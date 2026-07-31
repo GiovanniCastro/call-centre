@@ -118,8 +118,12 @@ recuperación, ni enrutador.
 Medido contra el repositorio: 28 pruebas, 28 pasan. `tsc --noEmit`, `eslint` y
 `depcruise` sin problemas. 7 dependencias directas, 129 paquetes instalados.
 
-**Publicado** en `github.com/GiovanniCastro/perimetro`, con `main` protegida y el
+**Publicado** en `github.com/GiovanniCastro/call-centre`, con `main` protegida y el
 CI actuando — ver R‑018. La fase 0 se cerró con el PR #1 y la etiqueta `v0.0`.
+
+El repositorio se llama `call-centre`; el producto se llama **Perímetro**. El slug
+de la URL no es el nombre del proyecto: el canon, `CLAUDE.md` y `package.json`
+dicen Perímetro, y son ellos los que mandan.
 
 | Fase | Nombre | Estado |
 |---|---|---|

@@ -219,8 +219,14 @@ la protección de rama, Dependabot y el escaneo de secretos estaban escritos per
 no actuando: exactamente lo que R‑008 quería evitar —invariantes que dependen de
 la buena voluntad—.
 
-**Qué cambió.** `github.com/GiovanniCastro/perimetro`, **público**. Configuración
-aplicada y verificada:
+**Qué cambió.** `github.com/GiovanniCastro/call-centre`, **público**. Se creó como
+`perimetro` y se renombró el mismo día, por decisión del responsable: yo había
+recomendado `perimetro` por coincidir con el nombre del producto, y `call-centre`
+resulta más reconocible desde fuera. GitHub mantiene la redirección desde la URL
+antigua. El producto sigue llamándose **Perímetro** en el canon, en `CLAUDE.md` y
+en `package.json`; lo que cambia es el slug, no el nombre.
+
+Configuración aplicada y verificada:
 
 - **`main` protegida**, con los dos trabajos del CI como comprobaciones
   obligatorias, historial lineal, sin `force push` ni borrado de rama, y **la
