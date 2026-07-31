@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "moneda": "USD",
+  "actualizado": "2026-07-31",
+  "nota": "Cambiar un precio aquí cambia los totales sin tocar código. Es la única tabla de precios del sistema; solo src/core/costeo/ puede leerla, y el check de arquitectura lo verifica.",
+
+  "nube": {
+    "anthropic": {
+      "fuente": "https://platform.claude.com/docs/en/pricing",
+      "consultado": "2026-07-31",
+      "nota": "Tarifas de primera parte de la API de Anthropic. Bedrock y Vertex son operados por socios y tienen tarifas propias; si se elige uno de ellos, se añade su propio bloque.",
+      "modelos": {
+        "claude-opus-5": {
+          "entrada_por_millon": 5.0,
+          "salida_por_millon": 25.0,
+          "contexto": 1000000,
+          "salida_maxima": 128000
+        },
+        "claude-sonnet-5": {
+          "entrada_por_millon": 3.0,
+          "salida_por_millon": 15.0,
+          "contexto": 1000000,
+          "salida_maxima": 128000,
+          "nota": "Precio de introducción de 2.00 / 10.00 vigente hasta 2026-08-31. No se refleja aquí: el costeo tiene que ser reproducible, y un precio con fecha de caducidad produce cifras que no se pueden recalcular después."
+        },
+        "claude-haiku-4-5": {
+          "entrada_por_millon": 1.0,
+          "salida_por_millon": 5.0,
+          "contexto": 200000,
+          "salida_maxima": 64000
+        }
+      }
+    }
+  },
+
+  "local": {
+    "nota": "El costo de la ejecución local NO es por token. Sale del tiempo de cómputo por la tarifa horaria de la máquina de referencia, que vive en config/maquina-referencia.json. Estos modelos se declaran para que el enrutador los conozca; su costo lo calcula la misma función `costear`.",
+    "modelos": {
+      "llama3.1:8b": { "motor": "ollama", "parametros_mm": 8 },
+      "qwen2.5:14b": { "motor": "ollama", "parametros_mm": 14 },
+      "nomic-embed-text": { "motor": "ollama", "proposito": "embeddings" }
+    }
+  }
+}

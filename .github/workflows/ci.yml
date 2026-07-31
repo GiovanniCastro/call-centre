@@ -1,0 +1,65 @@
+name: CI
+
+# Los invariantes ⚙️ del canon, como comprobaciones que bloquean el merge.
+# Ver docs/Propuesta-Desarrollo-Por-Fases.md §5.
+#
+# Un proyecto cuya tesis es «todo umbral tiene un vigía» no puede dejar sus
+# propios umbrales de construcción a la buena voluntad. Estos son sus vigías.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secretos:
+    name: Sin credenciales en el repositorio
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # gitleaks necesita el historial completo: un secreto que se añadió y
+          # se borró en el commit siguiente sigue estando en el repositorio.
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  invariantes:
+    name: Tipos, lint, arquitectura y pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      # Higiene: sin `any`. `tsc --strict` no prohíbe el `any` explícito —de eso
+      # se encarga el lint— pero sí todo lo demás.
+      - name: Tipos
+        run: npm run check:tipos
+
+      # Invariante 4 en el archivo, fuente única de costo, y sin `any`.
+      - name: Lint
+        run: npm run check:lint
+
+      # Invariante 4 sobre el grafo completo: el camino de tres saltos que el
+      # lint no ve. Más las fronteras de repos, Firebase y panel.
+      - name: Arquitectura
+        run: npm run check:arquitectura
+
+      # Invariante 5: el arnés falla si una ruta emite cero eventos o dos.
+      - name: Pruebas
+        run: npm run test

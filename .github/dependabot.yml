@@ -1,0 +1,45 @@
+version: 2
+
+# Dependabot **solo actualiza lo que ya existe**. Añadir una dependencia nueva
+# sigue siendo una propuesta que se aprueba, con su entrada en el manual de
+# cambios y su casilla en la plantilla de PR.
+#
+# Agrupado a propósito: siete PR sueltos por semana para subir versiones de
+# parche es ruido que se acaba ignorando, y una alerta que se ignora no protege
+# de nada. Las de seguridad van aparte para que no se pierdan entre las demás.
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencias
+    groups:
+      herramientas-de-desarrollo:
+        applies-to: version-updates
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      produccion:
+        applies-to: version-updates
+        dependency-type: production
+        update-types:
+          - patch
+      seguridad:
+        applies-to: security-updates
+        patterns:
+          - '*'
+
+  # Las propias acciones del CI caducan: este archivo nació con un aviso de
+  # obsolescencia de Node 20 en la primera ejecución.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels:
+      - dependencias
+      - ci

@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+
+    /* El código corre con el intérprete de TypeScript de Node: no hay paso de
+       compilación, solo borrado de tipos. De ahí `erasableSyntaxOnly`, que
+       prohíbe `enum`, `namespace` y propiedades de parámetro. */
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+
+    /* Invariante de higiene: sin `any`. Todo lo que el compilador sabe apretar,
+       apretado. */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "useUnknownInCatchVariables": true,
+
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts", "proyeccion/**/*.ts", "lote/**/*.ts"],
+  "exclude": ["node_modules", "panel", "dist"]
+}
