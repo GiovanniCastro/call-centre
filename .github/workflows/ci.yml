@@ -23,7 +23,7 @@ jobs:
     name: Sin credenciales en el repositorio
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # gitleaks necesita el historial completo: un secreto que se añadió y
           # se borró en el commit siguiente sigue estando en el repositorio.
@@ -37,7 +37,7 @@ jobs:
     name: Tipos, lint, arquitectura y pruebas
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
         with:
