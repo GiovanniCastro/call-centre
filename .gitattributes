@@ -1,0 +1,13 @@
+# Finales de línea normalizados a LF en el repositorio.
+#
+# Sin esto, se trabaja en Windows y el CI corre en Linux: cada archivo que
+# viaja entre los dos aparece como modificado por completo, y un diff de mil
+# líneas donde solo cambió una es un diff que nadie revisa.
+
+* text=auto eol=lf
+
+# Binarios: que git no intente normalizarlos.
+*.png binary
+*.jpg binary
+*.pdf binary
+*.ico binary

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "moneda": "USD",
+
+  "estado": "PROVISIONAL",
+  "nota_de_estado": "La máquina de referencia NO está decidida. Ver docs/00-CANON.md §Parte 4 «Lo que bloquea» y docs/CALL_CENTRE_DOCS.md §Pendiente de registrar. Estos valores son marcadores para que la función de costeo tenga forma; toda cifra derivada de ellos sale marcada como provisional y el panel está obligado a mostrarlo. No se publica ninguna cifra de costo local hasta que este archivo diga CONFIRMADA.",
+
+  "equipo": "SIN DEFINIR",
+  "costo_equipo": 0,
+  "vida_util_anios": 3,
+  "utilizacion_asumida": 0.4,
+  "potencia_vatios": 0,
+  "precio_kwh": 0,
+  "mantenimiento_anual": 0,
+
+  "campos": {
+    "costo_equipo": "Precio de compra del equipo completo, en USD.",
+    "vida_util_anios": "Periodo de amortización. Tres años es la convención del proyecto.",
+    "utilizacion_asumida": "Fracción de las horas del periodo en que la máquina está haciendo inferencia. Es el supuesto más discutible del costeo y por eso el panel lo muestra junto al número.",
+    "potencia_vatios": "Consumo medio bajo carga de inferencia.",
+    "precio_kwh": "Tarifa eléctrica local.",
+    "mantenimiento_anual": "Recambios, soporte y cualquier costo recurrente del equipo."
+  }
+}
