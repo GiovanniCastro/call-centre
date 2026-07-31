@@ -187,10 +187,10 @@ del webhook con cuatro fases de código y de pruebas encima.
 | Fase | Nombre | Sesiones | Depende de |
 |---|---|---|---|
 | **0** | Contrato de datos, telemetría, costeo, andamiaje | 2–3 | — |
-| **1** | Canal WhatsApp endurecido y aislamiento en repositorio | 3–4 | 0 |
+| **1** | Canal Telegram endurecido y aislamiento en repositorio | 3–4 | 0 |
 | **2** | Corpus y base de conocimiento con citación | 2–3 | 0 |
 | **3** | Enrutador local/nube y frontera de salida | 3–4 | 1, 2 |
-| **3B** | Telegram — prueba de la abstracción de canal | 1 | 3 |
+| **3B** | Segundo canal — prueba de la abstracción | 1 | 3 |
 | **4** | Salida estructurada con procedencia, validación y escalado | 3 | 3 |
 | **4B‑1** | Vigías que detienen: presupuesto, perímetro, bucle | 2 | 4 |
 | **4B‑2** | Vigías que observan: sustento, proveedor, vigencia, cola, silencio | 2–3 | 4B‑1 |
@@ -208,12 +208,17 @@ sesiones. Las fases 9 y 10 son mejora, no requisito.
 
 Tres movimientos merecen justificación:
 
-- **3B (Telegram) sube desde la fase 8.** El criterio de aceptación de la fase 1
-  —«el núcleo no importa nada específico de WhatsApp»— hoy se verifica leyendo
-  código. La única verificación real es un segundo canal, y son unas cien líneas
-  sobre la interfaz `Canal`. Enterrado al final, ese criterio pasa siete fases sin
-  probarse, que es tiempo de sobra para que el núcleo acumule dependencias que
-  nadie nota.
+- **El canal primario es Telegram, no WhatsApp** (R‑020). WhatsApp Business exige
+  un número corporativo y una revisión de Meta que puede tardar semanas; un bot de
+  Telegram se crea en dos minutos. Con WhatsApp en la fase 1, todo el proyecto
+  quedaba detrás de un trámite ajeno. WhatsApp pasa a ser un **conector
+  declarado** que se activa cuando existan sus credenciales.
+- **3B sube desde la fase 8 y deja de ser «Telegram».** El criterio de aceptación
+  de la fase 1 —«el núcleo no importa nada específico del canal»— hoy se
+  verificaría leyendo código. La única verificación real es un **segundo** canal, y
+  son unas cien líneas sobre la interfaz `Canal`. Enterrado al final, ese criterio
+  pasa siete fases sin probarse, que es tiempo de sobra para que el núcleo acumule
+  dependencias que nadie nota. Cuál sea ese segundo canal se decide en §7 bis.
 - **7 se ejecuta antes que 6B.** El selector de modo del panel exige «la misma
   carga de trabajo bajo los tres despliegues con las cifras recalculadas», y
   ejecutar la misma carga contra los tres modos *es* el corredor de la fase 7.
@@ -221,6 +226,33 @@ Tres movimientos merecen justificación:
 - **9 (informe de salud) sale del camino crítico.** Es una herramienta de
   desarrollo excelente, no un freno del producto. Nada de la demo pública depende
   de ella.
+
+### 7 bis. Cuál es el segundo canal, y por qué no puede ser WhatsApp
+
+Sacar WhatsApp de la fase 1 desbloquea el proyecto, pero **abre un agujero**: la
+fase 3B existe para demostrar que la abstracción `Canal` funciona, y esa
+demostración necesita un segundo canal que se pueda construir. Si el segundo canal
+fuera WhatsApp, el criterio quedaría detrás del mismo trámite que acabamos de
+apartar del camino crítico — y un criterio que depende de una autorización externa
+es un criterio que puede no cumplirse nunca.
+
+El segundo canal es **`lote`**, un adaptador que alimenta casos desde archivos a
+través de la misma interfaz `Canal`. Tres razones:
+
+1. **No depende de nadie.** Ni número corporativo, ni revisión, ni token de
+   terceros. Se puede construir el mismo día que se decide.
+2. **Ya está en el contrato de datos.** `canal ∈ {whatsapp, telegram, voz, lote}`
+   desde la fase 0. No inventa una categoría: usa una que el esquema ya declara.
+3. **La fase 7 lo necesita de todos modos.** El corredor tri‑modo tiene que meter
+   cincuenta o cien casos por el sistema. Si lo hace por la interfaz `Canal` en vez
+   de por un atajo, el lote ejercita **el camino real** —debounce, normalización,
+   alcance de contacto— en lugar de uno paralelo que puede divergir sin que nadie
+   se entere. Construirlo en la 3B no es trabajo extra: es adelantar trabajo de la
+   7 al momento en que además sirve de prueba.
+
+WhatsApp, cuando llegue, será el **tercer** canal. Ahí la prueba será más fuerte
+todavía: un canal comercial con firma criptográfica, cuotas y formatos propios,
+entrando sin tocar `src/core/`. Pero el proyecto no se queda esperándolo.
 
 ---
 
@@ -294,18 +326,33 @@ antes de que exista algo que medir.
 
 ---
 
-### Fase 1 — Canal WhatsApp endurecido y aislamiento en repositorio
+### Fase 1 — Canal Telegram endurecido y aislamiento en repositorio
 
 **Objetivo.** Entrada por un canal, normalizada, encolada y ya defendida. Absorbe
 4C‑A, 4C‑B (borde) y 4C‑D.
 
+**Por qué Telegram y no WhatsApp** (R‑020). WhatsApp Business exige número
+corporativo y revisión de Meta. Telegram exige hablar con `@BotFather` y guardar un
+token. Nada de esta fase es específico de un canal salvo el adaptador: la firma, la
+repetición, el límite de tasa, el debounce, la normalización y el alcance de
+contacto son los mismos. Cambiar de canal primario cambia unas cien líneas, no la
+fase.
+
 **Construir.**
 
-- Webhook de WhatsApp. **Primero la verificación de firma**, con comparación en
-  tiempo constante, antes de encolar o de tocar nada. Después la respuesta
-  inmediata al proveedor.
+- Webhook de Telegram. **Primero la verificación del secreto**, con comparación en
+  tiempo constante, antes de encolar o de tocar nada. Telegram lo entrega en la
+  cabecera `X-Telegram-Bot-Api-Secret-Token`, fijada al registrar el webhook.
+  Después la respuesta inmediata al proveedor.
+
+  > El criterio no cambia con el canal: **una petición sin credencial válida no
+  > llega a la cola**. Lo que cambia es el mecanismo — Telegram usa un secreto
+  > compartido, WhatsApp una firma HMAC. Por eso la verificación vive en el
+  > adaptador, detrás de un método de la interfaz `Canal`, y no en el webhook.
+
 - Rechazo de repetición: ventana de marca de tiempo más registro de identificadores
-  de mensaje ya vistos en Redis.
+  de mensaje ya vistos en Redis. Telegram reenvía la actualización si el webhook
+  no responde `200` a tiempo, así que esto no es teórico.
 - Validación estricta de la carga útil contra esquema; lo que no valida se
   descarta sin procesar y se registra.
 - Límite de tasa por contacto y por dirección de origen, ventana deslizante.
@@ -313,7 +360,14 @@ antes de que exista algo que medir.
 - Encolamiento en Redis con ventana de agrupación configurable.
 - Normalización a mensaje canónico: remitente, contenido, tipo, adjuntos, marca
   de tiempo, **procedencia**.
-- Interfaz `Canal` con recibir y responder.
+- Interfaz `Canal` con recibir, responder y **verificar la credencial de entrada**.
+  Los tres métodos son lo único que un canal nuevo tiene que implementar.
+- **Conector de WhatsApp declarado, no construido.** Aparece en el registro de
+  canales como `no_configurado`, con la lista de lo que necesita para activarse:
+  cuenta de WhatsApp Business, número verificado, aplicación de Meta, token
+  permanente, URL de webhook y token de verificación. Al arrancar sin esas
+  credenciales **no se registra y lo dice en el arranque**; no falla en silencio ni
+  finge estar disponible. Ver §Fase 3B.
 - **Capa `src/repos/` con alcance de contacto obligatorio.** Ninguna función
   exportada puede construirse sin un `AlcanceContacto`. Es la única capa del
   sistema que importa el cliente de PostgreSQL.
@@ -321,10 +375,13 @@ antes de que exista algo que medir.
 **Criterios de aceptación.**
 
 - Cinco mensajes en tres segundos producen una sola ejecución.
-- El núcleo no importa nada específico de WhatsApp — verificado por el check de
+- El núcleo no importa nada específico de Telegram — verificado por el check de
   arquitectura, no por lectura.
 - Reiniciar el proceso no pierde la conversación en curso.
-- **Una petición con firma inválida nunca llega a la cola.** Prueba explícita.
+- **Una petición sin credencial válida nunca llega a la cola.** Prueba explícita.
+- **El conector de WhatsApp arranca sin credenciales sin romper nada, y declara
+  qué le falta.** Prueba explícita: el registro de canales lo lista como
+  `no_configurado` con sus requisitos, y ninguna ruta puede enviarle un mensaje.
 - **Un mensaje repetido no produce una segunda ejecución.** Prueba explícita.
 - **Existe una prueba que falla si algún método de `repos/` puede consultar sin
   filtro de contacto.**
@@ -405,20 +462,37 @@ entregable que el plan original mencionaba solo como riesgo.
 
 ---
 
-### Fase 3B — Telegram
+### Fase 3B — Segundo canal y conector de WhatsApp
 
 **Objetivo.** Convertir el criterio de aceptación de la fase 1 en una prueba de
-verdad. Sesión corta.
+verdad, y dejar WhatsApp listo para enchufarse el día que existan sus credenciales.
+Sesión corta.
 
-**Construir.** Adaptador de Telegram sobre la interfaz `Canal`, reusando
-encolamiento, normalización y núcleo.
+**Construir.**
+
+- **Adaptador de `lote`** sobre la interfaz `Canal`: alimenta casos desde archivos
+  por el mismo camino que Telegram — debounce, normalización, alcance de contacto—.
+  Razonado en §7 bis. Es también el cimiento del corredor de la fase 7.
+- **Conector de WhatsApp, completo salvo credenciales.** Verificación de firma
+  HMAC, normalización de su formato de carga y envío por la API de mensajes, todo
+  escrito y probado contra cargas de ejemplo del propio proveedor. Lo que no tiene
+  es cuenta.
+- **Declaración de requisitos legible por la aplicación**, no un párrafo en un
+  README: qué necesita el conector para activarse, en qué variable de entorno va
+  cada cosa, y cómo se obtiene. El panel de la fase 6 la lee para mostrar el estado
+  del conector y qué falta; hasta entonces se ve al arrancar y por línea de órdenes.
 
 **Criterios de aceptación.**
 
-- Añadir Telegram no modifica ni una línea de `src/core/`. Verificable con el
-  diff del PR.
-- El mismo caso entrando por WhatsApp y por Telegram produce eventos idénticos
-  salvo el campo `canal`.
+- Añadir un canal no modifica ni una línea de `src/core/`. Verificable con el diff
+  del PR y con el check de arquitectura.
+- El mismo caso entrando por Telegram y por `lote` produce eventos idénticos salvo
+  el campo `canal`.
+- **El conector de WhatsApp declara sus requisitos y el sistema arranca sin ellos.**
+  Con credenciales inventadas en un entorno de prueba, la verificación de firma
+  acepta una carga de ejemplo firmada correctamente y rechaza una alterada.
+- **Ninguna cifra del panel cuenta casos de un canal no configurado.** Un conector
+  declarado no es un canal activo, y confundirlos inflaría el denominador.
 
 ---
 
@@ -745,9 +819,13 @@ donde más daño hace.
 
 ## 10. Riesgos, actualizados
 
-- **La aprobación de WhatsApp Business** puede tardar semanas. Se inicia el
-  trámite en la fase 0. Mitigación real: la fase 3B (Telegram) permite avanzar
-  con un canal funcionando mientras llega.
+- **La aprobación de WhatsApp Business** puede tardar semanas y exige número
+  corporativo. **Deja de ser un riesgo del camino crítico** (R‑020): el canal
+  primario es Telegram y WhatsApp entra como conector cuando existan sus
+  credenciales. El riesgo que queda es distinto y menor: que el conector se escriba
+  contra la documentación y nadie lo ejercite nunca contra el proveedor real. Se
+  mitiga probándolo con cargas de ejemplo firmadas, pero conviene no llamarlo
+  «probado» hasta que haya pasado un mensaje de verdad.
 - **El corpus.** Ahora es un entregable con nombre dentro de la fase 2, y bloquea
   también la 7. Si no hay documentos, no hay proyecto.
 - **La máquina de referencia.** De ella salen todas las cifras de costo local. Si
