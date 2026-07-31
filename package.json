@@ -8,6 +8,8 @@
     "node": ">=22.18.0"
   },
   "scripts": {
+    "dev": "node --env-file-if-exists=.env --watch src/main.ts",
+    "arrancar": "node --env-file-if-exists=.env src/main.ts",
     "verificar": "npm run check:tipos && npm run check:lint && npm run check:arquitectura && npm run test",
     "check:tipos": "tsc --noEmit",
     "check:lint": "eslint .",
