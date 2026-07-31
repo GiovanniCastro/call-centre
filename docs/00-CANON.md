@@ -128,10 +128,10 @@ dicen Perímetro, y son ellos los que mandan.
 | Fase | Nombre | Estado |
 |---|---|---|
 | 0 | Contrato de datos, telemetría, costeo, andamiaje | **CONSTRUIDO** |
-| 1 | Canal WhatsApp endurecido y aislamiento en repositorio | PROPUESTO |
+| 1 | Canal Telegram endurecido y aislamiento en repositorio | PROPUESTO |
 | 2 | Corpus y base de conocimiento con citación | PROPUESTO |
 | 3 | Enrutador local/nube y frontera de salida | PROPUESTO |
-| 3B | Telegram — prueba de la abstracción de canal | PROPUESTO |
+| 3B | Segundo canal (`lote`) y conector de WhatsApp | PROPUESTO |
 | 4 | Salida estructurada con procedencia, validación y escalado | PROPUESTO |
 | 4B‑1 | Vigías que detienen | PROPUESTO |
 | 4B‑2 | Vigías que observan | PROPUESTO |
@@ -177,8 +177,10 @@ De antes:
 ## Lo que bloquea
 
 - **El corpus de la empresa ficticia.** Bloquea la fase 2 y la 7. No existe.
-- **La aprobación de WhatsApp Business.** Trámite no iniciado. Se inicia en la
-  fase 0, no en la 1.
+- ~~La aprobación de WhatsApp Business.~~ **Ya no bloquea** (R‑020). El canal
+  primario es Telegram, que solo necesita un token de `@BotFather`. WhatsApp entra
+  como conector declarado que se activa cuando existan número corporativo y
+  credenciales de Meta.
 - **La máquina de referencia para Ollama.** Sin definirla, las cifras de costo
   local no se pueden defender. Desde la fase 0 el bloqueo es visible en el propio
   dato: `config/maquina-referencia.json` está en estado `PROVISIONAL`, y todo
@@ -240,3 +242,6 @@ Cada una con su entrada en [[CALL_CENTRE_DOCS]].
 | R‑015 | Node ejecuta TypeScript sin compilar; sintaxis borrable | Paso de compilación y artefacto intermedio |
 | R‑016 | Invariantes 1 y 3 como restricción de esquema y de base | Dejarlos como reglas escritas |
 | R‑017 | El costeo local sale marcado como provisional | Rellenar la máquina de referencia con cifras plausibles |
+| R‑018 | Repositorio público, `main` protegida también para administradores | Repositorio privado; eximir al dueño de la protección |
+| R‑019 | TypeScript 7 se aplaza hasta que `@typescript-eslint` lo admita | Forzarlo con `--legacy-peer-deps` |
+| R‑020 | El canal primario es Telegram; WhatsApp es un conector declarado | WhatsApp en la fase 1, con el proyecto detrás de un trámite de Meta |

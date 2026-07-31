@@ -15,7 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
-| **2** | 2026‑07‑31 | R‑012 … R‑019 | Fase 0 construida: repositorio, telemetría, costeo, migraciones y CI. React fijado para el panel. Repositorio público en GitHub |
+| **2** | 2026‑07‑31 | R‑012 … R‑020 | Fase 0 construida: repositorio, telemetría, costeo, migraciones y CI. React fijado para el panel. Repositorio público en GitHub. Telegram como canal primario |
 | **1** | 2026‑07‑30 | R‑001 … R‑011 | Revisión del plan, propuesta de desarrollo por fases, arquitectura en dos planos, vault de Obsidian |
 
 ---
@@ -31,6 +31,7 @@
   - [R‑017 · El costeo local se marca provisional](#r-017--el-costeo-local-sale-marcado-como-provisional)
   - [R‑018 · El repositorio es público](#r-018--el-repositorio-es-público-desde-el-primer-commit)
   - [R‑019 · TypeScript 7 se aplaza](#r-019--typescript-7-se-aplaza-hasta-que-typescript-eslint-lo-admita)
+  - [R‑020 · Telegram es el canal primario](#r-020--el-canal-primario-es-telegram-whatsapp-pasa-a-conector-declarado)
 - [Revisión 2026‑07‑30](#revisión-2026-07-30)
   - [R‑001 · Arquitectura en dos planos](#r-001--arquitectura-en-dos-planos-con-proyección-de-un-solo-sentido)
   - [R‑002 · Desdoblado el campo `resultado`](#r-002--desdoblado-el-campo-resultado-de-telemetría)
@@ -302,6 +303,66 @@ los otros seis paquetes y el de TypeScript se quedó en `^5.9.3`. Dependabot lo
 señaló en dos minutos, que es exactamente para lo que está.
 
 **Impacto.** Ninguno en el código. `package.json` mantiene `"typescript": "^5.9.3"`.
+
+---
+
+### R‑020 · El canal primario es Telegram; WhatsApp pasa a conector declarado
+
+**Contexto.** La fase 1 se llamaba «Canal WhatsApp endurecido». WhatsApp Business
+exige un **número corporativo** y una revisión de Meta que puede tardar semanas.
+El trámite ni siquiera se había iniciado, y figuraba como bloqueante en
+[[00-CANON]] §Parte 4. Con ese orden, todo el proyecto —enrutador, validación,
+vigías, panel— quedaba detrás de una autorización que no controlamos.
+
+**Qué cambió.** Decisión del responsable:
+
+- **La fase 1 pasa a ser Telegram.** Un bot se crea hablando con `@BotFather` y
+  guardando un token. Sin número corporativo, sin revisión, sin espera.
+- **WhatsApp queda como conector declarado**, escrito y probado contra cargas de
+  ejemplo, que se activa el día que existan sus credenciales. Se registra como
+  `no_configurado` y **declara qué necesita para instalarse** —cuenta de WhatsApp
+  Business, número verificado, aplicación de Meta, token permanente, URL de webhook
+  y token de verificación— en una forma que la aplicación puede leer, no en un
+  párrafo de README. El panel de la fase 6 lo mostrará.
+- **La fase 3B deja de ser «Telegram»** y pasa a ser «segundo canal y conector de
+  WhatsApp».
+
+**Por qué.** Nada de la fase 1 es específico de un canal salvo el adaptador: la
+verificación de la credencial, el rechazo de repetición, el límite de tasa, el
+debounce, la normalización a mensaje canónico y el alcance de contacto obligatorio
+son idénticos. Cambiar el canal primario cambia unas cien líneas, no la fase. Lo
+que cambia de verdad es que el proyecto deja de depender de un trámite ajeno.
+
+**El agujero que abría, y cómo se tapa.** La fase 3B existe para demostrar que la
+abstracción `Canal` funciona, y esa demostración necesita un **segundo** canal
+construible. Si el segundo fuera WhatsApp, el criterio quedaría detrás del mismo
+trámite que acabábamos de apartar — y un criterio que depende de una autorización
+externa puede no cumplirse nunca.
+
+El segundo canal es **`lote`**: alimenta casos desde archivos por la misma
+interfaz. No depende de nadie, ya está declarado en el enum `canal` desde la
+fase 0, y **la fase 7 lo necesita de todos modos** — su corredor tiene que meter
+cincuenta o cien casos por el sistema, y hacerlo por la interfaz `Canal` en lugar
+de por un atajo significa que el lote ejercita el camino real en vez de uno
+paralelo que puede divergir sin que nadie se entere. Construirlo en la 3B adelanta
+trabajo de la 7 al momento en que además sirve de prueba.
+
+**Qué NO cambia.** El criterio de la firma sigue en pie con otro mecanismo:
+Telegram usa un secreto compartido en la cabecera
+`X-Telegram-Bot-Api-Secret-Token`; WhatsApp usa HMAC. Por eso la verificación pasa
+a ser un método de la interfaz `Canal`, no código del webhook. La comparación sigue
+siendo en tiempo constante y sigue ocurriendo **antes de encolar nada**.
+
+**Un riesgo nuevo, dicho en voz alta.** El conector de WhatsApp se escribirá contra
+la documentación del proveedor y podría no ejercitarse nunca contra el proveedor
+real. Se mitiga con cargas de ejemplo firmadas, pero **no se llamará «probado»**
+hasta que haya pasado un mensaje de verdad. Un conector que nadie ha ejercitado es
+una promesa, no una garantía.
+
+**Impacto.** [[Propuesta-Desarrollo-Por-Fases]] §7, §7 bis (nueva), §Fase 1,
+§Fase 3B y §10. [[00-CANON]] §Parte 4: WhatsApp deja de figurar como bloqueante.
+Sin efecto en el código de la fase 0: `canal` ya incluía `telegram` y `lote`, que
+es exactamente por qué el enum se declaró completo desde el principio.
 
 ---
 
