@@ -15,7 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
-| **2** | 2026‑07‑31 | R‑012 … R‑018 | Fase 0 construida: repositorio, telemetría, costeo, migraciones y CI. React fijado para el panel. Repositorio público en GitHub |
+| **2** | 2026‑07‑31 | R‑012 … R‑019 | Fase 0 construida: repositorio, telemetría, costeo, migraciones y CI. React fijado para el panel. Repositorio público en GitHub |
 | **1** | 2026‑07‑30 | R‑001 … R‑011 | Revisión del plan, propuesta de desarrollo por fases, arquitectura en dos planos, vault de Obsidian |
 
 ---
@@ -30,6 +30,7 @@
   - [R‑016 · Invariantes 1 y 3 como restricciones](#r-016--los-invariantes-1-y-3-pasan-de-prosa-a-restricción-estructural)
   - [R‑017 · El costeo local se marca provisional](#r-017--el-costeo-local-sale-marcado-como-provisional)
   - [R‑018 · El repositorio es público](#r-018--el-repositorio-es-público-desde-el-primer-commit)
+  - [R‑019 · TypeScript 7 se aplaza](#r-019--typescript-7-se-aplaza-hasta-que-typescript-eslint-lo-admita)
 - [Revisión 2026‑07‑30](#revisión-2026-07-30)
   - [R‑001 · Arquitectura en dos planos](#r-001--arquitectura-en-dos-planos-con-proyección-de-un-solo-sentido)
   - [R‑002 · Desdoblado el campo `resultado`](#r-002--desdoblado-el-campo-resultado-de-telemetría)
@@ -253,6 +254,48 @@ bitácora del 31‑jul, que anotaba «sin remoto en GitHub» como pendiente abie
 Corrige también [[Propuesta-Desarrollo-Por-Fases]] §4 en un punto: la plantilla de
 PR no exige revisión de un segundo par de ojos, porque no hay un segundo par de
 ojos; exigirla bloquearía todos los merges.
+
+---
+
+### R‑019 · TypeScript 7 se aplaza hasta que `@typescript-eslint` lo admita
+
+**Contexto.** A los dos minutos de activarse, Dependabot abrió cuatro PR. Tres
+—`gitleaks-action` 2→3, `setup-node` 5→7, `checkout` 5→7— pasaron el CI y se
+fusionaron. El cuarto proponía TypeScript 5.9.3 → 7.0.2, el compilador reescrito
+en Go.
+
+**Qué cambió.** Nada: el proyecto sigue en TypeScript 5.9.3. El PR queda aplazado
+con `@dependabot ignore this major version`, y esta entrada existe para que el
+aplazamiento no sea invisible.
+
+**Por qué.** `npm ci` aborta antes de compilar nada:
+
+```
+npm error Found: typescript@7.0.2
+npm error Could not resolve dependency:
+npm error peer typescript@">=4.8.4 <6.1.0" from @typescript-eslint/eslint-plugin@8.65.0
+```
+
+`@typescript-eslint` 8.x declara TypeScript **< 6.1.0** como par admitido.
+Instalar ambos exige `--legacy-peer-deps`, que es aceptar a sabiendas una
+resolución que el propio gestor considera rota — y el lint es lo que sostiene el
+invariante de «sin `any`» y la fuente única de costo. No es una dependencia que
+convenga tener en un estado que npm marca como incorrecto.
+
+**Cuándo se revisa.** Cuando `@typescript-eslint` publique una versión que admita
+TypeScript 7. Entonces entran **los dos juntos**, no por separado.
+
+**Lo que esto demostró, que vale más que la actualización.** El CI detectó el
+fallo por su cuenta —`Tipos, lint, arquitectura y pruebas` en rojo a los 12 s—
+antes de que nadie mirara el PR. Es la primera vez que la puerta de R‑008 para
+algo real en lugar de una violación fabricada a propósito.
+
+**Un defecto propio que salió a la luz.** Al montar la fase 0 se consultaron las
+versiones publicadas y se vio `typescript 7.0.2`; se actualizaron los rangos de
+los otros seis paquetes y el de TypeScript se quedó en `^5.9.3`. Dependabot lo
+señaló en dos minutos, que es exactamente para lo que está.
+
+**Impacto.** Ninguno en el código. `package.json` mantiene `"typescript": "^5.9.3"`.
 
 ---
 
