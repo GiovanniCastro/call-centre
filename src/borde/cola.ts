@@ -1,32 +1,25 @@
-// La cola de entrada.
+// La cola de trabajo.
 //
-// Aquí solo está la **interfaz** y una implementación en memoria. La de Redis,
-// con ventana de agrupación y persistencia entre reinicios, llega con la segunda
-// mitad de la fase 1.
-//
-// La implementación en memoria no es un atajo permanente y no debe tratarse como
-// tal: pierde todo al reiniciar, y el criterio «reiniciar el proceso no pierde la
-// conversación en curso» no se puede cumplir con ella. Existe para que el borde
-// se pueda construir, probar y arrancar antes que Redis, y **dice en voz alta lo
-// que es** — `persistente: false` — para que ninguna superficie la confunda con
-// la definitiva.
+// Lo que se encola es un **grupo**, no un mensaje. Esa es la forma que toma el
+// criterio «cinco mensajes en tres segundos producen una sola ejecución»: si la
+// cola aceptara mensajes sueltos, la agrupación sería una recomendación que
+// cualquier ruta podría saltarse encolando de más.
 
-import type { MensajeCanonico } from '../core/mensaje.ts';
+import type { Grupo } from './almacen.ts';
 
 export interface Cola {
   /** ¿Sobrevive a un reinicio del proceso? */
   readonly persistente: boolean;
-  encolar(mensaje: MensajeCanonico): Promise<void>;
-  /** Cuántos hay esperando. Para el parte de arranque y las pruebas. */
+  encolar(grupo: Grupo): Promise<void>;
   pendientes(): Promise<number>;
 }
 
 export class ColaEnMemoria implements Cola {
   readonly persistente = false;
-  private readonly cola: MensajeCanonico[] = [];
+  private readonly cola: Grupo[] = [];
 
-  async encolar(mensaje: MensajeCanonico): Promise<void> {
-    this.cola.push(mensaje);
+  async encolar(grupo: Grupo): Promise<void> {
+    this.cola.push(grupo);
   }
 
   async pendientes(): Promise<number> {
@@ -34,7 +27,7 @@ export class ColaEnMemoria implements Cola {
   }
 
   /** Solo para pruebas y para el registro de desarrollo. */
-  vaciar(): readonly MensajeCanonico[] {
+  vaciar(): readonly Grupo[] {
     return this.cola.splice(0, this.cola.length);
   }
 }

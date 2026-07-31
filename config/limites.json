@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "nota": "Umbrales del borde. Viven aquí y no en el código porque un umbral que cambia sin dejar diff, autor y fecha no es auditable. Cambiar un valor cambia el comportamiento sin recompilar.",
+
+  "agrupacion": {
+    "ventana_ms": 3000,
+    "por_que": "Alguien que escribe en tres mensajes seguidos está escribiendo una sola cosa. Responder a cada uno produce tres respuestas descoordinadas y triplica el costo del caso. La ventana la fija el PRIMER mensaje y no se reinicia: si se reiniciara, quien escribe sin parar nunca recibiría respuesta."
+  },
+
+  "repeticion": {
+    "ttl_segundos": 86400,
+    "por_que": "Telegram y WhatsApp reintentan la entrega si el webhook no responde a tiempo. Veinticuatro horas cubre de sobra cualquier reintento del proveedor sin guardar identificadores para siempre."
+  },
+
+  "tasa_por_contacto": {
+    "maximo": 30,
+    "ventana_ms": 60000,
+    "por_que": "Treinta mensajes por minuto es muy por encima de lo que escribe una persona y muy por debajo de lo que envía un bucle. Al superarlo se descarta y se registra; no se responde con un error que le diga al emisor que ha dado con el límite."
+  },
+
+  "tasa_por_origen": {
+    "maximo": 300,
+    "ventana_ms": 60000,
+    "por_que": "Techo por dirección de origen, para el caso en que el atacante no tenga contacto válido y esté probando. Más alto que el de contacto porque un proveedor legítimo entrega desde pocas direcciones."
+  },
+
+  "techo_cuerpo_bytes": 262144
+}

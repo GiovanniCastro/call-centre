@@ -2,14 +2,17 @@
 //
 // El orden de este archivo **es** la regla de seguridad, y no es negociable:
 //
-//   1. techo de tamaño      — antes de leer el cuerpo entero en memoria
-//   2. verificar credencial — sobre el cuerpo crudo, antes de analizarlo
-//   3. analizar y normalizar
-//   4. encolar
+//   1. límite de tasa por origen — antes de gastar nada en la petición
+//   2. techo de tamaño           — antes de leer el cuerpo entero en memoria
+//   3. verificar credencial      — sobre el cuerpo crudo, antes de analizarlo
+//   4. analizar y normalizar
+//   5. rechazo de repetición     — por mensaje, atómico
+//   6. límite de tasa por contacto
+//   7. agrupar
 //
-// Invertir 2 y 3 sería lo cómodo —analizar el JSON primero da mejores mensajes de
+// Invertir 3 y 4 sería lo cómodo —analizar el JSON primero da mejores mensajes de
 // error— y sería un fallo: significaría ejecutar el analizador sobre carga de
-// cualquiera. Invertir 1 y 2 permitiría que una petición de un gigabyte agotara la
+// cualquiera. Invertir 2 y 3 permitiría que una petición de un gigabyte agotara la
 // memoria antes de que a nadie le importara si venía firmada.
 //
 // El borde no conoce ningún canal concreto: pide al registro el canal de la ruta y
@@ -18,24 +21,27 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 
 import { ErrorDeCanal } from '../core/canal.ts';
+import { claveDeGrupo, type AlmacenDeBorde } from './almacen.ts';
+import { LIMITES, type Limites } from './limites.ts';
 import type { NombreCanal } from '../core/canal.ts';
 import type { RegistroDeCanales } from '../core/registro-canales.ts';
-import type { Cola } from './cola.ts';
-
-/** Techo de tamaño del cuerpo. Un mensaje de texto no llega ni a un kilobyte. */
-export const TECHO_CUERPO_BYTES = 256 * 1024;
 
 export type ResultadoBorde = {
   readonly estado: number;
   readonly cuerpo: string;
   /** Por qué se rechazó, cuando se rechazó. Para el registro, no para la respuesta. */
   readonly motivo?: string;
-  readonly encolados?: number;
+  readonly aceptados?: number;
+  readonly repetidos?: number;
+  readonly limitados?: number;
 };
 
 export type Opciones = {
   readonly registro: RegistroDeCanales;
-  readonly cola: Cola;
+  readonly almacen: AlmacenDeBorde;
+  readonly limites?: Limites;
+  /** Se inyecta para que las pruebas controlen el tiempo. */
+  readonly ahora?: () => number;
   /** Se inyecta para que las pruebas no dependan de la consola. */
   readonly registrar?: (linea: string) => void;
 };
@@ -52,7 +58,7 @@ export class ErrorDeTamano extends Error {
  */
 export async function leerCuerpo(
   peticion: IncomingMessage,
-  techo = TECHO_CUERPO_BYTES,
+  techo = LIMITES.techo_cuerpo_bytes,
 ): Promise<string> {
   const declarado = peticion.headers['content-length'];
   if (declarado !== undefined && Number(declarado) > techo) {
@@ -89,6 +95,9 @@ export async function procesarEntrega(
   cabeceras: Readonly<Record<string, string | undefined>>,
   cuerpoCrudo: string,
 ): Promise<ResultadoBorde> {
+  const limites = opciones.limites ?? LIMITES;
+  const ahora = (opciones.ahora ?? Date.now)();
+
   let canal;
   try {
     canal = opciones.registro.obtener(nombreCanal);
@@ -97,11 +106,7 @@ export async function procesarEntrega(
       // 503 y no 404: el canal existe en el plan, lo que no existe son sus
       // credenciales. Un 404 diría que la ruta está mal, y mandaría a quien lo
       // lea a buscar el problema donde no está.
-      return {
-        estado: 503,
-        cuerpo: 'canal no configurado',
-        motivo: error.message,
-      };
+      return { estado: 503, cuerpo: 'canal no configurado', motivo: error.message };
     }
     throw error;
   }
@@ -119,17 +124,54 @@ export async function procesarEntrega(
     // La credencial era válida, así que esto no es un atacante: es el proveedor
     // enviando algo que no esperábamos. Se responde 200 para que no reintente en
     // bucle, y queda registrado.
-    return { estado: 200, cuerpo: 'ok', motivo: 'cuerpo no es JSON válido', encolados: 0 };
+    return { estado: 200, cuerpo: 'ok', motivo: 'cuerpo no es JSON válido', aceptados: 0 };
   }
 
   const mensajes = canal.normalizar(carga);
+
+  let aceptados = 0;
+  let repetidos = 0;
+  let limitados = 0;
+
   for (const mensaje of mensajes) {
-    await opciones.cola.encolar(mensaje);
+    // Repetición primero: un mensaje repetido no debe consumir cuota de tasa,
+    // porque entonces un reintento del proveedor acercaría al cliente a su límite.
+    const esNuevo = await opciones.almacen.marcarVistoSiNuevo(
+      mensaje.id_externo,
+      limites.repeticion.ttl_segundos,
+    );
+    if (!esNuevo) {
+      repetidos += 1;
+      continue;
+    }
+
+    const clave = claveDeGrupo(mensaje);
+    const enVentana = await opciones.almacen.registrarYContar(
+      `contacto:${clave}`,
+      limites.tasa_por_contacto.ventana_ms,
+      ahora,
+    );
+
+    if (enVentana > limites.tasa_por_contacto.maximo) {
+      // Se descarta en silencio: responder «has superado el límite» le diría al
+      // emisor exactamente dónde está el techo, que es la información que
+      // necesita para quedarse justo por debajo.
+      limitados += 1;
+      continue;
+    }
+
+    await opciones.almacen.anadirAlGrupo(
+      clave,
+      mensaje,
+      limites.agrupacion.ventana_ms,
+      ahora,
+    );
+    aceptados += 1;
   }
 
   // 200 inmediato: Telegram y WhatsApp reintentan la entrega si el webhook tarda,
   // y un reintento es un mensaje duplicado. El trabajo va en la cola.
-  return { estado: 200, cuerpo: 'ok', encolados: mensajes.length };
+  return { estado: 200, cuerpo: 'ok', aceptados, repetidos, limitados };
 }
 
 const RUTAS_WEBHOOK: Readonly<Record<string, NombreCanal>> = {
@@ -137,13 +179,30 @@ const RUTAS_WEBHOOK: Readonly<Record<string, NombreCanal>> = {
   '/webhook/whatsapp': 'whatsapp',
 };
 
+const INDICE = `Perímetro — borde
+
+  GET  /salud                 estado del proceso
+  GET  /canales               qué canales hay y qué les falta
+  POST /webhook/telegram      entrega de Telegram  (cabecera X-Telegram-Bot-Api-Secret-Token)
+  POST /webhook/whatsapp      entrega de WhatsApp  (cabecera X-Hub-Signature-256)
+
+Esto es el perímetro, no el panel. El panel es la fase 6.
+Nada de aquí responde todavía a un usuario: el enrutador y el modelo son la fase 3.
+`;
+
 export function crearServidor(opciones: Opciones): Server {
   const registrar = opciones.registrar ?? ((linea: string) => console.warn(linea));
+  const limites = opciones.limites ?? LIMITES;
+  const relojDe = opciones.ahora ?? Date.now;
 
   return createServer((peticion: IncomingMessage, respuesta: ServerResponse) => {
     void (async () => {
       const url = new URL(peticion.url ?? '/', 'http://localhost');
       const ruta = url.pathname;
+
+      if (peticion.method === 'GET' && (ruta === '/' || ruta === '/index.html')) {
+        return responder(respuesta, 200, INDICE);
+      }
 
       if (peticion.method === 'GET' && ruta === '/salud') {
         return responder(respuesta, 200, 'ok');
@@ -155,7 +214,12 @@ export function crearServidor(opciones: Opciones): Server {
           estado: e.estado,
           faltan: e.estado === 'no_configurado' ? e.faltan : [],
         }));
-        return responder(respuesta, 200, JSON.stringify({ canales: estados }, null, 2), 'application/json');
+        return responder(
+          respuesta,
+          200,
+          JSON.stringify({ canales: estados }, null, 2),
+          'application/json',
+        );
       }
 
       const canal = RUTAS_WEBHOOK[ruta];
@@ -163,9 +227,22 @@ export function crearServidor(opciones: Opciones): Server {
         return responder(respuesta, 404, 'no encontrado');
       }
 
+      // ── Caudal por origen, antes de gastar nada en la petición. ───────────
+      const origen = peticion.socket.remoteAddress ?? 'desconocido';
+      const desdeOrigen = await opciones.almacen.registrarYContar(
+        `origen:${origen}`,
+        limites.tasa_por_origen.ventana_ms,
+        relojDe(),
+      );
+
+      if (desdeOrigen > limites.tasa_por_origen.maximo) {
+        registrar(`[borde] ${ruta} → 429: ${origen} superó el techo por origen`);
+        return responder(respuesta, 429, 'demasiadas peticiones');
+      }
+
       let cuerpoCrudo: string;
       try {
-        cuerpoCrudo = await leerCuerpo(peticion);
+        cuerpoCrudo = await leerCuerpo(peticion, limites.techo_cuerpo_bytes);
       } catch (error) {
         if (error instanceof ErrorDeTamano) {
           registrar(`[borde] rechazado por tamaño en ${ruta}: ${error.message}`);
@@ -184,7 +261,10 @@ export function crearServidor(opciones: Opciones): Server {
       if (resultado.motivo !== undefined) {
         registrar(`[borde] ${ruta} → ${resultado.estado}: ${resultado.motivo}`);
       } else {
-        registrar(`[borde] ${ruta} → ${resultado.estado}, encolados ${resultado.encolados ?? 0}`);
+        registrar(
+          `[borde] ${ruta} → ${resultado.estado}, aceptados ${resultado.aceptados ?? 0}, ` +
+            `repetidos ${resultado.repetidos ?? 0}, limitados ${resultado.limitados ?? 0}`,
+        );
       }
 
       return responder(respuesta, resultado.estado, resultado.cuerpo);

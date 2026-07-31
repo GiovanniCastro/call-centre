@@ -17,6 +17,7 @@
     "test": "node --test --experimental-test-module-mocks \"tests/**/*.test.ts\""
   },
   "dependencies": {
+    "redis": "^6.1.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

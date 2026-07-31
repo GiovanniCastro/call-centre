@@ -36,6 +36,29 @@ jobs:
   invariantes:
     name: Tipos, lint, arquitectura y pruebas
     runs-on: ubuntu-latest
+
+    # Redis de verdad, no un doble. Las pruebas del almacén corren dos veces —una
+    # contra la implementación en memoria y otra contra esta— con el mismo cuerpo
+    # de casos: si las dos no se comportan igual, cambiar de una a otra cambiaría
+    # el comportamiento del sistema sin que nada avisara.
+    #
+    # La máquina de desarrollo no tiene Docker, así que este contenedor es el
+    # único sitio donde el código de Redis se ejercita. Sin él, `AlmacenRedis`
+    # sería código escrito y jamás ejecutado.
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      REDIS_URL: redis://localhost:6379
+
     steps:
       - uses: actions/checkout@v7
 
