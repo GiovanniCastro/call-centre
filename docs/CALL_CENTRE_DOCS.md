@@ -15,7 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
-| **2** | 2026‑07‑31 | R‑012 … R‑017 | Fase 0 construida: repositorio, telemetría, costeo, migraciones y CI. React fijado para el panel |
+| **2** | 2026‑07‑31 | R‑012 … R‑018 | Fase 0 construida: repositorio, telemetría, costeo, migraciones y CI. React fijado para el panel. Repositorio público en GitHub |
 | **1** | 2026‑07‑30 | R‑001 … R‑011 | Revisión del plan, propuesta de desarrollo por fases, arquitectura en dos planos, vault de Obsidian |
 
 ---
@@ -29,6 +29,7 @@
   - [R‑015 · Node ejecuta TypeScript sin compilar](#r-015--node-ejecuta-typescript-sin-paso-de-compilación)
   - [R‑016 · Invariantes 1 y 3 como restricciones](#r-016--los-invariantes-1-y-3-pasan-de-prosa-a-restricción-estructural)
   - [R‑017 · El costeo local se marca provisional](#r-017--el-costeo-local-sale-marcado-como-provisional)
+  - [R‑018 · El repositorio es público](#r-018--el-repositorio-es-público-desde-el-primer-commit)
 - [Revisión 2026‑07‑30](#revisión-2026-07-30)
   - [R‑001 · Arquitectura en dos planos](#r-001--arquitectura-en-dos-planos-con-proyección-de-un-solo-sentido)
   - [R‑002 · Desdoblado el campo `resultado`](#r-002--desdoblado-el-campo-resultado-de-telemetría)
@@ -207,6 +208,51 @@ utilización» es defendible. El primero es el que se cae en una demo.
 local visibles junto al número»— y calculadora de la fase 6B, que importa
 `costear` en lugar de reimplementarla. La máquina de referencia sigue
 **BLOQUEADA** hasta que el responsable la defina.
+
+---
+
+### R‑018 · El repositorio es público desde el primer commit
+
+**Contexto.** La fase 0 quedó construida en un repositorio local sin remoto. El CI,
+la protección de rama, Dependabot y el escaneo de secretos estaban escritos pero
+no actuando: exactamente lo que R‑008 quería evitar —invariantes que dependen de
+la buena voluntad—.
+
+**Qué cambió.** `github.com/GiovanniCastro/perimetro`, **público**. Configuración
+aplicada y verificada:
+
+- **`main` protegida**, con los dos trabajos del CI como comprobaciones
+  obligatorias, historial lineal, sin `force push` ni borrado de rama, y **la
+  protección aplica también a administradores**. Verificado: un push directo a
+  `main` se rechaza con `GH006`, siendo el dueño del repositorio.
+- **Escaneo de secretos con protección de empuje** activado. Es la mitad de la
+  sección H de la fase 4C, gratis y desde el día uno.
+- **Dependabot** con alertas y correcciones de seguridad. Actualizaciones
+  agrupadas: siete PR sueltos por semana son ruido, y una alerta que se ignora no
+  protege de nada.
+- `.claude/settings.json` pasa a `settings.local.json` e ignorado: eran permisos
+  de una máquina concreta, con rutas del disco y el nombre de otro proyecto.
+  Publicarlos no aportaba nada y es superficie regalada. La habilidad
+  `call_centre_docs` sí se versiona, porque es del proyecto.
+
+**Por qué público.** Es una demo de portafolio y el argumento de venta es que cada
+respuesta sea auditable; un repositorio cerrado pide creer eso en lugar de
+comprobarlo. Además la protección de rama y el escaneo de secretos son gratuitos
+en repositorios públicos y suelen exigir plan de pago en privados — sin ellos, el
+protocolo de fases queda escrito pero no aplicado, que es el mismo defecto que
+R‑008 vino a corregir.
+
+**Por qué la protección aplica a administradores.** El plan dice «sin push
+directo» sin excepciones, y un proyecto cuya tesis es «todo umbral tiene un vigía»
+no puede eximirse a sí mismo. El coste es que una corrección urgente exige
+levantar la protección a mano; se asume a propósito.
+
+**Impacto.** La fase 0 se cerró con el PR #1 y la etiqueta `v0.0`. El CI corre en
+GitHub y pasa —16 s y 8 s en la primera ejecución—, no solo en local. Corrige la
+bitácora del 31‑jul, que anotaba «sin remoto en GitHub» como pendiente abierto.
+Corrige también [[Propuesta-Desarrollo-Por-Fases]] §4 en un punto: la plantilla de
+PR no exige revisión de un segundo par de ojos, porque no hay un segundo par de
+ojos; exigirla bloquearía todos los merges.
 
 ---
 

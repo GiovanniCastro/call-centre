@@ -118,6 +118,9 @@ recuperación, ni enrutador.
 Medido contra el repositorio: 28 pruebas, 28 pasan. `tsc --noEmit`, `eslint` y
 `depcruise` sin problemas. 7 dependencias directas, 129 paquetes instalados.
 
+**Publicado** en `github.com/GiovanniCastro/perimetro`, con `main` protegida y el
+CI actuando — ver R‑018. La fase 0 se cerró con el PR #1 y la etiqueta `v0.0`.
+
 | Fase | Nombre | Estado |
 |---|---|---|
 | 0 | Contrato de datos, telemetría, costeo, andamiaje | **CONSTRUIDO** |
