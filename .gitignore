@@ -1,0 +1,21 @@
+node_modules/
+dist/
+coverage/
+*.log
+
+# Secretos — nunca al repositorio. Invariante de higiene, respaldado por gitleaks.
+.env
+.env.*
+!.env.ejemplo
+*.pem
+*.key
+serviceAccountKey*.json
+firebase-adminsdk*.json
+
+# Obsidian: la configuración local del vault no es del proyecto
+docs/.obsidian/workspace*.json
+
+# Ajustes de la máquina de quien trabaja, no del proyecto. La habilidad
+# .claude/skills/call_centre_docs/ sí se versiona: define cómo se documenta
+# Perímetro. Los permisos concedidos en una sesión, no: son rutas de un disco.
+.claude/settings.local.json

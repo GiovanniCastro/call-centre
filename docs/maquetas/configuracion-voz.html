@@ -1,0 +1,393 @@
+<title>Perímetro — Configuración del canal de voz</title>
+<style>
+:root{
+  --paper:#F3F5F9; --card:#FFFFFF; --ink:#12151A; --muted:#5F6773; --faint:#767E8B;
+  --hair:#E5E9F0; --signal:#3A64F5;
+  --local:#12A594;      /* dentro del perímetro */
+  --nube:#3A64F5;       /* fuera del perímetro */
+  --esc:#E8963C; --alarm:#E5484D;
+  --local-bg:#E4F6F3; --local-ink:#0A6B60;
+  --nube-bg:#E9EFFE;  --nube-ink:#2C4FCC;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0E1117; --card:#161A21; --ink:#E8EBF0; --muted:#9AA3B0; --faint:#7C8492;
+    --hair:#252B35; --local-bg:#0E2E2A; --local-ink:#4FD5C4; --nube-bg:#141F3D; --nube-ink:#8AA6FF;
+    --local:#2CC0AE; --nube:#5C82FF;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1117; --card:#161A21; --ink:#E8EBF0; --muted:#9AA3B0; --faint:#7C8492;
+  --hair:#252B35; --local-bg:#0E2E2A; --local-ink:#4FD5C4; --nube-bg:#141F3D; --nube-ink:#8AA6FF;
+  --local:#2CC0AE; --nube:#5C82FF;
+}
+:root[data-theme="light"]{
+  --paper:#F3F5F9; --card:#FFFFFF; --ink:#12151A; --muted:#5F6773; --faint:#767E8B;
+  --hair:#E5E9F0; --local-bg:#E4F6F3; --local-ink:#0A6B60; --nube-bg:#E9EFFE; --nube-ink:#2C4FCC;
+  --local:#12A594; --nube:#3A64F5;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink); font-size:14px; line-height:1.5;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,p,table{margin:0}
+.d{letter-spacing:-0.025em}
+.m{font-family:ui-monospace,'JetBrains Mono','SF Mono',Menlo,monospace;font-size:.62rem;letter-spacing:.13em;text-transform:uppercase}
+.num{font-family:ui-monospace,'JetBrains Mono','SF Mono',Menlo,monospace;font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px;border-radius:4px}
+
+.wrap{max-width:1180px;margin:0 auto;padding:22px clamp(14px,2.5vw,28px) 40px}
+
+/* ── cabecera ─────────────────────────────────────────────── */
+.top{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:4px}
+.top h1{font-size:1.3rem;font-weight:600}
+.top .sub{color:var(--muted);font-size:.83rem;margin-top:3px}
+.spacer{flex:1}
+
+.demoflag{
+  display:flex;align-items:center;gap:9px;margin:16px 0 18px;padding:9px 13px;
+  background:#FFF7EA;border:1px solid #F3DFC0;border-radius:8px;color:#8A6220;font-size:.8rem;
+}
+@media (prefers-color-scheme: dark){.demoflag{background:#2A2114;border-color:#4A3A1E;color:#E3B771}}
+:root[data-theme="dark"] .demoflag{background:#2A2114;border-color:#4A3A1E;color:#E3B771}
+.demoflag b{font-weight:600}
+
+/* ── control de volumen ───────────────────────────────────── */
+.volumen{
+  background:var(--card);border:1px solid var(--hair);border-radius:var(--r);
+  padding:15px 18px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:20px;
+}
+.volumen label{color:var(--muted);font-size:.82rem;flex:0 0 auto}
+.volumen input[type=range]{flex:1;min-width:200px;accent-color:var(--signal)}
+.volumen .val{font-size:1.35rem;font-weight:600;letter-spacing:-0.03em;flex:0 0 auto}
+.volumen .val small{font-size:.78rem;font-weight:400;color:var(--muted);letter-spacing:0}
+.volumen .hint{flex:1 1 100%;color:var(--faint);font-size:.76rem;border-top:1px solid var(--hair);padding-top:11px;margin-top:2px}
+
+/* ── secciones de perímetro ───────────────────────────────── */
+.seccion{margin-bottom:26px}
+.seccion-head{display:flex;align-items:flex-start;gap:11px;margin-bottom:4px}
+.seccion-head .marca{width:4px;align-self:stretch;border-radius:3px;flex:0 0 4px;margin-top:2px}
+.seccion.dentro .marca{background:var(--local)}
+.seccion.fuera  .marca{background:var(--nube)}
+.seccion-head h2{font-size:1.02rem;font-weight:600;letter-spacing:-0.015em;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;border-radius:6px;padding:3px 8px;
+  font-size:.68rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+}
+.seccion.dentro .chip{background:var(--local-bg);color:var(--local-ink)}
+.seccion.fuera  .chip{background:var(--nube-bg);color:var(--nube-ink)}
+.seccion-head p{color:var(--muted);font-size:.84rem;margin-top:5px;max-width:74ch}
+.seccion-body{display:grid;gap:14px;margin-top:14px;grid-template-columns:1fr}
+@media(min-width:900px){.seccion-body.dos{grid-template-columns:1fr 1fr}}
+
+/* ── tarjeta de proveedor ─────────────────────────────────── */
+.prov{
+  background:var(--card);border:1px solid var(--hair);border-radius:var(--r);
+  padding:17px 18px;display:flex;flex-direction:column;min-width:0;position:relative;
+}
+.prov.activo{border-color:var(--signal);box-shadow:0 0 0 1px var(--signal)}
+.prov-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:3px}
+.prov-head h3{font-size:.98rem;font-weight:600;letter-spacing:-0.01em;flex:1;min-width:0}
+.estado{
+  display:inline-flex;align-items:center;gap:5px;border-radius:5px;padding:3px 8px;
+  font-size:.68rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;flex:0 0 auto;
+}
+.e-activo{background:var(--nube-bg);color:var(--nube-ink)}
+.e-disp{background:var(--hair);color:var(--muted)}
+.e-sinmedir{background:#FDF1E2;color:#9A5F14}
+@media (prefers-color-scheme: dark){.e-sinmedir{background:#33260F;color:#E0A757}}
+:root[data-theme="dark"] .e-sinmedir{background:#33260F;color:#E0A757}
+.prov .tesis{color:var(--muted);font-size:.79rem;margin-bottom:14px}
+
+/* desglose de coste — tabla, no gráfico: son precios y hay que leerlos exactos */
+table.coste{width:100%;border-collapse:collapse;font-size:.8rem}
+table.coste th{
+  text-align:left;color:var(--faint);font-weight:500;padding:0 0 6px;border-bottom:1px solid var(--hair);
+  font-family:ui-monospace,monospace;font-size:.57rem;letter-spacing:.12em;text-transform:uppercase;
+}
+table.coste th:last-child,table.coste td:last-child{text-align:right}
+table.coste td{padding:6px 0;border-bottom:1px solid var(--hair);color:var(--ink)}
+table.coste tr.propio td{color:var(--muted)}
+table.coste tr.total td{border-bottom:0;padding-top:9px;font-weight:600}
+table.coste tr.total td:last-child{font-size:1.02rem;letter-spacing:-0.02em}
+.cero{color:var(--local);font-weight:500}
+
+.mes{
+  margin-top:13px;padding-top:13px;border-top:1px solid var(--hair);
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;
+}
+.mes .etq{color:var(--muted);font-size:.79rem}
+.mes .cifra{font-size:1.5rem;font-weight:600;letter-spacing:-0.035em}
+
+/* barra comparativa: única cifra que es magnitud relativa, no precio a leer */
+.rel{margin-top:11px}
+.rel .track{height:6px;border-radius:4px;background:var(--hair);overflow:hidden}
+.rel .track i{display:block;height:100%;border-radius:4px}
+.rel .pie{color:var(--faint);font-size:.72rem;margin-top:6px}
+
+.datos{margin-top:14px;padding-top:13px;border-top:1px solid var(--hair);display:grid;gap:9px}
+.dato{display:flex;gap:10px;font-size:.79rem;align-items:baseline}
+.dato .k{color:var(--faint);flex:0 0 96px}
+.dato .v{color:var(--ink);flex:1;min-width:0}
+.dato .v .no{color:var(--faint);font-style:italic}
+
+.proc{
+  margin-top:14px;padding:9px 11px;border-radius:7px;font-size:.75rem;display:flex;gap:8px;align-items:flex-start;
+}
+.proc.medido{background:var(--local-bg);color:var(--local-ink)}
+.proc.declarado{background:#FDF1E2;color:#9A5F14}
+@media (prefers-color-scheme: dark){.proc.declarado{background:#33260F;color:#E0A757}}
+:root[data-theme="dark"] .proc.declarado{background:#33260F;color:#E0A757}
+.proc svg{width:14px;height:14px;flex:0 0 14px;margin-top:2px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+.acciones{margin-top:15px;display:flex;gap:9px;flex-wrap:wrap}
+button.btn{
+  font:inherit;font-size:.81rem;font-weight:500;border-radius:7px;padding:8px 15px;cursor:pointer;
+  border:1px solid var(--hair);background:var(--card);color:var(--ink);
+}
+button.btn:hover{background:var(--paper)}
+button.btn.pri{background:var(--signal);border-color:var(--signal);color:#fff}
+button.btn.pri:hover{filter:brightness(1.08)}
+button.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+/* ── consecuencia ─────────────────────────────────────────── */
+.consecuencia{
+  background:var(--card);border:1px solid var(--hair);border-left:3px solid var(--nube);
+  border-radius:var(--r);padding:15px 18px;margin-top:6px;
+}
+.consecuencia h3{font-size:.9rem;font-weight:600;margin-bottom:7px}
+.consecuencia p{color:var(--muted);font-size:.82rem;max-width:88ch}
+.consecuencia p+p{margin-top:8px}
+.consecuencia b{color:var(--ink);font-weight:600}
+
+.nota{color:var(--faint);font-size:.78rem;margin-top:20px;padding-top:15px;border-top:1px solid var(--hair);max-width:88ch}
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1 class="d">Configuración · Canal de voz</h1>
+      <div class="sub">Elige el proveedor. La división no es por precio: es por dónde acaba el audio.</div>
+    </div>
+    <div class="spacer"></div>
+  </header>
+
+  <div class="demoflag">
+    <b>Maqueta</b> — cifras ficticias salvo donde diga «medido». Al conectar el histórico real, esta banda desaparece sola.
+  </div>
+
+  <!-- volumen: es la calculadora de punto de equilibrio, con el eje de voz -->
+  <div class="volumen">
+    <label for="vol">Volumen mensual</label>
+    <input id="vol" type="range" min="100" max="5000" step="100" value="500" aria-describedby="volhint">
+    <div class="val"><span class="num">500</span> <small>min / mes</small></div>
+    <div class="hint" id="volhint">
+      Todas las cifras de abajo se recalculan con este volumen. Es el mismo mecanismo que la calculadora
+      de punto de equilibrio: cambia el eje, no el motor de costeo.
+    </div>
+  </div>
+
+  <!-- ═══ DENTRO DEL PERÍMETRO ═══════════════════════════════ -->
+  <section class="seccion dentro" aria-labelledby="h-dentro">
+    <div class="seccion-head">
+      <span class="marca" aria-hidden="true"></span>
+      <div>
+        <h2 id="h-dentro">Dentro del perímetro <span class="chip">El audio no sale</span></h2>
+        <p>
+          Transcripción, modelo y síntesis corren en tu máquina. Ningún tercero oye la llamada, así que
+          el contador de egreso marca cero y es verdad. Admite <b>todas</b> las clases de tarea,
+          incluida sensibilidad alta.
+        </p>
+      </div>
+    </div>
+
+    <div class="seccion-body">
+      <article class="prov">
+        <div class="prov-head">
+          <h3>Autoalojado — Pipecat + Ollama + Whisper</h3>
+          <span class="estado e-sinmedir">Sin medir</span>
+        </div>
+        <div class="tesis">Tú conduces la tubería. El proveedor es una librería, no un servicio.</div>
+
+        <table class="coste">
+          <thead><tr><th>Capa</th><th>$ / min</th></tr></thead>
+          <tbody>
+            <tr class="propio"><td>Orquestación · propia</td><td class="num cero">0.000</td></tr>
+            <tr><td>Telefonía · SIP</td><td class="num">0.018</td></tr>
+            <tr class="propio"><td>Transcripción · Whisper local</td><td class="num cero">0.000</td></tr>
+            <tr class="propio"><td>Modelo · Ollama local</td><td class="num cero">0.000</td></tr>
+            <tr class="propio"><td>Síntesis · TTS local</td><td class="num cero">0.000</td></tr>
+            <tr><td>Cómputo · hardware amortizado</td><td class="num">0.004</td></tr>
+            <tr class="total"><td>Total</td><td class="num">$0.022</td></tr>
+          </tbody>
+        </table>
+
+        <div class="mes">
+          <span class="etq">A 500 min / mes</span>
+          <span class="cifra num">$11.00</span>
+        </div>
+        <div class="rel">
+          <div class="track"><i style="width:13.6%;background:var(--local)"></i></div>
+          <div class="pie">14 % del proveedor más caro de esta pantalla</div>
+        </div>
+
+        <div class="datos">
+          <div class="dato"><span class="k">Latencia</span><span class="v"><span class="no">sin medir — el lote no ha corrido contra este proveedor</span></span></div>
+          <div class="dato"><span class="k">Tareas</span><span class="v">Todas, incluida sensibilidad alta</span></div>
+          <div class="dato"><span class="k">Egreso</span><span class="v">Ninguno</span></div>
+          <div class="dato"><span class="k">Supuesto</span><span class="v">RTX 4090 amortizada a 3 años, 40 % de utilización</span></div>
+        </div>
+
+        <div class="proc declarado">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v5"/><path d="M12 17.5v.01"/><circle cx="12" cy="12" r="9"/></svg>
+          <span><b>Declarado, no medido.</b> El coste sale de la función de costeo con los supuestos de arriba; la latencia no se puede afirmar hasta correr el lote.</span>
+        </div>
+
+        <div class="acciones">
+          <button class="btn pri">Configurar</button>
+          <button class="btn" disabled>Activar</button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ═══ FUERA DEL PERÍMETRO ════════════════════════════════ -->
+  <section class="seccion fuera" aria-labelledby="h-fuera">
+    <div class="seccion-head">
+      <span class="marca" aria-hidden="true"></span>
+      <div>
+        <h2 id="h-fuera">Fuera del perímetro <span class="chip">El audio sale a un tercero</span></h2>
+        <p>
+          El proveedor transcribe, así que el audio crudo —con el nombre y lo que la persona diga—
+          sale <b>antes</b> de que el clasificador de sensibilidad pueda verlo. No se puede sanear lo
+          que aún no se ha transcrito. Con uno de estos activo, las tareas de sensibilidad alta
+          <b>quedan cerradas por teléfono</b>, y cada minuto cuenta como egreso en el panel.
+        </p>
+      </div>
+    </div>
+
+    <div class="seccion-body dos">
+
+      <article class="prov activo">
+        <div class="prov-head">
+          <h3>Vapi</h3>
+          <span class="estado e-activo">Activo</span>
+        </div>
+        <div class="tesis">El proveedor conduce la llamada; tu núcleo responde como endpoint de modelo.</div>
+
+        <table class="coste">
+          <thead><tr><th>Capa</th><th>$ / min</th></tr></thead>
+          <tbody>
+            <tr><td>Orquestación · Vapi</td><td class="num">0.050</td></tr>
+            <tr><td>Telefonía</td><td class="num">0.015</td></tr>
+            <tr><td>Transcripción</td><td class="num">0.014</td></tr>
+            <tr><td>Modelo</td><td class="num">0.021</td></tr>
+            <tr><td>Síntesis de voz</td><td class="num">0.062</td></tr>
+            <tr class="total"><td>Total</td><td class="num">$0.162</td></tr>
+          </tbody>
+        </table>
+
+        <div class="mes">
+          <span class="etq">A 500 min / mes</span>
+          <span class="cifra num">$81.00</span>
+        </div>
+        <div class="rel">
+          <div class="track"><i style="width:100%;background:var(--nube)"></i></div>
+          <div class="pie">El más caro de esta pantalla</div>
+        </div>
+
+        <div class="datos">
+          <div class="dato"><span class="k">Latencia</span><span class="v">p50 <b class="num">780 ms</b> · p95 <b class="num">1.4 s</b></span></div>
+          <div class="dato"><span class="k">Tareas</span><span class="v">Saludo, catálogo, agendamiento. <b>Sensibilidad alta cerrada.</b></span></div>
+          <div class="dato"><span class="k">Egreso</span><span class="v">500 min de audio al mes</span></div>
+          <div class="dato"><span class="k">Contrato</span><span class="v">Encargado del tratamiento · SOC 2 · HIPAA</span></div>
+        </div>
+
+        <div class="proc medido">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+          <span><b>Medido.</b> Lote de evaluación <span class="num">2026-08-14</span>, 84 llamadas. La latencia supera los 600 ms que anuncia el proveedor porque incluye nuestra cadena de verificación.</span>
+        </div>
+
+        <div class="acciones">
+          <button class="btn" disabled>Activo</button>
+          <button class="btn">Ver traza de una llamada</button>
+        </div>
+      </article>
+
+      <article class="prov">
+        <div class="prov-head">
+          <h3>Retell</h3>
+          <span class="estado e-sinmedir">Sin medir</span>
+        </div>
+        <div class="tesis">Mismo modelo que Vapi. Menos orquestación por encima, transcripción incluida.</div>
+
+        <table class="coste">
+          <thead><tr><th>Capa</th><th>$ / min</th></tr></thead>
+          <tbody>
+            <tr><td>Orquestación · Retell</td><td class="num">0.070</td></tr>
+            <tr><td>Telefonía</td><td class="num">0.015</td></tr>
+            <tr class="propio"><td>Transcripción · incluida</td><td class="num cero">0.000</td></tr>
+            <tr><td>Modelo</td><td class="num">0.018</td></tr>
+            <tr><td>Síntesis de voz</td><td class="num">0.035</td></tr>
+            <tr class="total"><td>Total</td><td class="num">$0.138</td></tr>
+          </tbody>
+        </table>
+
+        <div class="mes">
+          <span class="etq">A 500 min / mes</span>
+          <span class="cifra num">$69.00</span>
+        </div>
+        <div class="rel">
+          <div class="track"><i style="width:85.2%;background:var(--nube)"></i></div>
+          <div class="pie">85 % del proveedor más caro de esta pantalla</div>
+        </div>
+
+        <div class="datos">
+          <div class="dato"><span class="k">Latencia</span><span class="v"><span class="no">sin medir — el lote no ha corrido contra este proveedor</span></span></div>
+          <div class="dato"><span class="k">Tareas</span><span class="v">Saludo, catálogo, agendamiento. <b>Sensibilidad alta cerrada.</b></span></div>
+          <div class="dato"><span class="k">Egreso</span><span class="v">500 min de audio al mes</span></div>
+          <div class="dato"><span class="k">Contrato</span><span class="v">Encargado del tratamiento · SOC 2 · HIPAA</span></div>
+        </div>
+
+        <div class="proc declarado">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v5"/><path d="M12 17.5v.01"/><circle cx="12" cy="12" r="9"/></svg>
+          <span><b>Declarado por el proveedor, no medido.</b> Hasta que el lote corra contra Retell, esta cifra es su tarifa publicada, no nuestro coste.</span>
+        </div>
+
+        <div class="acciones">
+          <button class="btn pri">Activar</button>
+          <button class="btn">Correr el lote</button>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <div class="consecuencia">
+    <h3>Qué cambia al cambiar de proveedor</h3>
+    <p>
+      El proveedor no es una preferencia: es un campo <span class="num">perimetro</span> que leen dos
+      sitios del sistema. La <b>política de enrutamiento</b> cierra las clases de tarea sensibles cuando
+      el proveedor está fuera del perímetro, y el <b>contador de egreso</b> del panel de Operación empieza
+      a contar minutos de audio.
+    </p>
+    <p>
+      Nadie tiene que acordarse de cambiar una etiqueta. Con <b>Vapi</b> activo, el panel dice que sale
+      audio porque sale. Con el <b>autoalojado</b>, el contador vuelve a cero y esta vez el cero está
+      medido, no supuesto.
+    </p>
+  </div>
+
+  <p class="nota">
+    Las cifras de coste y latencia salen del corredor del lote de evaluación, nunca de la web del
+    proveedor. Un proveedor sin lote corrido muestra su tarifa publicada marcada como declarada —
+    y no se puede recomendar a un cliente sobre esa base. Las tipografías se sirven desde el propio
+    dominio: esta pantalla no hace ni una petición a un tercero.
+  </p>
+
+</div>
