@@ -13,10 +13,14 @@ import { AlmacenEnMemoria } from './borde/almacen-memoria.ts';
 import { AlmacenRedis } from './borde/almacen-redis.ts';
 import { arrancarDespachador, crearDespachador } from './borde/despachador.ts';
 import { LIMITES } from './borde/limites.ts';
+import { persistirGrupo } from './borde/persistir.ts';
+import { crearConsultador, type Consultador } from './repos/cliente.ts';
+import { migrar } from './repos/migrar.ts';
 import type { AlmacenDeBorde } from './borde/almacen.ts';
 
 const PUERTO = Number(process.env['PUERTO'] ?? 8787);
 const URL_REDIS = process.env['REDIS_URL'];
+const URL_BD = process.env['DATABASE_URL'];
 
 async function elegirAlmacen(): Promise<AlmacenDeBorde> {
   if (URL_REDIS === undefined || URL_REDIS === '') return new AlmacenEnMemoria();
@@ -35,10 +39,29 @@ async function elegirAlmacen(): Promise<AlmacenDeBorde> {
   }
 }
 
+async function elegirBaseDeDatos(): Promise<Consultador | null> {
+  if (URL_BD === undefined || URL_BD === '') return null;
+
+  const bd = crearConsultador(URL_BD);
+  const aplicadas = await migrar(bd);
+  console.warn(
+    aplicadas.length === 0
+      ? `PostgreSQL conectado en ${URL_BD} (esquema al día)`
+      : `PostgreSQL conectado; migraciones aplicadas: ${aplicadas.join(', ')}`,
+  );
+  return bd;
+}
+
 const registro = construirRegistro();
 const almacen = await elegirAlmacen();
+const bd = await elegirBaseDeDatos();
 const cola = new ColaEnMemoria();
-const despachador = crearDespachador(almacen, cola);
+
+const despachador = crearDespachador(
+  almacen,
+  cola,
+  bd === null ? undefined : (grupo) => persistirGrupo(bd, grupo),
+);
 
 console.warn(parteDeCanales(registro));
 
@@ -53,8 +76,15 @@ if (registro.activos().length === 0) {
 if (!almacen.persistente) {
   console.warn(
     '⚠  El almacén del borde es EN MEMORIA: se pierde al reiniciar. Define REDIS_URL\n' +
-      '   para usar Redis. Mientras tanto el criterio «reiniciar el proceso no pierde\n' +
-      '   la conversación en curso» NO se cumple, y no debe darse por bueno.\n',
+      '   para usar Redis.\n',
+  );
+}
+
+if (bd === null) {
+  console.warn(
+    '⚠  Sin DATABASE_URL: las conversaciones NO se guardan. El criterio «reiniciar el\n' +
+      '   proceso no pierde la conversación en curso» no se cumple, y no debe darse\n' +
+      '   por bueno. Define DATABASE_URL para conectar PostgreSQL.\n',
   );
 }
 
@@ -82,7 +112,7 @@ for (const senal of ['SIGINT', 'SIGTERM'] as const) {
     console.warn(`\n${senal} recibida, cerrando.`);
     detenerDespachador();
     servidor.close(() => {
-      void almacen.cerrar().then(() => process.exit(0));
+      void Promise.all([almacen.cerrar(), bd?.cerrar()]).then(() => process.exit(0));
     });
   });
 }

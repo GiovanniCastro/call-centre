@@ -17,11 +17,13 @@
     "test": "node --test --experimental-test-module-mocks \"tests/**/*.test.ts\""
   },
   "dependencies": {
+    "pg": "^8.22.0",
     "redis": "^6.1.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
+    "@types/pg": "^8.20.0",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
     "dependency-cruiser": "^18.1.0",

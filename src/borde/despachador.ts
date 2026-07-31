@@ -8,7 +8,7 @@
 // por su cuenta no se puede probar sin esperar de verdad, y una prueba que espera
 // tres segundos es una prueba que un día falla porque la máquina iba cargada.
 
-import type { AlmacenDeBorde } from './almacen.ts';
+import type { AlmacenDeBorde, Grupo } from './almacen.ts';
 import type { Cola } from './cola.ts';
 
 export type Despachador = {
@@ -16,19 +16,38 @@ export type Despachador = {
   despachar(ahoraMs: number): Promise<number>;
 };
 
-export function crearDespachador(almacen: AlmacenDeBorde, cola: Cola): Despachador {
+/**
+ * @param persistir Se llama con cada grupo **antes** de encolarlo. Es lo que
+ *   escribe la conversación en PostgreSQL. Se inyecta y es opcional porque el
+ *   borde tiene que poder arrancar y probarse sin base de datos; cuando falta, el
+ *   sistema funciona pero **no cumple** el criterio de supervivencia al reinicio,
+ *   y el arranque lo dice.
+ */
+export function crearDespachador(
+  almacen: AlmacenDeBorde,
+  cola: Cola,
+  persistir?: (grupo: Grupo) => Promise<unknown>,
+): Despachador {
   return {
     async despachar(ahoraMs: number): Promise<number> {
       const grupos = await almacen.recogerGruposVencidos(ahoraMs);
+      let despachados = 0;
 
       for (const grupo of grupos) {
         // Un grupo vacío no genera caso. Puede ocurrir si todos sus mensajes se
         // descartaron al releerlos —por ejemplo, tras un cambio de esquema— y
         // encolarlo produciría una ejecución sin nada que procesar.
-        if (grupo.mensajes.length > 0) await cola.encolar(grupo);
+        if (grupo.mensajes.length === 0) continue;
+
+        // Persistir primero, encolar después. Al revés, un fallo de escritura
+        // dejaría un caso en la cola sin conversación detrás, y el agente
+        // respondería sobre un hilo que no existe.
+        if (persistir !== undefined) await persistir(grupo);
+        await cola.encolar(grupo);
+        despachados += 1;
       }
 
-      return grupos.length;
+      return despachados;
     },
   };
 }
