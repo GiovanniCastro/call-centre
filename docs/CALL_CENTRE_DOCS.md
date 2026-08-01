@@ -15,6 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
+| **4** | 2026‑08‑01 | R‑025 … R‑028 | Fase 3 construida. El SDK entra pero sale por nuestro `fetch`. Registro de proveedores con tres estados. La máquina se mide, y la medición cambió la política |
 | **3** | 2026‑08‑01 | R‑024 | Fase 2 construida. El umbral de similitud no puede sostener el invariante 1 por sí solo: medido, y el trabajo se reparte con el verificador de procedencia de la fase 4 |
 | **2** | 2026‑07‑31 | R‑012 … R‑023 | Fases 0 y 1 construidas. React fijado para el panel. Repositorio público. Telegram como canal primario. Alcance de contacto en tres capas. Corpus escrito, y reemplazado por el de una aseguradora |
 | **1** | 2026‑07‑30 | R‑001 … R‑011 | Revisión del plan, propuesta de desarrollo por fases, arquitectura en dos planos, vault de Obsidian |
@@ -24,6 +25,10 @@
 ## Contenido
 
 - [Revisión 2026‑08‑01](#revisión-2026-08-01)
+  - [R‑025 · El SDK sale por nuestro `fetch`](#r-025--el-sdk-del-proveedor-entra-pero-sale-por-nuestro-fetch)
+  - [R‑026 · Registro de proveedores, tres estados](#r-026--el-registro-de-proveedores-distingue-falta-la-clave-de-falta-el-código)
+  - [R‑027 · La máquina se mide](#r-027--la-máquina-se-mide-y-la-medición-cambió-la-política)
+  - [R‑028 · La tabla de terceros no llega al panel](#r-028--la-tabla-de-terceros-es-una-instantánea-y-no-puede-llegar-al-panel)
   - [R‑024 · El umbral no sostiene el invariante 1 solo](#r-024--el-umbral-de-similitud-no-puede-sostener-el-invariante-1-por-sí-solo)
 - [Revisión 2026‑07‑31](#revisión-2026-07-31)
   - [R‑012 · El panel se construye en React](#r-012--el-panel-se-construye-en-react)
@@ -50,6 +55,107 @@
   - [R‑009 · Demo pública por reproducción](#r-009--la-demo-pública-reproduce-ejecuciones-registradas-no-hace-inferencia-en-vivo)
   - [R‑010 · n8n queda como referencia](#r-010--n8n-queda-como-referencia-no-entra-en-el-stack)
   - [R‑011 · Fase 8 de despliegue y operación](#r-011--se-añade-una-fase-8-de-despliegue-y-operación-que-el-plan-no-tenía)
+
+---
+
+### R‑025 · El SDK del proveedor entra, pero sale por nuestro `fetch`
+
+**Contexto.** La fase 3 exige un módulo único de salida con lista blanca y
+`fetch` prohibido fuera de él. Un SDK oficial hace su propio HTTP por dentro, así
+que la elección parecía ser: o el SDK, o el invariante 3.
+
+**Qué cambió.** Ninguna de las dos. `@anthropic-ai/sdk` se construye con
+`fetch: fetchDelPerimetro()`, así que todo su tráfico pasa por la lista blanca y
+por el contador de egreso igual que el resto. Se comprobó que la 0.115.0 admite
+`fetch` como opción de cliente **antes** de apostar por ello; si no lo admitiera,
+la decisión habría sido HTTP crudo.
+
+**Por qué importa.** La llamada que lleva contenido de una conversación a un
+tercero es la salida de más riesgo del sistema. Que fuera justo la única que no
+pasa por la capa que las cuenta habría vaciado de contenido el vigía de perímetro
+antes de escribirlo.
+
+**Impacto.** `sdk-de-proveedor-solo-en-adaptadores` en dependency-cruiser: el SDK
+no puede alcanzarse desde ninguna carpeta que no sea `src/providers/`.
+
+---
+
+### R‑026 · El registro de proveedores distingue «falta la clave» de «falta el código»
+
+**Contexto.** Petición del responsable: una lista donde se pega una clave de API
+y el proveedor se activa.
+
+**Qué cambió.** `config/proveedores.json` con seis proveedores y **tres** estados,
+no dos: `configurado`, `no_configurado` (tiene adaptador, le falta la credencial)
+y `sin_adaptador` (está declarado, pero no hay código que use la clave). Anthropic
+con adaptador real; OpenAI, Google, xAI, DeepSeek y Mistral declarados.
+
+**Por qué tres y no dos.** Prometer que pegar una clave activa un proveedor que
+nadie ha escrito es exactamente la clase de cifra que este proyecto prohíbe: una
+que suena a capacidad y no lo es. El arranque y `npm run maquina` los imprimen
+por separado, y el mensaje del tercero dice que falta código, no credencial.
+
+**Impacto.** Ningún proveedor puede recibir una petición si su anfitrión no está
+además en `config/destinos.json`. Son dos listas y las dos tienen que decir que sí.
+
+---
+
+### R‑027 · La máquina se mide, y la medición cambió la política
+
+**Contexto.** Petición del responsable: que el sistema analice el ordenador y diga
+qué modelos locales caben y qué falta para los que no. Se cruza con un bloqueante
+abierto del canon —`config/maquina-referencia.json` está en `PROVISIONAL`—.
+
+**Qué cambió.** `npm run maquina` mide CPU, RAM y VRAM reales y las cruza con
+`config/modelos-locales.json`. Informa y recomienda; **no instala** — deja el
+`ollama pull` escrito para copiar.
+
+**Tres veredictos, no dos.** `cabe_en_vram`, `cabe_lento` y `no_cabe`. La
+distinción entre los dos primeros es el sentido de la herramienta: un modelo que
+no cabe en la tarjeta no falla, se reparte con la RAM del sistema y la generación
+cae de decenas de fichas por segundo a unidades. Un informe de «sí / no» pondría
+ese caso en la columna del «sí».
+
+**Y cambió la política.** `config/politica.json` usaba `qwen3.6` como modelo
+local: pide ~23.8 GB contra los 12 GB de VRAM de la máquina de desarrollo. Medir
+la comparación local/nube contra un local derramado a RAM la haría ganar a la
+nube por un motivo que no tiene nada que ver con la nube. Pasa a `gemma4`
+(~10.4 GB), que corre entero en la tarjeta.
+
+**Dos errores propios, corregidos.** La VRAM sale de `nvidia-smi` y no de WMI,
+que informa 4 GB para cualquier tarjeta mayor por ser un entero de 32 bits — esta
+máquina tiene 12 y WMI decía 4. Y el catálogo va en GiB, no en GB decimales, que
+es la unidad en que se cuenta la VRAM: un 7 % de diferencia justo donde se decide
+si algo cabe.
+
+**Una regla que sale de aquí.** El informe prefiere un tamaño **verificado** a uno
+mayor sin verificar. Recomendaba un modelo no instalado de 9.3 GB declarados por
+encima de uno medido de 8.9; decidir sobre una cifra que nadie ha comprobado es lo
+que este proyecto no hace.
+
+---
+
+### R‑028 · La tabla de terceros es una instantánea, y no puede llegar al panel
+
+**Contexto.** Petición del responsable: usar llm-stats.com para ver qué modelos son
+mejores.
+
+**Qué cambió.** `config/referencia-modelos.json`, instantánea con fuente y fecha,
+como `config/precios.json`. **No consulta en vivo**, por tres razones y la tercera
+decide: mete un destino más en la lista blanca; la tabla es HTML sin API declarada,
+así que un analizador se rompería en silencio el día que cambien la maquetación —y
+un dato equivocado es peor que ninguno—; y si la recomendación cambia bajo los
+pies, dos ejecuciones del mismo lote elegirían modelos distintos sin que nadie sepa
+por qué.
+
+**Que cambia está comprobado.** Entre una captura y una consulta separadas por un
+minuto, Gemini 3.1 Pro pasó de 68 a 116 fichas/s y una columna de GPT‑5.5 de 21.9
+a 21.0. Esas fichas/s quedan en `null` en la instantánea en lugar de fijar una de
+las dos.
+
+**El límite, escrito en el propio archivo.** Nada de esa tabla puede aparecer en el
+panel. Sirve para acotar «qué merece la pena probar». Lo único que este proyecto
+puede afirmar sobre un modelo es lo que mida el lote de la fase 7.
 
 ---
 
