@@ -35,6 +35,9 @@ costeable y auditable.
   bloquear, `null` ≠ `OK`, detector de ausencias, registro de vigías con autoridad
   y regla de la mudez, y los candados que barren el código. **PROPUESTO** — §9
   lista los diez cambios que exige.
+- [[ENTORNO-LOCAL]] — 🧰 cómo ejecutar el perímetro en tu máquina: qué funciona
+  solo con Node, qué exige Docker, y los dos comandos elevados que hacen falta en
+  Windows. Una prueba omitida no es una prueba aprobada.
 - [[REFERENCIA-N8N]] — 🔁 el flujo de n8n del que venimos, **que no entra en el
   stack**. Qué confirma del plan, qué hace de otra forma —su verificador es un
   modelo arreglando a otro modelo— y qué se rescata tal cual.
