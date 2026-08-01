@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "nota": "Umbrales de los vigías que DETIENEN (fase 4B-1). Cada uno declara su umbral y su acción; cambiarlos cambia el comportamiento sin recompilar. Los tres pueden detener, no solo avisar — un vigía que solo avisa no es un límite, es un termómetro.",
+
+  "presupuesto": {
+    "techos_usd": {
+      "conversacion": 0.5,
+      "contacto": 2.0,
+      "hora": 5.0,
+      "dia": 25.0
+    },
+    "fraccion_suave": 0.8,
+    "mensaje_de_contingencia": "Ahora mismo no puedo darte una respuesta completa. Te paso con una persona del equipo, que lo verá enseguida.",
+    "por_que_cuatro_ventanas": "Un techo diario protege la factura del mes y nada más: un bucle de un solo contacto puede consumirlo entero en dos minutos y dejar sin servicio a todos los demás durante veintidós horas. El techo por contacto es el que impide que un caso se lleve el presupuesto de todos, y el de conversación el que impide que se lo lleve un solo hilo.",
+    "por_que_dos_umbrales": "Un único techo obliga a elegir entre gastar de más o dejar de atender. Con el suave al 80 % el sistema se abarata solo —todo a modelo local— antes de quedarse sin margen; el duro es el freno de mano, no el de servicio.",
+    "estado": "PROVISIONAL: las cifras son razonadas, no medidas. El lote de la fase 7 dirá cuánto cuesta un caso de verdad y entonces estos techos se podrán poner en función de él."
+  },
+
+  "perimetro": {
+    "umbral": 0,
+    "por_que_cero": "No es un umbral configurable. Un techo de fugas distinto de cero no es un techo: sería declarar cuántos datos sensibles se admite que salgan. La regla dura del enrutador ya lo impide por política; este vigía es la segunda línea, y existe porque una política se puede editar en un JSON y un contador no se puede convencer.",
+    "por_que_denominador": "Un cero con denominador cero no prueba nada: puede querer decir «retuve todos» o «no llegó ninguno». El panel tiene que poder enseñar «31 de 31 retenidos», y para eso hay que contar también los que llegaron."
+  },
+
+  "bucle": {
+    "limites": {
+      "pasos": 12,
+      "herramientas": 8,
+      "reintentos": 2,
+      "tiempo_ms": 60000
+    },
+    "por_que_cuatro_limites": "Un bucle se puede dar en cuatro sitios y cerrar tres deja abierto el cuarto. Un caso que alterna dos herramientas eternamente no supera el límite de pasos si nadie cuenta las herramientas.",
+    "por_que_con_cancelacion": "Un límite temporal que solo comprueba al terminar cada paso no corta un paso que no termina. El vigía expone una señal de cancelación y aborta él mismo: si dependiera de que el llamante se acuerde, un llamante distraído dejaría la petición en vuelo consumiendo presupuesto después de que el vigía dijera que parara.",
+    "accion": "Corta y escala. Cortar y devolver un error dejaría al cliente sin respuesta y sin nadie mirándolo."
+  }
+}
