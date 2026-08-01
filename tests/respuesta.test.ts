@@ -13,6 +13,7 @@ import { validarSalida, esquemaJson } from '../src/core/respuesta/esquemas.ts';
 import { verificar, proporcionDeSustento } from '../src/core/respuesta/verificar.ts';
 import { decidir, RESPUESTA } from '../src/core/respuesta/componer.ts';
 import { responder } from '../src/core/respuesta/responder.ts';
+import { POLITICA } from '../src/core/enrutador/politica.ts';
 import type { FragmentoRecuperado } from '../src/core/conocimiento/documento.ts';
 import type {
   Inferencia,
@@ -381,6 +382,23 @@ describe('el orquestador y el reintento único', () => {
     assert.equal(resultado.intentos, 0);
     assert.equal(modelo.peticiones.length, 0);
     assert.equal(resultado.clase_escalado, 'sin_fuentes');
+  });
+
+  test('EL MUESTREO SALE DE LA POLÍTICA Y LLEGA AL ADAPTADOR, Y ES DETERMINISTA', async () => {
+    // R-025. Dos corridas del lote de la fase 7 sobre la misma carga y el mismo
+    // modelo dieron 51 % y 43 % de acierto: Ollama muestrea a 0.8 por omisión.
+    // Con esa varianza la comparación local-contra-nube compara ruido. Y antes
+    // que la medición: una traza que no se puede reproducir no se puede auditar.
+    const modelo = new ModeloGuionizado([
+      JSON.stringify({ clase: 'saludo', datos: [], redaccion_sugerida: 'Hola' }),
+    ]);
+
+    await responder({ ...ENTRADA, clase_tarea: 'saludo', fragmentos: [] }, modelo);
+
+    assert.equal(modelo.peticiones[0]?.muestreo?.temperatura, 0);
+    // Y no es un valor escrito en el código: sale de config/politica.json, donde
+    // cambiarlo deja diff, autor y fecha.
+    assert.equal(modelo.peticiones[0]?.muestreo?.temperatura, POLITICA.muestreo.temperatura);
   });
 
   test('un saludo sin fragmentos SÍ se responde: no afirma nada', async () => {

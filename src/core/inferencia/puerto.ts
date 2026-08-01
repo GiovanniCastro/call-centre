@@ -45,6 +45,34 @@ export type PeticionInferencia = {
    * Presente, el adaptador la exige a su proveedor; ausente, redacta libre.
    */
   readonly esquema?: Record<string, unknown> | undefined;
+  /**
+   * Cómo se muestrea la respuesta. Declarada aquí y traducida por cada adaptador
+   * al parámetro de su proveedor — invariante 4: el núcleo dice qué quiere, no
+   * cómo se llama en la API de nadie.
+   *
+   * Existe porque el lote de la fase 7 dio 51 % y 43 % de acierto en dos corridas
+   * de la MISMA carga contra el MISMO modelo (R-025). Ollama muestrea a
+   * temperatura 0.8 por defecto, y con esa varianza la comparación local-contra-
+   * nube que justifica el proyecto entero no compara despliegues: compara ruido.
+   *
+   * Y hay una razón anterior a la medición. Este agente se vende por auditable:
+   * una traza que no se puede reproducir no se puede auditar, y la misma pregunta
+   * respondida distinto dos veces no tiene explicación que dar al cliente.
+   */
+  readonly muestreo?: Muestreo | undefined;
+};
+
+export type Muestreo = {
+  /** 0 es determinista. Es el valor por omisión del proyecto. */
+  readonly temperatura: number;
+  /**
+   * Semilla, para los proveedores que la admiten.
+   *
+   * Ollama sí; la API de Anthropic no la expone. Un adaptador que no pueda
+   * honrarla la ignora — y por eso la temperatura es lo que sostiene la
+   * propiedad, no la semilla.
+   */
+  readonly semilla?: number | undefined;
 };
 
 export type RespuestaInferencia = {

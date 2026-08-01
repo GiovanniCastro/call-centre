@@ -9,7 +9,8 @@
 // llegar al mismo escalado más tarde.
 
 import type { FragmentoRecuperado } from '../conocimiento/documento.ts';
-import type { Inferencia, PeticionInferencia } from '../inferencia/puerto.ts';
+import type { Inferencia, Muestreo, PeticionInferencia } from '../inferencia/puerto.ts';
+import { POLITICA } from '../enrutador/politica.ts';
 import type { ClaseTarea } from '../../telemetry/evento.ts';
 import { esquemaJson, validarSalida, type SalidaEstructurada } from './esquemas.ts';
 import { decidir, RESPUESTA, type ConfigRespuesta, type Decision } from './componer.ts';
@@ -41,6 +42,15 @@ export type EntradaRespuesta = {
   readonly fragmentos: readonly FragmentoRecuperado[];
   readonly maximo_tokens?: number;
   readonly tiempo_maximo_ms?: number;
+  /**
+   * Cómo se muestrea. Por omisión, lo que diga `config/politica.json`.
+   *
+   * No es un parámetro del corredor de la fase 7: si el lote pusiera temperatura
+   * cero y producción no, el lote mediría un camino que producción no recorre —
+   * exactamente el defecto que el propio corredor evita al no tener ruta de
+   * código propia. La decisión es del proyecto entero. Ver R-025.
+   */
+  readonly muestreo?: Muestreo;
 };
 
 function peticionBase(entrada: EntradaRespuesta, extra: string): PeticionInferencia {
@@ -56,6 +66,7 @@ function peticionBase(entrada: EntradaRespuesta, extra: string): PeticionInferen
     maximo_tokens: entrada.maximo_tokens ?? 1024,
     tiempo_maximo_ms: entrada.tiempo_maximo_ms ?? 30_000,
     esquema: esquemaJson(entrada.clase_tarea),
+    muestreo: entrada.muestreo ?? POLITICA.muestreo,
   };
 }
 

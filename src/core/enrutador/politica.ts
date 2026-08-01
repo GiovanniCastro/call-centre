@@ -51,6 +51,17 @@ const EsquemaPolitica = z.object({
     local: z.string().min(1),
     nube: z.string().min(1),
   }),
+  /**
+   * Cómo se muestrea. Vive en configuración porque es una decisión del proyecto,
+   * no un detalle de un adaptador, y porque cambiarla tiene que dejar diff, autor
+   * y fecha: una temperatura que se puede mover sin rastro invalida en silencio
+   * toda cifra medida antes del cambio.
+   */
+  muestreo: z.object({
+    temperatura: z.number().min(0).max(2),
+    semilla: z.number().int().optional(),
+    por_que: z.string().min(1),
+  }),
 });
 
 export type Politica = z.infer<typeof EsquemaPolitica>;
