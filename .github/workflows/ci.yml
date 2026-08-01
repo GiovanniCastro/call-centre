@@ -36,6 +36,47 @@ jobs:
   invariantes:
     name: Tipos, lint, arquitectura y pruebas
     runs-on: ubuntu-latest
+
+    # Redis de verdad, no un doble. Las pruebas del almacén corren dos veces —una
+    # contra la implementación en memoria y otra contra esta— con el mismo cuerpo
+    # de casos: si las dos no se comportan igual, cambiar de una a otra cambiaría
+    # el comportamiento del sistema sin que nada avisara.
+    #
+    # La máquina de desarrollo no tiene Docker, así que este contenedor es el
+    # único sitio donde el código de Redis se ejercita. Sin él, `AlmacenRedis`
+    # sería código escrito y jamás ejecutado.
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+      # PostgreSQL, por el mismo motivo. «Reiniciar el proceso no pierde la
+      # conversación en curso» no se puede probar con un doble: probaría que el
+      # doble recuerda lo que le dijimos.
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: perimetro
+          POSTGRES_PASSWORD: perimetro
+          POSTGRES_DB: perimetro
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      REDIS_URL: redis://localhost:6379
+      DATABASE_URL: postgres://perimetro:perimetro@localhost:5432/perimetro
+
     steps:
       - uses: actions/checkout@v7
 

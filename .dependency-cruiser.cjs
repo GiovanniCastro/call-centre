@@ -46,7 +46,7 @@ module.exports = {
         'el SDK de un proveedor, ni directamente ni por una cadena de imports. ' +
         'El SDK vive detrás de la interfaz común, en src/providers/.',
       severity: 'error',
-      from: { path: '^src/(core|channels|repos|telemetry)/' },
+      from: { path: '^src/(core|channels|repos|telemetry|borde)/' },
       to: { dependencyTypes: CUALQUIER_PAQUETE, path: SDKS_DE_PROVEEDOR },
     },
     {
@@ -55,7 +55,7 @@ module.exports = {
         'Invariante 4 · La dependencia va del adaptador al dominio, nunca al revés. ' +
         'src/core define la interfaz; src/providers la implementa.',
       severity: 'error',
-      from: { path: '^src/(core|channels|repos|telemetry)/' },
+      from: { path: '^src/(core|channels|repos|telemetry|borde)/' },
       to: { path: '^src/providers/' },
     },
     {

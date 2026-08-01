@@ -111,12 +111,13 @@ el webhook y no depende de que la máquina con Ollama esté encendida.
 
 > Medido contra el disco el **31-jul-2026**. Nada copiado de otro documento.
 
-**La fase 0 está construida.** El repositorio tiene código, pruebas y CI. Ninguna
-otra fase ha empezado. Nada responde todavía a un usuario: no hay canal, ni
-recuperación, ni enrutador.
+**Las fases 0 y 1 están construidas.** Entra un mensaje por Telegram, se verifica,
+se agrupa y se guarda. **Nadie responde todavía**: no hay recuperación ni
+enrutador, así que el sistema escucha y registra, no conversa.
 
-Medido contra el repositorio: 28 pruebas, 28 pasan. `tsc --noEmit`, `eslint` y
-`depcruise` sin problemas. 7 dependencias directas, 129 paquetes instalados.
+Medido contra el CI: **99 pruebas, 99 pasan, 0 omitidas** — incluidas las que
+corren contra Redis y PostgreSQL reales, en contenedores. `tsc --noEmit`, `eslint`
+y `depcruise` sin problemas. 9 dependencias directas.
 
 **Publicado** en `github.com/GiovanniCastro/call-centre`, con `main` protegida y el
 CI actuando — ver R‑018. La fase 0 se cerró con el PR #1 y la etiqueta `v0.0`.
@@ -128,7 +129,7 @@ dicen Perímetro, y son ellos los que mandan.
 | Fase | Nombre | Estado |
 |---|---|---|
 | 0 | Contrato de datos, telemetría, costeo, andamiaje | **CONSTRUIDO** |
-| 1 | Canal Telegram endurecido y aislamiento en repositorio | PROPUESTO |
+| 1 | Canal Telegram endurecido y aislamiento en repositorio | **CONSTRUIDO** |
 | 2 | Corpus y base de conocimiento con citación | PROPUESTO |
 | 3 | Enrutador local/nube y frontera de salida | PROPUESTO |
 | 3B | Segundo canal (`lote`) y conector de WhatsApp | PROPUESTO |
@@ -165,6 +166,23 @@ De la fase 0:
   Comprobado añadiendo violaciones a propósito y viéndolas fallar.
 - **`CLAUDE.md`** y la plantilla de PR con los criterios de aceptación como
   casillas.
+
+De la fase 1:
+
+- **Interfaz `Canal`** con tres métodos: verificar credencial, normalizar y
+  responder. La verificación vive ahí y no en el webhook, porque cada canal la
+  hace distinta — Telegram con secreto compartido, WhatsApp con HMAC.
+- **Adaptador de Telegram** y **conector de WhatsApp** escrito entero pero
+  registrado como `no_configurado`, declarando qué necesita para instalarse.
+- **El borde** (`src/borde/`): servidor de webhook sobre `node:http`, techos de
+  tamaño por bytes, límite de tasa por origen y por contacto, rechazo de
+  repetición y ventana de agrupación. El orden de las comprobaciones **es** la
+  regla de seguridad.
+- **`src/repos/` con alcance de contacto obligatorio** — R‑021. Tres capas:
+  marca de símbolo en el tipo, comprobación en ejecución, y una prueba que
+  recorre el árbol sintáctico y falla si aparece una función exportada sin
+  alcance o una consulta sin filtro.
+- **Umbrales en `config/limites.json`**, cada uno con su porqué escrito al lado.
 
 De antes:
 
@@ -245,3 +263,4 @@ Cada una con su entrada en [[CALL_CENTRE_DOCS]].
 | R‑018 | Repositorio público, `main` protegida también para administradores | Repositorio privado; eximir al dueño de la protección |
 | R‑019 | TypeScript 7 se aplaza hasta que `@typescript-eslint` lo admita | Forzarlo con `--legacy-peer-deps` |
 | R‑020 | El canal primario es Telegram; WhatsApp es un conector declarado | WhatsApp en la fase 1, con el proyecto detrás de un trámite de Meta |
+| R‑021 | Alcance de contacto en tres capas: marca, comprobación y prueba estructural | Convención y revisión de código; *row‑level security* (aplazada a la fase 8) |
