@@ -126,7 +126,7 @@ jamás produce una llamada externa: el espía sobre el módulo de salida lo veri
 con adaptadores que salen de verdad, no con dobles. Y una llamada a un dominio no
 declarado se bloquea antes de abrir el socket, aunque el código la intente.
 
-Medido contra el CI **y también en local**: **259 pruebas, 259 pasan, 0
+Medido contra el CI **y también en local**: **276 pruebas, 276 pasan, 0
 omitidas** — incluidas las que corren contra Redis, PostgreSQL y
 Qdrant reales, en contenedores. `tsc --noEmit`, `eslint` y `depcruise` sin
 problemas. 11 dependencias directas.
@@ -157,7 +157,7 @@ dicen Perímetro, y son ellos los que mandan.
 | 3B | Segundo canal (`lote`) y conector de WhatsApp | **CONSTRUIDO** |
 | 4 | Salida estructurada con procedencia, validación y escalado | **CONSTRUIDO** |
 | 4B‑1 | Vigías que detienen | **CONSTRUIDO** |
-| 4B‑2 | Vigías que observan | PROPUESTO |
+| 4B‑2 | Vigías que observan | **CONSTRUIDO** |
 | 4C | Detección | PROPUESTO |
 | 5 | Acciones, idempotencia, interfaz CRM | PROPUESTO |
 | 6 | Panel sobre histórico real | PROPUESTO |
