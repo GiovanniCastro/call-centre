@@ -69,6 +69,50 @@ if (URL_BD === undefined || URL_BD === '') {
       assert.deepEqual(await migrar(bd), []);
     });
 
+    test('CUATRO PROCESOS migrando a la vez no se pisan', async () => {
+      // Esto no es hipotético: rompió el CI de `main` el 1-ago-2026, cuando la
+      // fase 2 añadió un segundo archivo de prueba que también migra y
+      // `node --test` los corrió en paralelo. El síntoma era
+      // `duplicate key ... pg_type_typname_nsp_index` —el catálogo interno de
+      // PostgreSQL, no una tabla nuestra—, que no dice en absoluto lo que pasó.
+      //
+      // Y es exactamente lo que hará producción con dos instancias arrancando a
+      // la vez. Correr las pruebas en serie lo habría escondido; el arreglo está
+      // en el ejecutor, y esta prueba es lo que lo defiende.
+      //
+      // Se hace sobre un esquema propio para no tocar el de las demás pruebas, y
+      // porque la carrera solo existe cuando hay algo que crear.
+      const esquema = `migracion_concurrente_${process.pid}`;
+      await bd.consultar(`CREATE SCHEMA IF NOT EXISTS ${esquema}`);
+
+      const url = new URL(URL_BD ?? '');
+      url.searchParams.set('options', `-c search_path=${esquema}`);
+
+      const procesos = Array.from({ length: 4 }, () => crearConsultador(url.toString()));
+
+      try {
+        const resultados = await Promise.all(procesos.map((p) => migrar(p)));
+        const aplicadas = resultados.flat().sort((a, b) => a - b);
+
+        // Cada versión la aplica UNO. Si dos la reclaman, el cerrojo no sirvió;
+        // si ninguno, no se aplicó nada y la prueba no probó nada.
+        assert.deepEqual(
+          aplicadas,
+          [...new Set(aplicadas)].sort((a, b) => a - b),
+          'dos procesos dicen haber aplicado la misma versión',
+        );
+        assert.ok(aplicadas.length > 0, 'no se aplicó ninguna migración: el esquema no estaba vacío');
+
+        const filas = await procesos[0]!.consultar<{ version: number }>(
+          'SELECT version FROM esquema_migraciones ORDER BY version',
+        );
+        assert.deepEqual(filas.map((f) => f.version), aplicadas);
+      } finally {
+        await Promise.all(procesos.map((p) => p.cerrar()));
+        await bd.consultar(`DROP SCHEMA IF EXISTS ${esquema} CASCADE`);
+      }
+    });
+
     test('REINICIAR EL PROCESO no pierde la conversación en curso', async () => {
       const identificador = chat();
 
