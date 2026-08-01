@@ -15,6 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
+| **3** | 2026‑08‑01 | R‑024 | Fase 2 construida. El umbral de similitud no puede sostener el invariante 1 por sí solo: medido, y el trabajo se reparte con el verificador de procedencia de la fase 4 |
 | **2** | 2026‑07‑31 | R‑012 … R‑023 | Fases 0 y 1 construidas. React fijado para el panel. Repositorio público. Telegram como canal primario. Alcance de contacto en tres capas. Corpus escrito, y reemplazado por el de una aseguradora |
 | **1** | 2026‑07‑30 | R‑001 … R‑011 | Revisión del plan, propuesta de desarrollo por fases, arquitectura en dos planos, vault de Obsidian |
 
@@ -22,6 +23,8 @@
 
 ## Contenido
 
+- [Revisión 2026‑08‑01](#revisión-2026-08-01)
+  - [R‑024 · El umbral no sostiene el invariante 1 solo](#r-024--el-umbral-de-similitud-no-puede-sostener-el-invariante-1-por-sí-solo)
 - [Revisión 2026‑07‑31](#revisión-2026-07-31)
   - [R‑012 · El panel se construye en React](#r-012--el-panel-se-construye-en-react)
   - [R‑013 · El repositorio nace en la raíz del vault](#r-013--el-repositorio-nace-en-la-raíz-del-vault)
@@ -555,6 +558,78 @@ seguros, solo saber leer documentos.
 tiene código todavía. Sí cambia el texto de ejemplo de `tests/canales.test.ts`,
 que preguntaba por una limpieza dental. El corpus sigue sin bloquear las fases 2 y
 7; lo que cambia es de qué hablan los casos que se escribirán en la 7.
+
+---
+
+# Revisión 2026‑08‑01
+
+La fase 2 pasa de PROPUESTO a CONSTRUIDO. Una de sus mediciones obliga a
+precisar qué puede y qué no puede hacer el umbral de recuperación, y esa
+precisión cambia dónde vive el invariante 1.
+
+---
+
+### R‑024 · El umbral de similitud no puede sostener el invariante 1 por sí solo
+
+**Contexto.** El criterio de aceptación de la fase 2 dice: «una pregunta cuya
+respuesta no está en los documentos devuelve vacío, no un fragmento forzado». El
+mecanismo previsto era un umbral de similitud configurable: por debajo, vacío.
+
+**Qué se midió.** Veinte consultas contra el corpus de Nimbo Seguros indexado con
+`bge-m3`, 106 fragmentos. La mejor puntuación de cada una:
+
+| Grupo | Rango |
+|---|---|
+| Fuera del dominio (clima, capital, receta) | 0.327 – 0.363 |
+| Otro sector con forma de pregunta parecida (limpieza dental) | 0.486 |
+| **Huecos deliberados del corpus** | 0.477 – **0.601** |
+| **Preguntas que el corpus sí cubre** | **0.564** – 0.775 |
+
+**Los dos últimos rangos se solapan.** No por poco: entre 0.564 y 0.601 conviven
+tres preguntas legítimas y dos que el corpus no puede responder.
+
+**Qué cambió.** El umbral se queda en 0.55 y **se le atribuye el trabajo que sí
+hace**: detiene el 100 % de las consultas ajenas al dominio y deja pasar el 100 %
+de las cubiertas. Deja de atribuírsele el que no puede hacer.
+
+**Por qué no se arregla subiéndolo.** Subirlo a 0.61 atraparía los cinco huecos y
+produciría **tres vacíos falsos** sobre preguntas que el corpus responde. Cambiar
+un fallo por otro peor: un vacío falso es el agente diciendo «no está
+documentado» sobre algo que sí lo está, y nadie lo detecta porque tiene la forma
+exacta de una respuesta correcta.
+
+**Y por qué ningún umbral lo arregla.** «¿Aseguráis motocicletas?» **es** parecida
+a la póliza de auto. Debe serlo: habla de vehículos, de cobertura y de
+contratación. La similitud del coseno mide parentesco temático, y el parentesco
+es real. Lo que le falta al fragmento recuperado no es parecido con la pregunta:
+es **la respuesta**. Ninguna función de distancia entre vectores distingue «trata
+de esto» de «contiene el dato que se pide», porque son propiedades distintas.
+
+**Dónde vive entonces el invariante 1.** En dos sitios, no en uno:
+
+1. **El umbral, en la fase 2** — descarta lo ajeno al dominio. Primera línea.
+2. **El verificador de procedencia, en la fase 4** — comprueba que el valor citado
+   aparece **literalmente** en el fragmento que se recuperó en esa ejecución.
+   Es lo que atrapa el caso «recuperó algo del tema, pero no dice lo que el
+   modelo afirma».
+
+Esto no es una vía de escape improvisada: es exactamente lo que
+[[Propuesta-Desarrollo-Por-Fases]] §Fase 4 ya decidió, y por los mismos motivos.
+Lo que aporta esta entrada es la medición que demuestra que la fase 4 **no es
+opcional** — sin ella, el sistema responde preguntas cuya respuesta no tiene.
+
+**El criterio de la fase 2, dicho con precisión.** Se cumple para preguntas fuera
+del dominio del corpus. **No se cumple** para preguntas dentro del dominio cuya
+respuesta concreta está ausente. Queda como criterio relajado con justificación
+escrita, según el protocolo de fracaso de §9, y como issue abierto con etiqueta de
+la fase 4. Un criterio relajado en silencio es deuda invisible; este queda a la
+vista, con su número al lado.
+
+**Impacto.** `config/conocimiento.json` lleva la medición completa en el campo
+`medido`, no una cifra suelta. El umbral sigue marcado `PROVISIONAL`: veinte
+consultas escritas por quien escribió el corpus no son una muestra, y la
+calibración de verdad la da el lote de cincuenta a cien casos de la fase 7.
+[[00-CANON]] §Parte 4.
 
 ---
 

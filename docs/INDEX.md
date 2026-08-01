@@ -61,6 +61,9 @@ hizo, lo que quedó abierto y las entradas de manual que salieron.
 - `bitacoras/2026/07/2026-07-31_corpus-nimbo.md` — el corpus pasa de clínica
   dental a aseguradora digital; cinco huecos y cinco trampas traducidas al
   dominio nuevo; el léeme no se puede ingerir sin invalidar la fase 2
+- `bitacoras/2026/08/2026-08-01_fase-2.md` — fase 2 construida: 106 fragmentos
+  indexados con bge-m3, recuperación con umbral y cita; la medición que demuestra
+  que el umbral no basta para el invariante 1 y por qué ningún umbral bastaría
 
 ---
 

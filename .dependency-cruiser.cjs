@@ -69,6 +69,18 @@ module.exports = {
       to: { path: '^src/channels/' },
     },
     {
+      name: 'nucleo-sin-almacen-concreto',
+      comment:
+        'Fase 2 · src/core/conocimiento define las interfaces Embeddings y ' +
+        'AlmacenVectorial; src/conocimiento/ las implementa y las cablea. Si el ' +
+        'núcleo pudiera importar el almacén concreto, el criterio «los embeddings ' +
+        'se generan local o en nube sin tocar el código de recuperación» se ' +
+        'verificaría leyendo código en lugar de por construcción.',
+      severity: 'error',
+      from: { path: '^src/core/' },
+      to: { path: '^src/conocimiento/' },
+    },
+    {
       name: 'solo-repos-habla-con-sql',
       comment:
         'src/repos/ es la única capa con acceso a PostgreSQL, y toda función que ' +

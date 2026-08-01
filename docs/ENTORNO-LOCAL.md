@@ -121,6 +121,35 @@ cuál de las dos características de Windows falta y cómo activarla.
 
 ---
 
+## La base de conocimiento
+
+Además de los contenedores hace falta **Ollama con el modelo de embeddings**. Es
+lo único que no está en `docker-compose.yml`, porque el modelo se descarga una vez
+y ocupa 1.2 GB.
+
+```bash
+ollama pull bge-m3      # una vez
+npm run conocimiento:ingerir
+```
+
+| Orden | Qué hace |
+|---|---|
+| `npm run conocimiento:ingerir` | Indexa lo que haya cambiado. Lo que no cambió no cuesta ni una llamada al modelo |
+| `npm run conocimiento:reindexar` | Borra la colección y vuelve a empezar. Necesario al cambiar de modelo |
+| `npm run conocimiento:consultar "…"` | Recupera con puntuaciones. Es la orden con la que se calibra el umbral |
+| `npm run conocimiento:verificar` | Compara las sumas del disco con las registradas y avisa de modificaciones externas |
+
+**El modelo es `bge-m3` y no uno de los ligeros porque el corpus está en
+español.** `nomic-embed-text` y `mxbai` están entrenados sobre todo con inglés; con
+uno de ellos no se podría saber si un vacío viene del umbral o del modelo.
+
+> **Sobre el umbral.** `consultar` imprime la puntuación de cada fragmento. Si
+> vas a tocar `config/conocimiento.json → recuperacion.umbral`, mira antes el
+> campo `medido` que hay al lado: dice qué separa 0.55 y qué no puede separar
+> ningún umbral. Ver R‑024.
+
+---
+
 ## Alternativa sin Docker
 
 Existe: PostgreSQL y Qdrant publican binarios nativos para Windows, y hay
@@ -145,7 +174,8 @@ Todas son opcionales. Sin ellas, el sistema arranca y avisa de lo que le falta.
 | `PUERTO` | Puerto del webhook | 8787 |
 | `REDIS_URL` | Repetición, caudal y agrupación | Almacén en memoria; se pierde al reiniciar |
 | `DATABASE_URL` | Conversaciones y mensajes | **No se guarda nada** |
-| `QDRANT_URL` | Base de conocimiento (fase 2) | Sin recuperación |
+| `QDRANT_URL` | Base de conocimiento | **La ingestión y la consulta fallan al arrancar, con el motivo.** No hay modo degradado: un índice vacío devolvería vacío para todo, y el vacío significa «no está documentado» |
+| `OLLAMA_URL` | Embeddings locales | `http://localhost:11434` |
 | `TELEGRAM_BOT_TOKEN` | Canal primario | Canal declarado, sin configurar |
 | `TELEGRAM_WEBHOOK_SECRET` | Verificación de entrega | Igual |
 | `WHATSAPP_*` | Conector de WhatsApp | Conector declarado, sin configurar |
