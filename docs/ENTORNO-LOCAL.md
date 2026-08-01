@@ -55,10 +55,15 @@ caro de diagnosticar: el que solo pasa en un sitio.
 
 ## Instalar Docker en Windows 11
 
+> **En la máquina de desarrollo ya está hecho** (31‑jul‑2026): Docker 29.6.2 y
+> Docker Compose v5.3.1. Los tres servicios levantan sanos y `npm run verificar`
+> pasa **99 pruebas con 0 omitidas**, que es la primera vez que la suite completa
+> se ejecuta fuera del CI. Lo que sigue queda como receta para la próxima máquina.
+
 **Hace falta permiso de administrador y un reinicio.** No es algo que el agente
 pueda hacer por ti.
 
-Comprobado en esta máquina el 31‑jul‑2026:
+Estado comprobado antes de instalar:
 
 | | |
 |---|---|

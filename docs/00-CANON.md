@@ -115,9 +115,10 @@ el webhook y no depende de que la máquina con Ollama esté encendida.
 se agrupa y se guarda. **Nadie responde todavía**: no hay recuperación ni
 enrutador, así que el sistema escucha y registra, no conversa.
 
-Medido contra el CI: **99 pruebas, 99 pasan, 0 omitidas** — incluidas las que
-corren contra Redis y PostgreSQL reales, en contenedores. `tsc --noEmit`, `eslint`
-y `depcruise` sin problemas. 9 dependencias directas.
+Medido contra el CI **y, desde el 31‑jul‑2026, también en local**: **99 pruebas,
+99 pasan, 0 omitidas** — incluidas las que corren contra Redis y PostgreSQL
+reales, en contenedores. `tsc --noEmit`, `eslint` y `depcruise` sin problemas.
+9 dependencias directas.
 
 **Publicado** en `github.com/GiovanniCastro/call-centre`, con `main` protegida y el
 CI actuando — ver R‑018. La fase 0 se cerró con el PR #1 y la etiqueta `v0.0`.
@@ -194,10 +195,13 @@ De antes:
 
 ## Lo que bloquea
 
-- ~~El corpus de la empresa ficticia.~~ **Ya no bloquea** (R‑022). Diecisiete
-  documentos de la Clínica Dental Aurora —ficticia— en `corpus/`, con omisiones
+- ~~El corpus de la empresa ficticia.~~ **Ya no bloquea** (R‑022, sustituido por
+  R‑023). Diecisiete documentos de **Nimbo Seguros** —aseguradora digital
+  ficticia, mercado estadounidense, cinco ramos— en `corpus/`, con cinco omisiones
   deliberadas para que la fase 2 pueda probar que una pregunta sin respuesta
-  devuelve vacío, y un documento envenenado para la fase 4C.
+  devuelve vacío, y un documento envenenado para la fase 4C. Sustituye al corpus
+  de clínica dental: el dominio asegurador aporta la cobertura condicional y los
+  datos sensibles reales que el anterior no tenía.
 - ~~La aprobación de WhatsApp Business.~~ **Ya no bloquea** (R‑020). El canal
   primario es Telegram, que solo necesita un token de `@BotFather`. WhatsApp entra
   como conector declarado que se activa cuando existan número corporativo y
@@ -206,9 +210,11 @@ De antes:
   local no se pueden defender. Desde la fase 0 el bloqueo es visible en el propio
   dato: `config/maquina-referencia.json` está en estado `PROVISIONAL`, y todo
   costo que se apoye en él sale con `provisional: true` — ver R‑017.
-- **No hay Docker en la máquina de desarrollo.** Todo lo que toca Redis o
-  PostgreSQL solo se ejecuta en el CI, nunca en local. Descubierto construyendo la
-  fase 1. La fase 2 añade Qdrant y agrava el problema: conviene resolverlo antes.
+- ~~No hay Docker en la máquina de desarrollo.~~ **Resuelto el 31‑jul‑2026**,
+  antes de la fase 2 como se pedía. Docker 29.6.2 y Compose v5.3.1; los tres
+  servicios levantan en las versiones del CI y `npm run verificar` da 99 pruebas
+  con **0 omitidas** en local. Qdrant queda levantado por adelantado aunque
+  todavía no lo lea ninguna línea de código.
 - **El proveedor de nube concreto** para la inferencia frontera. `config/precios.json`
   lleva hoy las tarifas de la API de Anthropic con su fuente y su fecha de
   consulta; elegir otro proveedor es añadir su bloque, no tocar código.

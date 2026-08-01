@@ -15,7 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
-| **2** | 2026‑07‑31 | R‑012 … R‑022 | Fases 0 y 1 construidas. React fijado para el panel. Repositorio público. Telegram como canal primario. Alcance de contacto en tres capas. Corpus escrito |
+| **2** | 2026‑07‑31 | R‑012 … R‑023 | Fases 0 y 1 construidas. React fijado para el panel. Repositorio público. Telegram como canal primario. Alcance de contacto en tres capas. Corpus escrito, y reemplazado por el de una aseguradora |
 | **1** | 2026‑07‑30 | R‑001 … R‑011 | Revisión del plan, propuesta de desarrollo por fases, arquitectura en dos planos, vault de Obsidian |
 
 ---
@@ -34,6 +34,7 @@
   - [R‑020 · Telegram es el canal primario](#r-020--el-canal-primario-es-telegram-whatsapp-pasa-a-conector-declarado)
   - [R‑021 · El alcance de contacto, en tres capas](#r-021--el-alcance-de-contacto-se-defiende-en-tres-capas-no-en-una)
   - [R‑022 · El corpus, con huecos a propósito](#r-022--el-corpus-tiene-huecos-a-propósito-y-un-documento-envenenado)
+  - [R‑023 · El corpus pasa a aseguradora digital](#r-023--el-corpus-pasa-de-clínica-dental-a-aseguradora-digital)
 - [Revisión 2026‑07‑30](#revisión-2026-07-30)
   - [R‑001 · Arquitectura en dos planos](#r-001--arquitectura-en-dos-planos-con-proyección-de-un-solo-sentido)
   - [R‑002 · Desdoblado el campo `resultado`](#r-002--desdoblado-el-campo-resultado-de-telemetría)
@@ -473,6 +474,87 @@ Desbloquea la fase 2 y la 7. Quedan tres bloqueantes: la máquina de referencia
 para Ollama, el proveedor de nube y —nuevo, descubierto construyendo la fase 1— la
 ausencia de Docker en la máquina de desarrollo, que impide ejecutar en local todo
 lo que toque Redis, PostgreSQL y, a partir de la fase 2, Qdrant.
+
+> **Sustituida por R‑023.** El mecanismo de esta entrada —huecos deliberados,
+> cinco trampas, documento envenenado, aviso de ficción— sigue vigente palabra por
+> palabra. Lo que cambió es el negocio: la clínica dental dejó paso a una
+> aseguradora. Se conserva porque explica **por qué** el corpus está construido
+> así, que es lo que R‑023 hereda.
+
+---
+
+### R‑023 · El corpus pasa de clínica dental a aseguradora digital
+
+**Contexto.** El corpus de R‑022 cumplía su función: diecisiete documentos, huecos
+deliberados, trampas y un documento envenenado. Pero el dominio elegido —una
+clínica dental— resultó ser el más flojo de los disponibles para lo que este
+sistema tiene que demostrar. Una clínica responde preguntas planas: cuánto cuesta
+una limpieza, a qué hora abrís. Casi todo son datos únicos sin condiciones.
+
+**Qué cambió.** El corpus se sustituye **entero** por el de **Nimbo Seguros**,
+aseguradora digital ficticia del mercado estadounidense, con cinco ramos
+—inquilino, propietario, mascotas, vida y auto—. Diecisiete documentos, cifras en
+dólares, marco regulatorio estadounidense, redactados en español porque la
+compañía atiende en español. Decisión del responsable, con Lemonade como
+referencia **de modelo de negocio, no de contenido**: comisión fija, catálogo
+corto, contratación y siniestros por aplicación, sobrante anual donado. Ni una
+línea copiada de una póliza real.
+
+**Por qué el dominio importa.** Cuatro capacidades del sistema pasan de probarse
+con ejemplos a probarse con material:
+
+| Capacidad | Con la clínica | Con la aseguradora |
+|---|---|---|
+| Respuesta condicional | «La limpieza cuesta $X» | «Está cubierto» depende del ramo, del estado, del deducible y de si encaja en una exclusión |
+| Sensibilidad alta (invariante 3, vigía de perímetro) | Datos de contacto | Número de seguro social, carné de conducir, cuenta bancaria, cuestionario de salud |
+| Extracción con procedencia (fase 4) | Precios sueltos | Límites, sublímites, deducibles y fechas de vigencia, cada uno con su `fragmento_id` |
+| Coste de equivocarse | Molestia | Afirmar que algo está cubierto cuando no lo está es un daño concreto |
+
+La segunda fila es la que decide. El vigía de perímetro de la fase 4B‑1 tiene que
+poder enseñar «31 de 31 retenidos», y para eso hacen falta casos de sensibilidad
+alta **de verdad**, no inventados encima de un corpus que no los pedía.
+
+**Las trampas se conservan, traducidas al dominio nuevo.** La duplicación de un
+precio en dos documentos, la excepción que contradice la regla general, la tabla
+con filas que se solapan, la fecha de vigencia explícita y el documento
+envenenado siguen ahí, una por una. Dos ganan fuerza al cambiar de dominio:
+
+- **La excepción de cancelación** pasa a ser la trampa más peligrosa del corpus.
+  La regla general promete reembolso prorrateado; la excepción lo niega si hubo un
+  siniestro pagado. Un agente que cite la regla e ignore la excepción da una
+  respuesta que **suena correcta y cuesta dinero**.
+- **La tabla de cobertura por estado** son doce estados por cinco ramos con seis
+  notas al pie que se solapan, y se declara a sí misma con precedencia sobre los
+  documentos de producto. Resolver bien un conflicto exige respetar esa
+  precedencia, no promediar las dos fuentes.
+
+**Los huecos deliberados pasan de cuatro a cinco**: motocicletas y embarcaciones,
+vida entera y universal, mascotas que no sean perro o gato, el precio de la póliza
+de inundación y el recargo de los conductores menores de 25 años. Los cinco son
+preguntas que un cliente haría. Si el agente contesta a alguna, está inventando.
+
+**Un defecto que R‑022 tenía y no vio.** `00-LEEME.md` enumera los huecos y las
+trampas. Si se ingesta con el resto de la carpeta, una pregunta sobre motocicletas
+recupera el párrafo que explica que las motocicletas son un hueco a propósito —y
+el criterio de aceptación de la fase 2 queda invalidado por su propia
+documentación. **La ingestión excluye todo archivo cuyo nombre empiece por
+`00-`.** Queda escrito en el propio léeme y en la fase 2 de
+[[Propuesta-Desarrollo-Por-Fases]], porque es una restricción de la ingestión, no
+una convención de nombres.
+
+**Lo que hay que decir en voz alta.** Nimbo Seguros no existe. Sus precios, sus
+coberturas, sus cifras de donación y los estados donde dice operar son inventados,
+y nada de ese material es asesoramiento en materia de seguros. El aviso ocupa la
+primera pantalla de `corpus/00-LEEME.md`. Vale aquí lo mismo que valía para la
+clínica: **si esto pasa a ser una demo para un cliente real, la carpeta se
+sustituye entera**, y esa es la intención — el sistema no debe saber nada de
+seguros, solo saber leer documentos.
+
+**Impacto.** [[00-CANON]] §Parte 4 y la fase 2 de
+[[Propuesta-Desarrollo-Por-Fases]]. Ninguna línea de `src/` cambia: el corpus no
+tiene código todavía. Sí cambia el texto de ejemplo de `tests/canales.test.ts`,
+que preguntaba por una limpieza dental. El corpus sigue sin bloquear las fases 2 y
+7; lo que cambia es de qué hablan los casos que se escribirán en la 7.
 
 ---
 

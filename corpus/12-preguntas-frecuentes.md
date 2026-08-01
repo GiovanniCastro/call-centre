@@ -1,66 +1,66 @@
 # Preguntas frecuentes
 
-**Revisado:** 2 de junio de 2026 · **Responsable:** Recepción
+**Revisado:** 21 de junio de 2026 · **Responsable:** Víctor Palau, Atención al cliente
 
-### ¿Cuánto cuesta una limpieza?
+## Contratación
 
-**60 €.** Si al explorar se ve que hay sarro bajo la encía, lo que hace falta no es
-una limpieza sino un curetaje, que va por cuadrantes y cuesta 90 € cada uno. Eso se
-dice antes de empezar, nunca después.
+**¿Cuánto cuesta el seguro de inquilino?**
+Desde **$5 al mes**, con $25,000 de contenido y $100,000 de responsabilidad
+civil. El precio real depende del código postal, del edificio y de los límites
+que elijas.
 
-### ¿La primera visita se paga?
+**¿Cuánto tardo en estar cubierto?**
+La cobertura empieza cuando tú digas, desde el mismo día. En vida y en mascotas
+hay periodos de carencia; están en sus documentos.
 
-No. La primera visita, con revisión y radiografía panorámica, es gratuita. La
-consulta de ortodoncia también.
+**¿Me pedís revisar la casa antes de asegurarla?**
+En propietario, a veces: en viviendas de más de 50 años o con más de $750,000 de
+cobertura A pedimos una inspección exterior, que hacemos nosotros y no cuesta
+nada.
 
-### ¿Cuánto se tarda en tener cita?
+**¿Puedo asegurar una casa que alquilo a otros?**
+No con la póliza de propietario, que es para la vivienda en la que resides. Ese
+producto no lo tenemos.
 
-Para revisión o limpieza, entre una y dos semanas. Para urgencias, el mismo día.
-Para ortodoncia o implantes, la primera consulta suele haber hueco en menos de una
-semana.
+## Siniestros
 
-### ¿Duele?
+**¿Me sube la prima si reclamo?**
+Puede subir en la renovación, y depende del número de siniestros y del ramo. Una
+consulta que no acaba en reclamación no afecta.
 
-Todo lo que puede doler se hace con anestesia local. Lo que suele molestar es el
-pinchazo de la anestesia, y para eso usamos gel anestésico antes.
+**¿Y si el daño es menor que mi deducible?**
+Entonces no hay nada que pagar por nuestra parte. Reclamar igualmente deja el
+siniestro en tu historial sin que cobres nada, así que normalmente no compensa.
 
-Si el paciente tiene miedo, que lo diga al pedir la cita: se reserva más tiempo y
-se va más despacio. No es una molestia; es lo que hace que la gente vuelva.
+**¿Tengo que aceptar el taller o el perito que me digáis?**
+No. Puedes elegir taller. Si el presupuesto supera nuestra valoración, se
+negocia; y si no hay acuerdo, la póliza prevé una tasación contradictoria con un
+tercero.
 
-### ¿Puedo ir estando embarazada?
+## Pagos y cambios
 
-Sí, y conviene. El embarazo cambia la encía y hay más riesgo de gingivitis.
+**¿Hay penalización por cancelar?**
+No. Se puede cancelar en cualquier momento sin coste. La regla de reembolso, con
+su excepción, está en el documento de cancelación.
 
-El **segundo trimestre** es el mejor momento para tratamientos que no puedan
-esperar. Se evitan las radiografías salvo que sean imprescindibles, y en ese caso
-se usa delantal plomado. No se hacen blanqueamientos.
+**¿Puedo pagar anualmente?**
+Sí, con un 5 % de descuento.
 
-### ¿Aceptáis mi seguro?
+**¿Qué pasa si me mudo?**
+Se traslada la póliza con un cambio de dirección y una recotización, siempre que
+el destino sea uno de los doce estados donde operamos.
 
-Depende de la compañía. Ver el documento de cobertura de seguros. Antes de empezar
-cualquier tratamiento confirmamos con la aseguradora.
+## Sobre nosotros
 
-### ¿Puedo pagar a plazos?
+**¿Sois una aseguradora de verdad o un intermediario?**
+Aseguradora. Suscribimos el riesgo y pagamos los siniestros con nuestra propia
+licencia en cada estado.
 
-Sí, financiación sin intereses hasta 12 meses para importes de más de 600 €, sujeta
-a aprobación de la entidad financiera.
+**¿Qué es eso de la Devolución?**
+Nos quedamos una comisión fija del 25 % de la prima. Lo que sobra de la bolsa de
+siniestros al cerrar el año va a la causa que elegiste. Tiene documento propio.
 
-### Se me ha caído un empaste, ¿es urgente?
-
-Si no duele, no. Se atiende en la primera cita disponible. Si duele o el diente
-está muy sensible al frío, sí conviene venir pronto.
-
-### ¿Cada cuánto hay que hacerse una limpieza?
-
-Una vez al año en la mayoría de los casos. Cada seis meses si hay tendencia a
-acumular sarro, si el paciente fuma o si ha tenido enfermedad periodontal.
-
-### ¿Tenéis parking?
-
-Zona azul en la propia avenida y un parking cubierto a 120 metros. No tenemos
-parking propio.
-
-### ¿Se puede ir con niños pequeños mientras me atienden?
-
-Sí, pero recepción no puede hacerse cargo de ellos. Si el acompañante va a estar
-solo con el niño, mejor pedir cita a media mañana, que hay menos gente en la sala.
+**¿Qué datos me vais a pedir?**
+Los del documento de protección de datos. Lo importante: **nunca te pediremos la
+contraseña de tu cuenta, ni el PIN de la tarjeta, ni datos bancarios por
+teléfono**.

@@ -55,6 +55,12 @@ hizo, lo que quedó abierto y las entradas de manual que salieron.
 - `bitacoras/2026/07/2026-07-31_fase-1.md` — fase 1 construida: canal Telegram,
   borde endurecido, alcance de contacto en tres capas; 99 pruebas en el CI contra
   Redis y PostgreSQL reales; ocho pruebas que fallaron y por qué eran mías
+- `bitacoras/2026/07/2026-07-31_entorno-local.md` — Docker en la máquina de
+  desarrollo; la suite completa fuera del CI por primera vez (99 pruebas, 0
+  omitidas); el script de pruebas no cargaba `.env` y el documento decía que sí
+- `bitacoras/2026/07/2026-07-31_corpus-nimbo.md` — el corpus pasa de clínica
+  dental a aseguradora digital; cinco huecos y cinco trampas traducidas al
+  dominio nuevo; el léeme no se puede ingerir sin invalidar la fase 2
 
 ---
 

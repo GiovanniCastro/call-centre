@@ -398,9 +398,14 @@ entregable que el plan original mencionaba solo como riesgo.
 **Construir.**
 
 - **El corpus de la empresa ficticia**, como entregable con nombre: entre quince
-  y treinta documentos reales de una clínica —servicios, precios, horarios,
-  políticas de cancelación, preguntas frecuentes, cobertura de seguros—. Bloquea
-  esta fase y también la 7, donde los casos se escriben contra él.
+  y treinta documentos reales de una aseguradora —ramos, precios, deducibles,
+  exclusiones, política de cancelación, preguntas frecuentes, disponibilidad por
+  estado—. Bloquea esta fase y también la 7, donde los casos se escriben contra
+  él. **Construido** como Nimbo Seguros (R‑023).
+- **Exclusión de los archivos meta de la ingestión.** El léeme del corpus
+  documenta sus propios huecos y trampas; si se indexa, una pregunta sin respuesta
+  recupera el párrafo que explica que no tiene respuesta. La ingestión salta todo
+  archivo cuyo nombre empiece por `00-`.
 - Ingestión desde carpeta vigilada y desde Cloud Storage: PDF, TXT, Markdown,
   registrando quién subió cada documento y cuándo.
 - Suma de verificación por documento.
