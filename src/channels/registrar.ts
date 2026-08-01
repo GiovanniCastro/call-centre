@@ -9,6 +9,7 @@ import {
   RegistroDeCanales,
   describirRequisitos,
 } from '../core/registro-canales.ts';
+import { crearCanalLote, REQUISITOS_LOTE } from './lote/canal.ts';
 import { crearCanalTelegram, REQUISITOS_TELEGRAM } from './telegram/canal.ts';
 import { crearCanalWhatsApp, REQUISITOS_WHATSAPP } from './whatsapp/canal.ts';
 
@@ -44,6 +45,11 @@ export function construirRegistro(
       }),
     ),
   );
+
+  // El lote no lleva credenciales, así que siempre queda configurado. Se registra
+  // igual que los demás y por la misma puerta: si tuviera una vía propia, dejaría
+  // de probar que la interfaz `Canal` sirve, que es para lo que existe.
+  registro.registrar(evaluarRequisitos('lote', REQUISITOS_LOTE, entorno, () => crearCanalLote()));
 
   return registro;
 }

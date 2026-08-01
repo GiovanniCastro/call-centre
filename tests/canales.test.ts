@@ -289,9 +289,10 @@ describe('normalización a mensaje canónico', () => {
 });
 
 describe('el registro de canales — declarado no es lo mismo que activo', () => {
-  test('con el entorno completo, los dos canales quedan activos', () => {
+  test('con el entorno completo, los canales con credencial quedan activos', () => {
     const registro = construirRegistro(ENTORNO_COMPLETO);
-    assert.deepEqual([...registro.activos()].sort(), ['telegram', 'whatsapp']);
+    // `lote` entra desde la fase 3B y no lleva credenciales: siempre activo.
+    assert.deepEqual([...registro.activos()].sort(), ['lote', 'telegram', 'whatsapp']);
     assert.equal(registro.estaConfigurado('whatsapp'), true);
   });
 
@@ -301,7 +302,7 @@ describe('el registro de canales — declarado no es lo mismo que activo', () =>
       TELEGRAM_WEBHOOK_SECRET: ENTORNO_COMPLETO.TELEGRAM_WEBHOOK_SECRET,
     });
 
-    assert.deepEqual(registro.activos(), ['telegram']);
+    assert.deepEqual([...registro.activos()].sort(), ['lote', 'telegram']);
     assert.equal(registro.estaConfigurado('whatsapp'), false);
   });
 

@@ -111,7 +111,9 @@ el webhook y no depende de que la máquina con Ollama esté encendida.
 
 > Medido contra el disco el **1-ago-2026**. Nada copiado de otro documento.
 
-**Las fases 0, 1, 2 y 3 están construidas.** Entra un mensaje por Telegram, se
+**Las fases 0, 1, 2, 3 y 3B están construidas.** Hay tres canales: Telegram,
+WhatsApp declarado sin credenciales, y `lote`, que alimenta casos desde archivos
+por el mismo camino. Entra un mensaje por Telegram, se
 verifica, se agrupa y se guarda. El corpus está indexado y se consulta con cita y
 umbral. El enrutador clasifica, decide plano, sanea y redacta, con respaldo de
 local a nube registrado como desvío. **Falta la credencial de nube**: sin
@@ -124,7 +126,7 @@ jamás produce una llamada externa: el espía sobre el módulo de salida lo veri
 con adaptadores que salen de verdad, no con dobles. Y una llamada a un dominio no
 declarado se bloquea antes de abrir el socket, aunque el código la intente.
 
-Medido contra el CI **y también en local**: **199 pruebas, 199 pasan, 0
+Medido contra el CI **y también en local**: **211 pruebas, 211 pasan, 0
 omitidas** — incluidas las que corren contra Redis, PostgreSQL y
 Qdrant reales, en contenedores. `tsc --noEmit`, `eslint` y `depcruise` sin
 problemas. 11 dependencias directas.
@@ -152,7 +154,7 @@ dicen Perímetro, y son ellos los que mandan.
 | 1 | Canal Telegram endurecido y aislamiento en repositorio | **CONSTRUIDO** |
 | 2 | Corpus y base de conocimiento con citación | **CONSTRUIDO** |
 | 3 | Enrutador local/nube y frontera de salida | **CONSTRUIDO** |
-| 3B | Segundo canal (`lote`) y conector de WhatsApp | PROPUESTO |
+| 3B | Segundo canal (`lote`) y conector de WhatsApp | **CONSTRUIDO** |
 | 4 | Salida estructurada con procedencia, validación y escalado | PROPUESTO |
 | 4B‑1 | Vigías que detienen | PROPUESTO |
 | 4B‑2 | Vigías que observan | PROPUESTO |
