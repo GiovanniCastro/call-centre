@@ -46,8 +46,9 @@
   },
 
   "modelos": {
-    "local": "qwen3.6:latest",
+    "local": "gemma4:latest",
     "nube": "claude-sonnet-5",
+    "por_que_local": "Medido con `npm run maquina` el 2026-08-01: gemma4 pide ~10.4 GB y la RTX 4070 de esta máquina tiene 12 GB de VRAM, así que corre entera en la tarjeta. Antes estaba qwen3.6, que pide ~23.8 GB: arranca, pero se reparte con la RAM del sistema y la generación cae de decenas de fichas por segundo a unidades. No es un detalle de rendimiento — el proyecto existe para comparar local contra nube, y medir esa comparación contra un local derramado a RAM la haría ganar a la nube por un motivo que no tiene nada que ver con la nube.",
     "por_que_nube": "Redactar a partir de fragmentos ya recuperados y verificados no exige el modelo más caro, y el proyecto mide costo por caso resuelto: elegir arriba sesga la cifra que más importa. Se revisa si la fase 4 demuestra que la salida estructurada con procedencia necesita más."
   }
 }

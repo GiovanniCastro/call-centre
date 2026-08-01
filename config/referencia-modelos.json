@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "nota": "Instantánea de una tabla comparativa de terceros, para decidir QUÉ modelo elegir. No es una fuente de cifras del proyecto: nada de aquí puede aparecer en el panel. Las cifras del panel salen del corredor de la fase 7 y de ningún otro sitio.",
+
+  "fuente": {
+    "url": "https://llm-stats.com/leaderboards/llm-leaderboard",
+    "consultado": "2026-08-01",
+    "como_se_calcula": "Según el propio sitio: agrega resultados de pruebas verificadas, precios declarados por el proveedor y métricas de rendimiento en vivo (fichas por segundo y tiempo hasta la primera ficha) muestreadas en los proveedores principales.",
+    "con_que_frecuencia_cambia": "El sitio dice que los precios y metadatos se revalidan cada hora y que el rendimiento es una media móvil de siete días. Comprobado: entre una captura y una consulta separadas por un minuto, Gemini 3.1 Pro pasó de 68 a 116 fichas/s y la columna de búsqueda de GPT-5.5 de 21.9 a 21.0."
+  },
+
+  "por_que_instantanea_y_no_consulta_en_vivo": "Tres razones, y la tercera es la que decide. Una: consultar en vivo mete un destino más en la lista blanca y hace que el arranque dependa de que un tercero esté en pie. Dos: la tabla es HTML, no una API declarada; un analizador escrito contra su maquetación se rompe en silencio el día que la cambien, y un dato equivocado es peor que ninguno. Tres: si la recomendación cambia bajo los pies, dos ejecuciones del mismo lote pueden elegir modelos distintos y nadie sabría por qué. Una instantánea con fecha se puede reconstruir; una consulta en vivo, no.",
+
+  "como_actualizar": "A mano, y a propósito. Se abre la URL, se copian las filas que interesen, se actualiza `consultado` y se hace commit — el diff es el registro de qué cambió y cuándo. Es el mismo trato que config/precios.json.",
+
+  "advertencia": "Estas cifras NO están verificadas por este proyecto. Son de un agregador externo y sirven para acotar la conversación —«qué modelos merece la pena probar»—, no para afirmar nada. Lo único que este proyecto puede afirmar sobre un modelo es lo que haya medido su propio lote.",
+
+  "modelos": [
+    { "modelo": "GPT-5.6 Sol", "proveedor": "openai", "indice": 58.0, "contexto": "1.1M", "entrada_por_millon": 5.0, "salida_por_millon": 30.0, "fichas_por_segundo": 17, "razonamiento": 58.1, "matematicas": 36.8, "codigo": 50.1 },
+    { "modelo": "Claude Mythos Preview", "proveedor": "anthropic", "indice": 56.1, "contexto": null, "entrada_por_millon": null, "salida_por_millon": null, "fichas_por_segundo": null, "razonamiento": 56.6, "matematicas": 47.1, "codigo": 46.6, "nota": "Sin publicar; sin precio ni contexto declarados en la fuente." },
+    { "modelo": "Kimi K3", "proveedor": "moonshot", "indice": 55.7, "contexto": "1.0M", "entrada_por_millon": 3.0, "salida_por_millon": 15.0, "fichas_por_segundo": 0, "razonamiento": 54.9, "matematicas": 42.0, "codigo": 44.9, "nota": "Peso abierto. El 0 de fichas/s es lo que devolvió la fuente, no una medición de cero." },
+    { "modelo": "Claude Opus 4.8", "proveedor": "anthropic", "indice": 52.6, "contexto": "1M", "entrada_por_millon": 5.0, "salida_por_millon": 25.0, "fichas_por_segundo": 7, "razonamiento": 52.1, "matematicas": 39.8, "codigo": 43.9 },
+    { "modelo": "GPT-5.5", "proveedor": "openai", "indice": 49.1, "contexto": "1.1M", "entrada_por_millon": 5.0, "salida_por_millon": 30.0, "fichas_por_segundo": 23, "razonamiento": 48.3, "matematicas": 38.5, "codigo": 41.1 },
+    { "modelo": "Claude Opus 4.7", "proveedor": "anthropic", "indice": 45.6, "contexto": "1M", "entrada_por_millon": 5.0, "salida_por_millon": 25.0, "fichas_por_segundo": 72, "razonamiento": 47.1, "matematicas": 39.5, "codigo": 39.2 },
+    { "modelo": "Gemini 3.1 Pro", "proveedor": "google", "indice": 43.6, "contexto": "1.0M", "entrada_por_millon": 2.5, "salida_por_millon": 15.0, "fichas_por_segundo": null, "razonamiento": 45.1, "matematicas": 43.0, "codigo": 33.0, "nota": "Las fichas/s se omiten: la captura decía 68 y la consulta de un minuto después, 116." }
+  ],
+
+  "lo_que_no_dice_esta_tabla": "Nada sobre lo que este sistema hace. Redactar una respuesta de atención al cliente a partir de fragmentos ya recuperados y verificados no es ninguna de las columnas de arriba, y el modelo que gana en razonamiento puede perder aquí. La única comparación que vale para este proyecto es el lote de la fase 7 corriendo contra los tres modos."
+}
