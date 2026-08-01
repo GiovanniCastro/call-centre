@@ -15,6 +15,8 @@
 // dónde fue y si fue egreso de verdad; de ahí sale el numerador del vigía de
 // perímetro de la fase 4B-1.
 
+import { AsyncLocalStorage } from 'node:async_hooks';
+
 import { DESTINOS, type Destino, type ListaDeDestinos } from './destinos.ts';
 
 export class DestinoBloqueado extends Error {
@@ -63,7 +65,32 @@ export function observarSalidas(observador: Observador): () => void {
   return () => observadores.delete(observador);
 }
 
+/**
+ * Recolector de salidas acotado a un caso.
+ *
+ * Los observadores de arriba son globales, y para el panel eso está bien. Para
+ * el evento de telemetría de UN caso, no: dos casos que se atienden a la vez
+ * verían cada uno las salidas del otro, y `hubo_egreso` diría que un caso sacó
+ * datos que sacó otro. Con almacenamiento local asíncrono, cada caso recoge lo
+ * suyo aunque se solapen — es la diferencia entre un contador y un contador que
+ * sabe de quién es lo que cuenta.
+ */
+const porCaso = new AsyncLocalStorage<RegistroDeSalida[]>();
+
+/**
+ * Ejecuta `trabajo` recogiendo las salidas que ocurran **dentro de él**, sin
+ * mezclarlas con las de otros casos concurrentes.
+ */
+export async function registrandoSalidas<T>(
+  trabajo: () => Promise<T>,
+): Promise<{ resultado: T; salidas: readonly RegistroDeSalida[] }> {
+  const salidas: RegistroDeSalida[] = [];
+  const resultado = await porCaso.run(salidas, trabajo);
+  return { resultado, salidas };
+}
+
 function anunciar(registro: RegistroDeSalida): void {
+  porCaso.getStore()?.push(registro);
   for (const observador of observadores) observador(registro);
 }
 
