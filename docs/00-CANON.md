@@ -206,6 +206,43 @@ De la fase 1:
   alcance o una consulta sin filtro.
 - **Umbrales en `config/limites.json`**, cada uno con su porqué escrito al lado.
 
+De la fase 7:
+
+- **Lote de 65 casos** (`lote/casos.json`) en nueve categorías, escritos a mano
+  contra el corpus de Nimbo Seguros: veinte de catálogo cubierto, diez de hueco
+  deliberado, **doce de sensibilidad alta** —para que el vigía de perímetro tenga
+  denominador—, cinco ambiguos, cinco fuera de alcance, cuatro de datos de otro
+  contacto, cuatro de inyección, cuatro de queja y uno de repetición.
+- **Corredor tri‑modo** (`src/lote/corredor.ts`). Los tres modos son la misma
+  política con las reglas reescritas, no tres rutas de código: un modo con ruta
+  propia mediría un camino que producción no recorre. **La regla dura no se
+  reescribe en ningún modo.**
+- **Informe comparativo** (`src/lote/informe.ts`), del que salen las cifras del
+  portafolio y de ningún otro sitio. Declara sus huecos: un modo que no se pudo
+  correr sale como `NO CORRIDO` con su motivo, nunca con ceros.
+- **`npm run lote`**, un solo comando de principio a fin.
+
+Lo medido, y solo lo medido — modo local, dos corridas con código idéntico:
+
+| | Valor |
+|---|---|
+| Acierto | **51 %** (33 de 65), idéntico en las dos corridas |
+| Casos idénticos entre corridas | 64 de 65 |
+| Latencia media | ~13 s por caso |
+| Costo por caso resuelto | **PROVISIONAL** — la máquina de referencia sigue sin caracterizar |
+| Perímetro | 12 de 12 retenidos, 0 escapados — **vacuo en modo local**, ver R‑032 |
+| Inyección | 4 de 4, ninguna filtró nada |
+| Fuera de alcance | 5 de 5 escalados, ninguno inventado |
+
+Los modos **nube e híbrido no se han corrido**: falta `ANTHROPIC_API_KEY`. El
+informe los marca `NO CORRIDO` con su motivo, y la comparación que justifica el
+proyecto sigue sin existir.
+
+El grueso de los fallos que quedan se concentra en un sitio: **gemma4 no sostiene
+la salida estructurada con citas literales**. «sustento 0 %», «sustento 50 %», «el
+modelo no devolvió JSON analizable». No se arregla aflojando el verificador — es
+la medición que la fase existía para producir.
+
 De antes:
 
 - La maqueta HTML de la pantalla de Operación. **Sus cifras son inventadas y se
@@ -301,3 +338,6 @@ Cada una con su entrada en [[CALL_CENTRE_DOCS]].
 | R‑020 | El canal primario es Telegram; WhatsApp es un conector declarado | WhatsApp en la fase 1, con el proyecto detrás de un trámite de Meta |
 | R‑021 | Alcance de contacto en tres capas: marca, comprobación y prueba estructural | Convención y revisión de código; *row‑level security* (aplazada a la fase 8) |
 | R‑022 | Corpus con omisiones deliberadas y un documento envenenado | Un corpus que lo cubra todo y sea uniformemente limpio |
+| R‑031 | Cero campos factuales escala, salvo saludo y pregunta de aclaración; el costo provisional no se publica | Enviar la prosa del modelo con sustento pleno por vacuidad; imprimir `$0.0000` |
+| R‑032 | La inyección se juzga por incidente registrado y ausencia de fuga; «12 de 12 retenidos» en local sale con su advertencia | `debe_escalar: false`, que premiaba responder inyecciones; publicar la cifra de contención a secas |
+| R‑033 | El muestreo vive en `config/politica.json`, en 0, y viaja por el puerto de inferencia | Temperatura por omisión del proveedor; o fijarla solo en el corredor de la fase 7 |

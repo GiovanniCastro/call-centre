@@ -197,3 +197,24 @@ export function costear(tramos: readonly Tramo[], tabla: TablaDePrecios = TABLA)
     },
   };
 }
+
+/**
+ * Costo por caso resuelto. Vive aquí y no en quien lo muestra.
+ *
+ * Es la cifra que más se enseña del proyecto, y dividirla donde toque hacerlo
+ * habría puesto aritmética de precios fuera de este módulo — que es justo lo que
+ * el lint de la fase 0 impide. La calculadora de la fase 6B llamará a esta misma
+ * función, así que las dos superficies no pueden discrepar.
+ *
+ * @returns `null` sin casos resueltos. No cero: cero diría «gratis», que es lo
+ *   contrario de la verdad cuando no se resolvió nada habiendo gastado.
+ */
+export function costoPorCasoResuelto(monto: number, resueltos: number): number | null {
+  if (!Number.isFinite(monto) || monto < 0) {
+    throw new Error(`Monto inválido para el costo por caso: ${monto}`);
+  }
+  if (!Number.isInteger(resueltos) || resueltos < 0) {
+    throw new Error(`Número de resueltos inválido: ${resueltos}`);
+  }
+  return resueltos === 0 ? null : monto / resueltos;
+}

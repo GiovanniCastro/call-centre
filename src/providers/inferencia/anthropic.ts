@@ -77,6 +77,14 @@ export class InferenciaAnthropic implements Inferencia {
         // lo hizo la recuperación, y lo hará el verificador de procedencia de la
         // fase 4. Pensar aquí es latencia y tokens que el costo por caso paga.
         thinking: { type: 'disabled' },
+        // La API de Anthropic no expone semilla, así que la temperatura es lo
+        // único que sostiene la reproducibilidad aquí. El puerto lo dice y el
+        // adaptador ignora `semilla` sin fingir que la honró: un adaptador que
+        // acepta en silencio lo que no puede cumplir convierte una propiedad
+        // declarada en una suposición.
+        ...(peticion.muestreo === undefined
+          ? {}
+          : { temperature: peticion.muestreo.temperatura }),
         output_config:
           peticion.esquema === undefined
             ? { effort: 'low' }

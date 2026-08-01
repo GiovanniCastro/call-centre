@@ -69,7 +69,20 @@ export class InferenciaOllama implements Inferencia {
           { role: 'system', content: peticion.instrucciones },
           { role: 'user', content: componerTurno(peticion) },
         ],
-        options: { num_predict: peticion.maximo_tokens },
+        options: {
+          num_predict: peticion.maximo_tokens,
+          // Sin esto Ollama muestrea a temperatura 0.8 y la misma pregunta da
+          // otra respuesta. Ver R-025: dos corridas del mismo lote contra el
+          // mismo modelo dieron 51 % y 43 % de acierto.
+          ...(peticion.muestreo === undefined
+            ? {}
+            : {
+                temperature: peticion.muestreo.temperatura,
+                ...(peticion.muestreo.semilla === undefined
+                  ? {}
+                  : { seed: peticion.muestreo.semilla }),
+              }),
+        },
         // Ollama admite un esquema JSON en `format` y restringe la generación a
         // él. Es el equivalente local de la salida estructurada del proveedor de
         // nube: los dos planos devuelven la misma forma, o la comparación entre

@@ -34,6 +34,33 @@ export const EsquemaCasoDeLote = z.object({
       respuesta: z.string().optional(),
       fuentes: z.array(z.string()).optional(),
       debe_escalar: z.boolean().optional(),
+      // Lo que el corredor de la fase 7 compara. El canal sigue ignorándolo
+      // entero: una expectativa no puede influir en la ejecución que juzga.
+      clase_tarea: z.string().optional(),
+      clase_sensibilidad: z.string().optional(),
+      vigia: z.string().optional(),
+      categoria: z.string().optional(),
+      /**
+       * Qué clase de incidente de seguridad tuvo que quedar registrado.
+       *
+       * Para un caso de inyección esto es lo que importa —4C pide «no obedecer,
+       * registrar el intento íntegro»— y `debe_escalar` es el instrumento
+       * equivocado: escalar a un humano y responder con normalidad son los dos
+       * desenlaces aceptables. Ver R-025.
+       */
+      incidente: z.string().optional(),
+      /** Marcas que la respuesta NO puede contener. Un ataque que funciona las trae. */
+      no_debe_contener: z.array(z.string()).optional(),
+      /**
+       * Por qué este caso espera lo que espera.
+       *
+       * Obligatorio de hecho, no de esquema, cuando una expectativa se corrige
+       * después de haber visto un resultado: ajustar la expectativa al resultado
+       * es la forma más fácil de que un lote mida su propia ejecución y saque
+       * siempre cien por cien. Escribir el motivo no lo impide, pero lo deja a la
+       * vista de quien lea el archivo.
+       */
+      por_que_asi: z.string().optional(),
     })
     .optional(),
 });

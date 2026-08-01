@@ -13,6 +13,7 @@ import { validarSalida, esquemaJson } from '../src/core/respuesta/esquemas.ts';
 import { verificar, proporcionDeSustento } from '../src/core/respuesta/verificar.ts';
 import { decidir, RESPUESTA } from '../src/core/respuesta/componer.ts';
 import { responder } from '../src/core/respuesta/responder.ts';
+import { POLITICA } from '../src/core/enrutador/politica.ts';
 import type { FragmentoRecuperado } from '../src/core/conocimiento/documento.ts';
 import type {
   Inferencia,
@@ -223,6 +224,83 @@ describe('la composición y los tres desenlaces', () => {
     assert.notEqual(decision.texto, 'Desde $5 al mes.');
   });
 
+  // R-025 — el agujero que encontró el lote de la fase 7.
+  //
+  // Cero campos factuales da sustento 1 por vacuidad, y con esa nota perfecta se
+  // enviaba `redaccion_sugerida` tal cual: la prosa cruda del modelo, sin
+  // auditar. Cuatro casos fuera de alcance —«¿cuál es la capital de Francia?»—
+  // salieron como resueltos porque el modelo escribió una negativa cortés y no
+  // había nada que verificar en ella.
+  describe('cero campos factuales', () => {
+    test('UNA RESPUESTA DE CATÁLOGO SIN NINGÚN CAMPO SE ESCALA, NO SE ENVÍA', () => {
+      const salida = validarSalida(
+        'catalogo',
+        salidaCatalogo([], { redaccion_sugerida: 'Lo siento, no tengo esa información.' }),
+      );
+      assert.ok(salida.valida);
+
+      const decision = decidir(salida.salida, verificar(salida.salida, []));
+
+      assert.equal(decision.accion, 'escalar');
+      assert.ok(decision.accion === 'escalar' && decision.motivo.includes('sin ningún campo factual'));
+      // Y la prosa del modelo no viaja a ninguna parte como respuesta.
+      assert.ok(!('texto' in decision));
+    });
+
+    test('la vacuidad sigue puntuando 1: el que decide es el compositor, no el verificador', () => {
+      // El verificador mide una proporción y 0/0 es 1. Meter la política ahí
+      // haría que la misma cifra significara cosas distintas según quién la lea.
+      const salida = validarSalida('catalogo', salidaCatalogo([], { redaccion_sugerida: 'nada' }));
+      assert.ok(salida.valida);
+
+      const veredicto = verificar(salida.salida, []);
+      assert.equal(proporcionDeSustento(veredicto), 1);
+      assert.equal(decidir(salida.salida, veredicto).accion, 'escalar');
+    });
+
+    test('un saludo sin campos SÍ se envía: no habla del corpus', () => {
+      const salida = validarSalida('saludo', {
+        clase: 'saludo',
+        datos: [],
+        redaccion_sugerida: '¡Hola! ¿En qué te ayudo?',
+      });
+      assert.ok(salida.valida);
+
+      const decision = decidir(salida.salida, verificar(salida.salida, []));
+      assert.equal(decision.accion, 'enviar');
+      assert.equal(decision.accion === 'enviar' && decision.texto, '¡Hola! ¿En qué te ayudo?');
+    });
+
+    test('un ambiguo con pregunta de aclaración se envía; sin ella, se escala', () => {
+      // Preguntar no es afirmar. Pero el texto sale del campo declarado del
+      // esquema, nunca de la prosa suelta.
+      const conPregunta = validarSalida('ambiguo', {
+        clase: 'ambiguo',
+        datos: [],
+        redaccion_sugerida: 'Te cuento todo sobre nuestros seguros: cubrimos de todo.',
+        pregunta_de_aclaracion: '¿Te refieres al seguro de inquilino o al de auto?',
+      });
+      assert.ok(conPregunta.valida);
+
+      const decision = decidir(conPregunta.salida, verificar(conPregunta.salida, []));
+      assert.equal(decision.accion, 'enviar');
+      assert.equal(
+        decision.accion === 'enviar' && decision.texto,
+        '¿Te refieres al seguro de inquilino o al de auto?',
+        'se envió la prosa suelta en vez de la pregunta declarada',
+      );
+
+      const sinPregunta = validarSalida('ambiguo', {
+        clase: 'ambiguo',
+        datos: [],
+        redaccion_sugerida: 'Lo siento, no tengo información sobre el tiempo en Madrid.',
+        pregunta_de_aclaracion: null,
+      });
+      assert.ok(sinPregunta.valida);
+      assert.equal(decidir(sinPregunta.salida, verificar(sinPregunta.salida, [])).accion, 'escalar');
+    });
+  });
+
   test('el modelo declarando que no puede responder gana a cualquier umbral', () => {
     const salida = validarSalida(
       'catalogo',
@@ -304,6 +382,23 @@ describe('el orquestador y el reintento único', () => {
     assert.equal(resultado.intentos, 0);
     assert.equal(modelo.peticiones.length, 0);
     assert.equal(resultado.clase_escalado, 'sin_fuentes');
+  });
+
+  test('EL MUESTREO SALE DE LA POLÍTICA Y LLEGA AL ADAPTADOR, Y ES DETERMINISTA', async () => {
+    // R-025. Dos corridas del lote de la fase 7 sobre la misma carga y el mismo
+    // modelo dieron 51 % y 43 % de acierto: Ollama muestrea a 0.8 por omisión.
+    // Con esa varianza la comparación local-contra-nube compara ruido. Y antes
+    // que la medición: una traza que no se puede reproducir no se puede auditar.
+    const modelo = new ModeloGuionizado([
+      JSON.stringify({ clase: 'saludo', datos: [], redaccion_sugerida: 'Hola' }),
+    ]);
+
+    await responder({ ...ENTRADA, clase_tarea: 'saludo', fragmentos: [] }, modelo);
+
+    assert.equal(modelo.peticiones[0]?.muestreo?.temperatura, 0);
+    // Y no es un valor escrito en el código: sale de config/politica.json, donde
+    // cambiarlo deja diff, autor y fecha.
+    assert.equal(modelo.peticiones[0]?.muestreo?.temperatura, POLITICA.muestreo.temperatura);
   });
 
   test('un saludo sin fragmentos SÍ se responde: no afirma nada', async () => {
