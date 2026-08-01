@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "nota": "Parámetros de la base de conocimiento. Viven aquí y no en el código por la misma razón que los del borde: un umbral que cambia sin dejar diff, autor y fecha no es auditable. Cambiar el umbral cambia qué preguntas se responden y cuáles se escalan, sin recompilar.",
+
+  "ingesta": {
+    "carpeta": "corpus",
+    "extensiones": [".md", ".txt", ".pdf"],
+    "prefijos_excluidos": ["00-"],
+    "por_que_prefijos": "00-LEEME.md documenta los huecos deliberados del corpus y las trampas que tiene puestas. Si se indexa, una pregunta sobre motocicletas recupera el párrafo que explica que las motocicletas son un hueco a propósito, y el criterio de aceptación de la fase 2 queda invalidado por su propia documentación. Ver R-023."
+  },
+
+  "troceado": {
+    "objetivo_caracteres": 1200,
+    "solapamiento_caracteres": 200,
+    "minimo_caracteres": 120,
+    "por_que": "El troceado corta por fronteras de encabezado y de párrafo, y solo parte por tamaño cuando un bloque no cabe. 1200 caracteres es del orden de un apartado de estos documentos: suficiente para que una cláusula y su excepción caigan juntas, y corto para que la cita señale un sitio y no media página. El solapamiento existe para que una frase partida por el corte siga estando entera en uno de los dos lados. El mínimo descarta restos: un fragmento de treinta caracteres puntúa alto por casualidad y no dice nada."
+  },
+
+  "recuperacion": {
+    "umbral": 0.55,
+    "maximo_fragmentos": 6,
+    "estado_umbral": "PROVISIONAL",
+    "por_que": "Por debajo del umbral la recuperación devuelve VACÍO, no el mejor de los malos. Es el invariante 1 hecho número: sin fuente por encima del umbral, el agente no responde y escala.",
+    "medido": {
+      "cuando": "2026-08-01",
+      "como": "20 consultas contra el corpus de Nimbo Seguros indexado con bge-m3, 106 fragmentos. Se anota la mejor puntuación de cada una.",
+      "fuera_del_dominio": [0.327, 0.363],
+      "otro_sector_con_forma_parecida": 0.486,
+      "huecos_deliberados_del_corpus": [0.477, 0.601],
+      "preguntas_que_el_corpus_cubre": [0.564, 0.775],
+      "que_significa": "0.55 deja pasar el 100% de las preguntas cubiertas y detiene el 100% de las ajenas al dominio. Lo que NO puede hacer es detener los huecos deliberados: sus rangos SE SOLAPAN con los de las preguntas cubiertas (0.564–0.601). Subir el umbral a 0.61 para atraparlos produciría tres vacíos falsos sobre preguntas legítimas. Ninguna similitud puede distinguirlos, porque «¿aseguráis motocicletas?» ES parecida a la póliza de auto: lo que le falta al fragmento no es parecido, es la respuesta. Esa distinción la hace el verificador de procedencia de la fase 4, no el umbral. Ver R-024.",
+      "sigue_provisional_porque": "Veinte consultas escritas por quien escribió el corpus no son una muestra. El lote de la fase 7 son de cincuenta a cien casos escritos contra él; hasta entonces el valor está medido pero no calibrado, y la diferencia importa."
+    }
+  },
+
+  "embeddings": {
+    "origen": "local",
+    "local": {
+      "modelo": "bge-m3",
+      "dimensiones": 1024,
+      "url_por_defecto": "http://localhost:11434"
+    },
+    "nube": {
+      "modelo": "sin-decidir",
+      "dimensiones": 0
+    },
+    "por_que_bge_m3": "El corpus está en español. Los modelos de embeddings pequeños que corren en Ollama —nomic-embed-text, mxbai— están entrenados sobre todo con inglés, y sobre texto en español recuperan peor. Con uno de ellos no se podría saber si un vacío viene del umbral o del modelo, y el criterio de aceptación dejaría de medir lo que dice medir.",
+    "por_que_nube_sin_decidir": "El proveedor de nube es un bloqueante abierto del canon. El adaptador existe, declara qué credenciales necesita y al arrancar sin ellas lo dice y no se registra — mismo patrón que el conector de WhatsApp. Cambiar `origen` a `nube` sin credenciales falla al arrancar con el motivo, no en la primera consulta."
+  },
+
+  "almacen": {
+    "coleccion": "conocimiento",
+    "metrica": "Cosine",
+    "por_que": "Una colección por despliegue. La métrica es coseno porque bge-m3 emite vectores normalizados y su puntuación es directamente comparable con el umbral de arriba; con producto interno el umbral dependería de la longitud del texto."
+  }
+}

@@ -61,7 +61,7 @@ const ACTUALIZACION_TELEGRAM = {
     date: 1_785_000_000,
     chat: { id: 5_550_001 },
     from: { id: 5_550_001, first_name: 'Ana', last_name: 'Ruiz' },
-    text: '¿Cuánto cuesta una limpieza dental?',
+    text: '¿Cuánto cuesta el seguro de inquilino?',
   },
 };
 
@@ -81,7 +81,7 @@ const CARGA_WHATSAPP = {
                 from: '5550001',
                 timestamp: '1785000000',
                 type: 'text',
-                text: { body: '¿Cuánto cuesta una limpieza dental?' },
+                text: { body: '¿Cuánto cuesta el seguro de inquilino?' },
               },
             ],
           },
@@ -138,7 +138,7 @@ describe('verificación de credencial — una petición sin credencial no pasa',
     // El ataque real: reenviar una firma legítima con otro contenido.
     const original = JSON.stringify(CARGA_WHATSAPP);
     const firma = firmarHmacSha256(SECRETO_APP_WHATSAPP, original);
-    const alterado = original.replace('limpieza dental', 'transferencia bancaria');
+    const alterado = original.replace('seguro de inquilino', 'transferencia bancaria');
 
     assert.notEqual(original, alterado);
 

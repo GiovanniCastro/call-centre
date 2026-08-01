@@ -15,13 +15,16 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
-| **2** | 2026‑07‑31 | R‑012 … R‑022 | Fases 0 y 1 construidas. React fijado para el panel. Repositorio público. Telegram como canal primario. Alcance de contacto en tres capas. Corpus escrito |
+| **3** | 2026‑08‑01 | R‑024 | Fase 2 construida. El umbral de similitud no puede sostener el invariante 1 por sí solo: medido, y el trabajo se reparte con el verificador de procedencia de la fase 4 |
+| **2** | 2026‑07‑31 | R‑012 … R‑023 | Fases 0 y 1 construidas. React fijado para el panel. Repositorio público. Telegram como canal primario. Alcance de contacto en tres capas. Corpus escrito, y reemplazado por el de una aseguradora |
 | **1** | 2026‑07‑30 | R‑001 … R‑011 | Revisión del plan, propuesta de desarrollo por fases, arquitectura en dos planos, vault de Obsidian |
 
 ---
 
 ## Contenido
 
+- [Revisión 2026‑08‑01](#revisión-2026-08-01)
+  - [R‑024 · El umbral no sostiene el invariante 1 solo](#r-024--el-umbral-de-similitud-no-puede-sostener-el-invariante-1-por-sí-solo)
 - [Revisión 2026‑07‑31](#revisión-2026-07-31)
   - [R‑012 · El panel se construye en React](#r-012--el-panel-se-construye-en-react)
   - [R‑013 · El repositorio nace en la raíz del vault](#r-013--el-repositorio-nace-en-la-raíz-del-vault)
@@ -34,6 +37,7 @@
   - [R‑020 · Telegram es el canal primario](#r-020--el-canal-primario-es-telegram-whatsapp-pasa-a-conector-declarado)
   - [R‑021 · El alcance de contacto, en tres capas](#r-021--el-alcance-de-contacto-se-defiende-en-tres-capas-no-en-una)
   - [R‑022 · El corpus, con huecos a propósito](#r-022--el-corpus-tiene-huecos-a-propósito-y-un-documento-envenenado)
+  - [R‑023 · El corpus pasa a aseguradora digital](#r-023--el-corpus-pasa-de-clínica-dental-a-aseguradora-digital)
 - [Revisión 2026‑07‑30](#revisión-2026-07-30)
   - [R‑001 · Arquitectura en dos planos](#r-001--arquitectura-en-dos-planos-con-proyección-de-un-solo-sentido)
   - [R‑002 · Desdoblado el campo `resultado`](#r-002--desdoblado-el-campo-resultado-de-telemetría)
@@ -473,6 +477,159 @@ Desbloquea la fase 2 y la 7. Quedan tres bloqueantes: la máquina de referencia
 para Ollama, el proveedor de nube y —nuevo, descubierto construyendo la fase 1— la
 ausencia de Docker en la máquina de desarrollo, que impide ejecutar en local todo
 lo que toque Redis, PostgreSQL y, a partir de la fase 2, Qdrant.
+
+> **Sustituida por R‑023.** El mecanismo de esta entrada —huecos deliberados,
+> cinco trampas, documento envenenado, aviso de ficción— sigue vigente palabra por
+> palabra. Lo que cambió es el negocio: la clínica dental dejó paso a una
+> aseguradora. Se conserva porque explica **por qué** el corpus está construido
+> así, que es lo que R‑023 hereda.
+
+---
+
+### R‑023 · El corpus pasa de clínica dental a aseguradora digital
+
+**Contexto.** El corpus de R‑022 cumplía su función: diecisiete documentos, huecos
+deliberados, trampas y un documento envenenado. Pero el dominio elegido —una
+clínica dental— resultó ser el más flojo de los disponibles para lo que este
+sistema tiene que demostrar. Una clínica responde preguntas planas: cuánto cuesta
+una limpieza, a qué hora abrís. Casi todo son datos únicos sin condiciones.
+
+**Qué cambió.** El corpus se sustituye **entero** por el de **Nimbo Seguros**,
+aseguradora digital ficticia del mercado estadounidense, con cinco ramos
+—inquilino, propietario, mascotas, vida y auto—. Diecisiete documentos, cifras en
+dólares, marco regulatorio estadounidense, redactados en español porque la
+compañía atiende en español. Decisión del responsable, con Lemonade como
+referencia **de modelo de negocio, no de contenido**: comisión fija, catálogo
+corto, contratación y siniestros por aplicación, sobrante anual donado. Ni una
+línea copiada de una póliza real.
+
+**Por qué el dominio importa.** Cuatro capacidades del sistema pasan de probarse
+con ejemplos a probarse con material:
+
+| Capacidad | Con la clínica | Con la aseguradora |
+|---|---|---|
+| Respuesta condicional | «La limpieza cuesta $X» | «Está cubierto» depende del ramo, del estado, del deducible y de si encaja en una exclusión |
+| Sensibilidad alta (invariante 3, vigía de perímetro) | Datos de contacto | Número de seguro social, carné de conducir, cuenta bancaria, cuestionario de salud |
+| Extracción con procedencia (fase 4) | Precios sueltos | Límites, sublímites, deducibles y fechas de vigencia, cada uno con su `fragmento_id` |
+| Coste de equivocarse | Molestia | Afirmar que algo está cubierto cuando no lo está es un daño concreto |
+
+La segunda fila es la que decide. El vigía de perímetro de la fase 4B‑1 tiene que
+poder enseñar «31 de 31 retenidos», y para eso hacen falta casos de sensibilidad
+alta **de verdad**, no inventados encima de un corpus que no los pedía.
+
+**Las trampas se conservan, traducidas al dominio nuevo.** La duplicación de un
+precio en dos documentos, la excepción que contradice la regla general, la tabla
+con filas que se solapan, la fecha de vigencia explícita y el documento
+envenenado siguen ahí, una por una. Dos ganan fuerza al cambiar de dominio:
+
+- **La excepción de cancelación** pasa a ser la trampa más peligrosa del corpus.
+  La regla general promete reembolso prorrateado; la excepción lo niega si hubo un
+  siniestro pagado. Un agente que cite la regla e ignore la excepción da una
+  respuesta que **suena correcta y cuesta dinero**.
+- **La tabla de cobertura por estado** son doce estados por cinco ramos con seis
+  notas al pie que se solapan, y se declara a sí misma con precedencia sobre los
+  documentos de producto. Resolver bien un conflicto exige respetar esa
+  precedencia, no promediar las dos fuentes.
+
+**Los huecos deliberados pasan de cuatro a cinco**: motocicletas y embarcaciones,
+vida entera y universal, mascotas que no sean perro o gato, el precio de la póliza
+de inundación y el recargo de los conductores menores de 25 años. Los cinco son
+preguntas que un cliente haría. Si el agente contesta a alguna, está inventando.
+
+**Un defecto que R‑022 tenía y no vio.** `00-LEEME.md` enumera los huecos y las
+trampas. Si se ingesta con el resto de la carpeta, una pregunta sobre motocicletas
+recupera el párrafo que explica que las motocicletas son un hueco a propósito —y
+el criterio de aceptación de la fase 2 queda invalidado por su propia
+documentación. **La ingestión excluye todo archivo cuyo nombre empiece por
+`00-`.** Queda escrito en el propio léeme y en la fase 2 de
+[[Propuesta-Desarrollo-Por-Fases]], porque es una restricción de la ingestión, no
+una convención de nombres.
+
+**Lo que hay que decir en voz alta.** Nimbo Seguros no existe. Sus precios, sus
+coberturas, sus cifras de donación y los estados donde dice operar son inventados,
+y nada de ese material es asesoramiento en materia de seguros. El aviso ocupa la
+primera pantalla de `corpus/00-LEEME.md`. Vale aquí lo mismo que valía para la
+clínica: **si esto pasa a ser una demo para un cliente real, la carpeta se
+sustituye entera**, y esa es la intención — el sistema no debe saber nada de
+seguros, solo saber leer documentos.
+
+**Impacto.** [[00-CANON]] §Parte 4 y la fase 2 de
+[[Propuesta-Desarrollo-Por-Fases]]. Ninguna línea de `src/` cambia: el corpus no
+tiene código todavía. Sí cambia el texto de ejemplo de `tests/canales.test.ts`,
+que preguntaba por una limpieza dental. El corpus sigue sin bloquear las fases 2 y
+7; lo que cambia es de qué hablan los casos que se escribirán en la 7.
+
+---
+
+# Revisión 2026‑08‑01
+
+La fase 2 pasa de PROPUESTO a CONSTRUIDO. Una de sus mediciones obliga a
+precisar qué puede y qué no puede hacer el umbral de recuperación, y esa
+precisión cambia dónde vive el invariante 1.
+
+---
+
+### R‑024 · El umbral de similitud no puede sostener el invariante 1 por sí solo
+
+**Contexto.** El criterio de aceptación de la fase 2 dice: «una pregunta cuya
+respuesta no está en los documentos devuelve vacío, no un fragmento forzado». El
+mecanismo previsto era un umbral de similitud configurable: por debajo, vacío.
+
+**Qué se midió.** Veinte consultas contra el corpus de Nimbo Seguros indexado con
+`bge-m3`, 106 fragmentos. La mejor puntuación de cada una:
+
+| Grupo | Rango |
+|---|---|
+| Fuera del dominio (clima, capital, receta) | 0.327 – 0.363 |
+| Otro sector con forma de pregunta parecida (limpieza dental) | 0.486 |
+| **Huecos deliberados del corpus** | 0.477 – **0.601** |
+| **Preguntas que el corpus sí cubre** | **0.564** – 0.775 |
+
+**Los dos últimos rangos se solapan.** No por poco: entre 0.564 y 0.601 conviven
+tres preguntas legítimas y dos que el corpus no puede responder.
+
+**Qué cambió.** El umbral se queda en 0.55 y **se le atribuye el trabajo que sí
+hace**: detiene el 100 % de las consultas ajenas al dominio y deja pasar el 100 %
+de las cubiertas. Deja de atribuírsele el que no puede hacer.
+
+**Por qué no se arregla subiéndolo.** Subirlo a 0.61 atraparía los cinco huecos y
+produciría **tres vacíos falsos** sobre preguntas que el corpus responde. Cambiar
+un fallo por otro peor: un vacío falso es el agente diciendo «no está
+documentado» sobre algo que sí lo está, y nadie lo detecta porque tiene la forma
+exacta de una respuesta correcta.
+
+**Y por qué ningún umbral lo arregla.** «¿Aseguráis motocicletas?» **es** parecida
+a la póliza de auto. Debe serlo: habla de vehículos, de cobertura y de
+contratación. La similitud del coseno mide parentesco temático, y el parentesco
+es real. Lo que le falta al fragmento recuperado no es parecido con la pregunta:
+es **la respuesta**. Ninguna función de distancia entre vectores distingue «trata
+de esto» de «contiene el dato que se pide», porque son propiedades distintas.
+
+**Dónde vive entonces el invariante 1.** En dos sitios, no en uno:
+
+1. **El umbral, en la fase 2** — descarta lo ajeno al dominio. Primera línea.
+2. **El verificador de procedencia, en la fase 4** — comprueba que el valor citado
+   aparece **literalmente** en el fragmento que se recuperó en esa ejecución.
+   Es lo que atrapa el caso «recuperó algo del tema, pero no dice lo que el
+   modelo afirma».
+
+Esto no es una vía de escape improvisada: es exactamente lo que
+[[Propuesta-Desarrollo-Por-Fases]] §Fase 4 ya decidió, y por los mismos motivos.
+Lo que aporta esta entrada es la medición que demuestra que la fase 4 **no es
+opcional** — sin ella, el sistema responde preguntas cuya respuesta no tiene.
+
+**El criterio de la fase 2, dicho con precisión.** Se cumple para preguntas fuera
+del dominio del corpus. **No se cumple** para preguntas dentro del dominio cuya
+respuesta concreta está ausente. Queda como criterio relajado con justificación
+escrita, según el protocolo de fracaso de §9, y como issue abierto con etiqueta de
+la fase 4. Un criterio relajado en silencio es deuda invisible; este queda a la
+vista, con su número al lado.
+
+**Impacto.** `config/conocimiento.json` lleva la medición completa en el campo
+`medido`, no una cifra suelta. El umbral sigue marcado `PROVISIONAL`: veinte
+consultas escritas por quien escribió el corpus no son una muestra, y la
+calibración de verdad la da el lote de cincuenta a cien casos de la fase 7.
+[[00-CANON]] §Parte 4.
 
 ---
 

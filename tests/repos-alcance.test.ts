@@ -51,6 +51,12 @@ const SIN_ALCANCE = new Set([
   'cliente.ts',
   // Migraciones: corren antes de que exista contacto alguno.
   'migrar.ts',
+  // Procedencia del corpus (fase 2). El corpus es común a todos los contactos:
+  // no hay contacto al que acotarlo, y exigir un alcance obligaría a inventar
+  // uno, haciendo que el filtro afirmara algo falso —que estos documentos
+  // pertenecen a alguien—. La exención es a la regla del alcance, no a la de
+  // aislamiento: en `documentos` no hay ni un dato de cliente.
+  'documentos.ts',
 ]);
 
 /**

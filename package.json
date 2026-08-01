@@ -13,14 +13,19 @@
     "dev": "node --env-file-if-exists=.env --watch src/main.ts",
     "arrancar": "node --env-file-if-exists=.env src/main.ts",
     "verificar": "npm run check:tipos && npm run check:lint && npm run check:arquitectura && npm run test",
+    "conocimiento:ingerir": "node --env-file-if-exists=.env src/conocimiento/ordenes.ts ingerir",
+    "conocimiento:reindexar": "node --env-file-if-exists=.env src/conocimiento/ordenes.ts reindexar",
+    "conocimiento:consultar": "node --env-file-if-exists=.env src/conocimiento/ordenes.ts consultar",
+    "conocimiento:verificar": "node --env-file-if-exists=.env src/conocimiento/ordenes.ts verificar",
     "check:tipos": "tsc --noEmit",
     "check:lint": "eslint .",
     "check:arquitectura": "depcruise src --config .dependency-cruiser.cjs",
-    "test": "node --test --experimental-test-module-mocks \"tests/**/*.test.ts\""
+    "test": "node --env-file-if-exists=.env --test --experimental-test-module-mocks \"tests/**/*.test.ts\""
   },
   "dependencies": {
     "pg": "^8.22.0",
     "redis": "^6.1.0",
+    "unpdf": "^1.8.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
