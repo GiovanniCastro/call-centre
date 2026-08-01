@@ -68,7 +68,25 @@ const SIN_ALCANCE = new Set([
  */
 const EXCEPCIONES = new Map([
   ['alcanceParaContacto', 'es la función que construye el alcance'],
+  // Fábrica, no consulta: construye el adaptador de CRM. Sus TRES métodos sí
+  // reciben alcance y sí filtran; exigírselo a la fábrica sería exigir un
+  // alcance para decidir con qué base de datos hablar.
+  ['crmSobrePostgres', 'es una fábrica de adaptador, no una consulta'],
 ]);
+
+/**
+ * Tablas que NO son datos de un cliente, sino un recurso compartido.
+ *
+ * `huecos` es la agenda: los espacios libres son de la empresa, no de nadie.
+ * Filtrarlos por contacto sería incorrecto, no más seguro — cada cliente vería
+ * cero huecos disponibles.
+ *
+ * La regla de esta prueba tenía dos categorías —leer datos de alguien y
+ * atribuirle una fila nueva— y le faltaba la tercera. Se añade nombrando la
+ * tabla, no relajando el patrón: una excepción por nombre es un cambio visible
+ * en el diff; un patrón más laxo dejaría pasar también lo que no debe.
+ */
+const TABLAS_COMPARTIDAS = ['huecos'];
 
 type FuncionExportada = {
   archivo: string;
@@ -182,12 +200,19 @@ describe('src/repos/ — ninguna consulta puede saltarse el filtro de contacto',
         // volverá a encontrar.
         const esInsercionPura = /^\s*INSERT\b/i.test(normalizada) && !/\bWHERE\b/i.test(normalizada);
         const esSobreContactos = /\bcontactos\b/i.test(normalizada);
+        // Tercera categoría: recurso compartido de la empresa, no dato de nadie.
+        // Filtrarlo por contacto no sería más seguro, sería incorrecto.
+        const esRecursoCompartido = TABLAS_COMPARTIDAS.some((tabla) =>
+          new RegExp(`\\b(FROM|INTO|UPDATE)\\s+${tabla}\\b`, 'i').test(normalizada),
+        );
 
         const cumple = esSobreContactos
           ? true
-          : esInsercionPura
-            ? /\bcontacto_id\b/i.test(normalizada)
-            : /contacto_id\s*=\s*\$\d/i.test(normalizada);
+          : esRecursoCompartido
+            ? true
+            : esInsercionPura
+              ? /\bcontacto_id\b/i.test(normalizada)
+              : /contacto_id\s*=\s*\$\d/i.test(normalizada);
 
         if (!cumple) infractoras.push(`${archivo}: ${normalizada.slice(0, 90)}…`);
       }
