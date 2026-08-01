@@ -126,7 +126,7 @@ jamás produce una llamada externa: el espía sobre el módulo de salida lo veri
 con adaptadores que salen de verdad, no con dobles. Y una llamada a un dominio no
 declarado se bloquea antes de abrir el socket, aunque el código la intente.
 
-Medido contra el CI **y también en local**: **276 pruebas, 276 pasan, 0
+Medido contra el CI **y también en local**: **305 pruebas, 305 pasan, 0
 omitidas** — incluidas las que corren contra Redis, PostgreSQL y
 Qdrant reales, en contenedores. `tsc --noEmit`, `eslint` y `depcruise` sin
 problemas. 11 dependencias directas.
