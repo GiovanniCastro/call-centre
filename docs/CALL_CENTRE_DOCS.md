@@ -15,7 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
-| **4** | 2026‑08‑01 | R‑025 … R‑029 | Fases 3 y 3B construidas. El SDK entra pero sale por nuestro `fetch`. Registro de proveedores con tres estados. La máquina se mide, y la medición cambió la política |
+| **4** | 2026‑08‑01 | R‑025 … R‑030 | Fases 3, 3B y 4 construidas. El SDK entra pero sale por nuestro `fetch`. Registro de proveedores con tres estados. La máquina se mide, y la medición cambió la política |
 | **3** | 2026‑08‑01 | R‑024 | Fase 2 construida. El umbral de similitud no puede sostener el invariante 1 por sí solo: medido, y el trabajo se reparte con el verificador de procedencia de la fase 4 |
 | **2** | 2026‑07‑31 | R‑012 … R‑023 | Fases 0 y 1 construidas. React fijado para el panel. Repositorio público. Telegram como canal primario. Alcance de contacto en tres capas. Corpus escrito, y reemplazado por el de una aseguradora |
 | **1** | 2026‑07‑30 | R‑001 … R‑011 | Revisión del plan, propuesta de desarrollo por fases, arquitectura en dos planos, vault de Obsidian |
@@ -25,6 +25,7 @@
 ## Contenido
 
 - [Revisión 2026‑08‑01](#revisión-2026-08-01)
+  - [R‑030 · El reintento corrige; el escalado exige el hilo](#r-030--el-reintento-corrige-la-cola-de-escalado-exige-el-hilo-entero)
   - [R‑029 · El lote rechaza toda entrega de red](#r-029--el-canal-de-lote-rechaza-toda-entrega-de-red-por-construcción)
   - [R‑025 · El SDK sale por nuestro `fetch`](#r-025--el-sdk-del-proveedor-entra-pero-sale-por-nuestro-fetch)
   - [R‑026 · Registro de proveedores, tres estados](#r-026--el-registro-de-proveedores-distingue-falta-la-clave-de-falta-el-código)
@@ -59,6 +60,35 @@
 
 ---
 
+### R‑030 · El reintento corrige; la cola de escalado exige el hilo entero
+
+**Contexto.** La fase 4 pide «reintento único con contexto corregido antes de
+escalar» y una cola de escalado «con motivo, transcripción y contexto».
+
+**Qué cambió.** El reintento no repite la petición: le dice al modelo **qué
+campos rechazó el verificador y por qué**. Repetir sin corregir sería tirar el
+dado dos veces; con el motivo delante, un modelo que parafraseó una cifra en vez
+de copiarla suele copiarla a la segunda. Y uno solo: si a la segunda sigue sin
+poder citar, el problema no es la redacción, y seguir insistiendo es gastar
+presupuesto para llegar al mismo escalado más tarde.
+
+**Dos casos NO se reintentan.** El modelo que declara `no_puedo_responder` ya
+dijo que con esas fuentes no llega — insistir sería no creerle. Y una tarea
+factual sin ningún fragmento recuperado no llega ni a la primera llamada:
+pedirle que redacte sin fuentes es pedirle que invente.
+
+**La cola rechaza un hilo vacío en lugar de guardarlo.** Un escalado sin
+transcripción llega al operador como una notificación sin contexto, y entonces el
+criterio «el caso escalado conserva el hilo completo» sería cierto del esquema y
+falso de la práctica.
+
+**Un matiz que salió al escribir las pruebas.** La afirmación rechazada NO llega
+al texto que ve el cliente —la decisión de escalar ni siquiera tiene campo
+`texto`— pero SÍ queda en el registro del escalado. Un escalado que oculta lo que
+se intentó afirmar obliga al operador a reconstruirlo, que es justo lo que venía
+a evitarle.
+
+---
 ### R‑029 · El canal de lote rechaza toda entrega de red, por construcción
 
 **Contexto.** La fase 3B añade `lote` como segundo canal para convertir en prueba

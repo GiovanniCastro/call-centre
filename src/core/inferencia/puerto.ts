@@ -35,6 +35,16 @@ export type PeticionInferencia = {
   readonly fragmentos: readonly FragmentoConProcedencia[];
   readonly maximo_tokens: number;
   readonly tiempo_maximo_ms: number;
+  /**
+   * Esquema JSON al que debe ajustarse la respuesta.
+   *
+   * Va en la petición y no en un método aparte para que **ningún adaptador pueda
+   * no soportarlo**: si fuera opcional a nivel de interfaz, un proveedor sin
+   * salida estructurada devolvería prosa y el verificador de procedencia de la
+   * fase 4 se quedaría sin nada que verificar — que es tanto como no tenerlo.
+   * Presente, el adaptador la exige a su proveedor; ausente, redacta libre.
+   */
+  readonly esquema?: Record<string, unknown> | undefined;
 };
 
 export type RespuestaInferencia = {
