@@ -158,7 +158,7 @@ dicen Perímetro, y son ellos los que mandan.
 | 4 | Salida estructurada con procedencia, validación y escalado | **CONSTRUIDO** |
 | 4B‑1 | Vigías que detienen | **CONSTRUIDO** |
 | 4B‑2 | Vigías que observan | **CONSTRUIDO** |
-| 4C | Detección | PROPUESTO |
+| 4C | Detección | **CONSTRUIDO** |
 | 5 | Acciones, idempotencia, interfaz CRM | PROPUESTO |
 | 6 | Panel sobre histórico real | PROPUESTO |
 | 7 | Lote de casos y corredor tri‑modo | PROPUESTO |
