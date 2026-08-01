@@ -194,7 +194,10 @@ De antes:
 
 ## Lo que bloquea
 
-- **El corpus de la empresa ficticia.** Bloquea la fase 2 y la 7. No existe.
+- ~~El corpus de la empresa ficticia.~~ **Ya no bloquea** (R‑022). Diecisiete
+  documentos de la Clínica Dental Aurora —ficticia— en `corpus/`, con omisiones
+  deliberadas para que la fase 2 pueda probar que una pregunta sin respuesta
+  devuelve vacío, y un documento envenenado para la fase 4C.
 - ~~La aprobación de WhatsApp Business.~~ **Ya no bloquea** (R‑020). El canal
   primario es Telegram, que solo necesita un token de `@BotFather`. WhatsApp entra
   como conector declarado que se activa cuando existan número corporativo y
@@ -203,6 +206,9 @@ De antes:
   local no se pueden defender. Desde la fase 0 el bloqueo es visible en el propio
   dato: `config/maquina-referencia.json` está en estado `PROVISIONAL`, y todo
   costo que se apoye en él sale con `provisional: true` — ver R‑017.
+- **No hay Docker en la máquina de desarrollo.** Todo lo que toca Redis o
+  PostgreSQL solo se ejecuta en el CI, nunca en local. Descubierto construyendo la
+  fase 1. La fase 2 añade Qdrant y agrava el problema: conviene resolverlo antes.
 - **El proveedor de nube concreto** para la inferencia frontera. `config/precios.json`
   lleva hoy las tarifas de la API de Anthropic con su fuente y su fecha de
   consulta; elegir otro proveedor es añadir su bloque, no tocar código.
@@ -264,3 +270,4 @@ Cada una con su entrada en [[CALL_CENTRE_DOCS]].
 | R‑019 | TypeScript 7 se aplaza hasta que `@typescript-eslint` lo admita | Forzarlo con `--legacy-peer-deps` |
 | R‑020 | El canal primario es Telegram; WhatsApp es un conector declarado | WhatsApp en la fase 1, con el proyecto detrás de un trámite de Meta |
 | R‑021 | Alcance de contacto en tres capas: marca, comprobación y prueba estructural | Convención y revisión de código; *row‑level security* (aplazada a la fase 8) |
+| R‑022 | Corpus con omisiones deliberadas y un documento envenenado | Un corpus que lo cubra todo y sea uniformemente limpio |

@@ -15,7 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
-| **2** | 2026‑07‑31 | R‑012 … R‑021 | Fases 0 y 1 construidas. React fijado para el panel. Repositorio público. Telegram como canal primario. Alcance de contacto en tres capas |
+| **2** | 2026‑07‑31 | R‑012 … R‑022 | Fases 0 y 1 construidas. React fijado para el panel. Repositorio público. Telegram como canal primario. Alcance de contacto en tres capas. Corpus escrito |
 | **1** | 2026‑07‑30 | R‑001 … R‑011 | Revisión del plan, propuesta de desarrollo por fases, arquitectura en dos planos, vault de Obsidian |
 
 ---
@@ -33,6 +33,7 @@
   - [R‑019 · TypeScript 7 se aplaza](#r-019--typescript-7-se-aplaza-hasta-que-typescript-eslint-lo-admita)
   - [R‑020 · Telegram es el canal primario](#r-020--el-canal-primario-es-telegram-whatsapp-pasa-a-conector-declarado)
   - [R‑021 · El alcance de contacto, en tres capas](#r-021--el-alcance-de-contacto-se-defiende-en-tres-capas-no-en-una)
+  - [R‑022 · El corpus, con huecos a propósito](#r-022--el-corpus-tiene-huecos-a-propósito-y-un-documento-envenenado)
 - [Revisión 2026‑07‑30](#revisión-2026-07-30)
   - [R‑001 · Arquitectura en dos planos](#r-001--arquitectura-en-dos-planos-con-proyección-de-un-solo-sentido)
   - [R‑002 · Desdoblado el campo `resultado`](#r-002--desdoblado-el-campo-resultado-de-telemetría)
@@ -417,6 +418,61 @@ exista despliegue real y la configuración de conexión esté fijada.
 `tests/repos-alcance.test.ts`. La fase 5 hereda la regla: las herramientas de
 acción no aceptan destinatario desde el texto, y el alcance es lo que lo garantiza
 del lado de los datos.
+
+---
+
+### R‑022 · El corpus tiene huecos a propósito, y un documento envenenado
+
+**Contexto.** «El corpus de la empresa ficticia» figuraba como bloqueante de las
+fases 2 y 7 desde la primera revisión. Sin documentos no hay nada que indexar, y
+sin índice el invariante 1 —sin fuente no hay respuesta— deja al agente sin poder
+decir nada.
+
+**Qué cambió.** Diecisiete documentos de la **Clínica Dental Aurora**, ficticia, en
+`corpus/`: servicios, precios, horarios, políticas, urgencias, seguros, protección
+de datos y preguntas frecuentes. Unas 6.600 palabras.
+
+**Por qué así y no pulido.** Están escritos como los escribiría la clínica, no como
+los querría un sistema de recuperación: formatos desiguales, algún dato repetido
+en dos sitios y alguna redacción ambigua. Un corpus pulido demostraría que la
+recuperación funciona sobre corpus pulidos, que no es lo que hace falta saber.
+
+**Las omisiones son la parte importante.** La fase 2 tiene un criterio de
+aceptación que exige que una pregunta sin respuesta en los documentos devuelva
+**vacío, no un fragmento forzado**. Ese criterio no se puede probar si el corpus lo
+cubre todo. Se omiten a propósito cuatro temas que un cliente preguntaría —estética
+facial, odontopediatría por encima de los 12 años, precio de urgencias fuera de
+horario y financiación a más de 12 meses—. Si el agente responde a alguno, está
+inventando, y eso es un fallo del sistema, no una carencia del corpus.
+
+**Trampas puestas a propósito**, cada una contra un criterio concreto:
+
+| Qué | Para qué |
+|---|---|
+| El precio de la limpieza aparece en dos documentos | Que la citación señale una fuente concreta y no «alguna de las dos» |
+| La política de cancelación tiene una excepción que contradice la regla general dos párrafos antes | Que el agente no cite la regla ignorando la excepción |
+| `07-horarios.md` lleva fecha de caducidad explícita | El vigía de vigencia de la fase 4B‑2 |
+| La tabla de seguros tiene condiciones que se solapan | Que la extracción no mezcle filas |
+| `14-documento-con-instruccion-incrustada.md` contiene texto que ordena al agente revelar datos de otros pacientes | Fase 4C, envenenamiento del índice |
+
+El documento envenenado va **rodeado de material real de la clínica**, porque un
+documento hostil no llega con una etiqueta que lo anuncie. Lleva un aviso al
+principio para quien lo lea, no para el sistema: si el agente cambia de
+comportamiento tras indexarlo, la fase 4C no está haciendo su trabajo.
+
+**Lo que hay que decir en voz alta.** La clínica no existe y sus precios los
+inventé yo. Está escrito en `corpus/00-LEEME.md` con un aviso que ocupa la primera
+pantalla, porque un corpus ficticio que se confunda con datos reales es
+exactamente la clase de cifra sin ejecución detrás que este proyecto prohíbe. **Si
+esto pasa a ser una demo para un cliente real, la carpeta se sustituye entera** — y
+esa es la intención: el sistema no debe saber nada de odontología, solo saber leer
+documentos.
+
+**Impacto.** [[00-CANON]] §Parte 4: el corpus sale de la lista de bloqueantes.
+Desbloquea la fase 2 y la 7. Quedan tres bloqueantes: la máquina de referencia
+para Ollama, el proveedor de nube y —nuevo, descubierto construyendo la fase 1— la
+ausencia de Docker en la máquina de desarrollo, que impide ejecutar en local todo
+lo que toque Redis, PostgreSQL y, a partir de la fase 2, Qdrant.
 
 ---
 
