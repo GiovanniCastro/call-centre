@@ -42,9 +42,10 @@ jobs:
     # de casos: si las dos no se comportan igual, cambiar de una a otra cambiaría
     # el comportamiento del sistema sin que nada avisara.
     #
-    # La máquina de desarrollo no tiene Docker, así que este contenedor es el
-    # único sitio donde el código de Redis se ejercita. Sin él, `AlmacenRedis`
-    # sería código escrito y jamás ejecutado.
+    # Desde el 31-jul-2026 la máquina de desarrollo también los tiene, en las
+    # mismas versiones (docker-compose.yml). Las versiones de los dos sitios se
+    # cambian a la vez: un local con PostgreSQL 15 y un CI con el 16 produce el
+    # fallo más caro de diagnosticar, el que solo pasa en un sitio.
     services:
       redis:
         image: redis:7-alpine
@@ -73,9 +74,28 @@ jobs:
           --health-timeout 3s
           --health-retries 10
 
+      # Qdrant, desde la fase 2. Un doble probaría que el doble hace lo que le
+      # dijimos; lo que hay que saber es que la colección se crea con las
+      # dimensiones correctas, que guardar y buscar mantienen la correspondencia
+      # entre vector y carga útil, y que el borrado por filtro alcanza justo los
+      # fragmentos de un documento.
+      #
+      # La imagen no trae curl ni wget, así que la comprobación de salud va por
+      # bash sobre /dev/tcp — igual que en docker-compose.yml.
+      qdrant:
+        image: qdrant/qdrant:v1.12.4
+        ports:
+          - 6333:6333
+        options: >-
+          --health-cmd "bash -c '>/dev/tcp/127.0.0.1/6333' || exit 1"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
     env:
       REDIS_URL: redis://localhost:6379
       DATABASE_URL: postgres://perimetro:perimetro@localhost:5432/perimetro
+      QDRANT_URL: http://localhost:6333
 
     steps:
       - uses: actions/checkout@v7
