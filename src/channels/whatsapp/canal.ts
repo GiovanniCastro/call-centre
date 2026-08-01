@@ -12,6 +12,7 @@
 // queda dicha aquí y en R-020.
 
 import { verificarHmacSha256 } from '../../core/credencial.ts';
+import { salir } from '../../salida/salir.ts';
 import { normalizarCarga } from './normalizar.ts';
 import type {
   Canal,
@@ -80,7 +81,7 @@ type Opciones = {
 };
 
 async function enviarPorHttps(url: string, token: string, cuerpo: unknown): Promise<void> {
-  const respuesta = await fetch(url, {
+  const respuesta = await salir(url, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',

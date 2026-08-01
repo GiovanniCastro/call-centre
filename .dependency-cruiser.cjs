@@ -128,6 +128,31 @@ module.exports = {
       to: { path: '^config/precios\\.json$' },
     },
     {
+      name: 'solo-salida-habla-con-internet',
+      comment:
+        'Invariante 3 · Cero salida de datos sin pasar por la capa de saneo y la ' +
+        'lista blanca. src/salida/ es el único módulo que abre una conexión. ESLint ' +
+        'detiene el `fetch` global en el archivo; esto detiene la vuelta por un ' +
+        'cliente HTTP empaquetado, que ESLint no vería.',
+      severity: 'error',
+      from: { pathNot: '^src/salida/' },
+      to: {
+        dependencyTypes: CUALQUIER_PAQUETE,
+        path: '^(undici|node-fetch|axios|got|superagent|request|cross-fetch|ky)$',
+      },
+    },
+    {
+      name: 'sdk-de-proveedor-solo-en-adaptadores',
+      comment:
+        'El SDK de un proveedor vive en src/providers/, detrás de la interfaz común. ' +
+        'La regla `nucleo-sin-sdk-de-proveedor` cubre el dominio; esta cubre el resto ' +
+        'del perímetro —conocimiento, salida, el arranque— para que no se cuele por ' +
+        'una carpeta que nadie había pensado en nombrar.',
+      severity: 'error',
+      from: { pathNot: '^src/providers/' },
+      to: { dependencyTypes: CUALQUIER_PAQUETE, path: SDKS_DE_PROVEEDOR },
+    },
+    {
       name: 'sin-ciclos',
       comment:
         'Un ciclo de dependencias hace que «qué depende de qué» deje de tener ' +
