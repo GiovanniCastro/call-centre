@@ -18,7 +18,7 @@ costeable y auditable.
   disco**, glosario y decisiones tomadas. Si algo choca con el código, gana el
   código.
 - [[CALL_CENTRE_DOCS]] — 📘 **el manual**: cada cambio de fondo con su contexto,
-  qué cambió, por qué y a qué afecta. Diecisiete entradas en dos revisiones, a
+  qué cambió, por qué y a qué afecta. Veintiuna entradas en dos revisiones, a
   31‑jul‑2026. Lo mantiene la habilidad `call_centre_docs`.
 - [[Propuesta-Desarrollo-Por-Fases]] — 🧭 **el cómo y el cuándo**: dieciséis fases
   con criterios de aceptación, los invariantes convertidos en checks de CI que
@@ -49,6 +49,9 @@ hizo, lo que quedó abierto y las entradas de manual que salieron.
 - `bitacoras/2026/07/2026-07-31_cambios.md` — fase 0 construida: telemetría,
   costeo, migraciones y CI; los checks demostrados fallando; dos defectos
   encontrados y corregidos (una regla que acusaba mal, una prueba que no probaba)
+- `bitacoras/2026/07/2026-07-31_fase-1.md` — fase 1 construida: canal Telegram,
+  borde endurecido, alcance de contacto en tres capas; 99 pruebas en el CI contra
+  Redis y PostgreSQL reales; ocho pruebas que fallaron y por qué eran mías
 
 ---
 
@@ -76,7 +79,8 @@ panel.
 
 ## Estado en una línea
 
-**Fase 0 construida.** El repositorio tiene código, 28 pruebas que pasan y CI con
-los invariantes mecanizados. Nada responde todavía a un usuario. Bloqueantes
-conocidos: el corpus de la empresa ficticia, el trámite de WhatsApp Business, la
-máquina de referencia para Ollama y el proveedor de nube. Ver [[00-CANON]] §Parte 4.
+**Fases 0 y 1 construidas.** Entra un mensaje por Telegram, se verifica, se agrupa
+y se guarda. Nadie responde todavía: no hay recuperación ni enrutador. 99 pruebas
+en el CI, contra Redis y PostgreSQL reales. Bloqueantes conocidos: el corpus de la
+empresa ficticia, la máquina de referencia para Ollama y el proveedor de nube — el
+trámite de WhatsApp dejó de bloquear con R‑020. Ver [[00-CANON]] §Parte 4.

@@ -15,7 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
-| **2** | 2026‑07‑31 | R‑012 … R‑020 | Fase 0 construida: repositorio, telemetría, costeo, migraciones y CI. React fijado para el panel. Repositorio público en GitHub. Telegram como canal primario |
+| **2** | 2026‑07‑31 | R‑012 … R‑021 | Fases 0 y 1 construidas. React fijado para el panel. Repositorio público. Telegram como canal primario. Alcance de contacto en tres capas |
 | **1** | 2026‑07‑30 | R‑001 … R‑011 | Revisión del plan, propuesta de desarrollo por fases, arquitectura en dos planos, vault de Obsidian |
 
 ---
@@ -32,6 +32,7 @@
   - [R‑018 · El repositorio es público](#r-018--el-repositorio-es-público-desde-el-primer-commit)
   - [R‑019 · TypeScript 7 se aplaza](#r-019--typescript-7-se-aplaza-hasta-que-typescript-eslint-lo-admita)
   - [R‑020 · Telegram es el canal primario](#r-020--el-canal-primario-es-telegram-whatsapp-pasa-a-conector-declarado)
+  - [R‑021 · El alcance de contacto, en tres capas](#r-021--el-alcance-de-contacto-se-defiende-en-tres-capas-no-en-una)
 - [Revisión 2026‑07‑30](#revisión-2026-07-30)
   - [R‑001 · Arquitectura en dos planos](#r-001--arquitectura-en-dos-planos-con-proyección-de-un-solo-sentido)
   - [R‑002 · Desdoblado el campo `resultado`](#r-002--desdoblado-el-campo-resultado-de-telemetría)
@@ -363,6 +364,59 @@ una promesa, no una garantía.
 §Fase 3B y §10. [[00-CANON]] §Parte 4: WhatsApp deja de figurar como bloqueante.
 Sin efecto en el código de la fase 0: `canal` ya incluía `telegram` y `lote`, que
 es exactamente por qué el enum se declaró completo desde el principio.
+
+---
+
+### R‑021 · El alcance de contacto se defiende en tres capas, no en una
+
+**Contexto.** La sección D de la fase 4C pide filtro de contacto obligatorio en la
+capa de repositorio, y R‑004 lo bajó a la fase 1 porque ahí es donde nace esa
+capa. El criterio de aceptación es exigente y está bien redactado: «existe una
+prueba que falla si algún método de `repos/` **puede** consultar sin filtro de
+contacto». La palabra es *puede*, no *consulta*.
+
+**Qué cambió.** `AlcanceContacto` se implementa con tres protecciones que se
+sostienen unas a otras:
+
+1. **Marca de símbolo en el tipo.** Un objeto con la forma correcta —
+   `{ contacto_id, canal }` — **no** es un `AlcanceContacto`. Falsificarlo exige un
+   `as` explícito, que es visible en el diff de un PR.
+2. **Comprobación en ejecución.** Toda función exportada de `src/repos/` recibe el
+   alcance como primer argumento y llama a `exigirAlcance`. Los tipos se borran al
+   ejecutar; la marca no. Un `as` escrito con prisa pasa el compilador y muere
+   aquí.
+3. **Prueba estructural sobre el árbol sintáctico.** Recorre `src/repos/` con el
+   compilador de TypeScript —que ya era dependencia del proyecto— y falla si
+   aparece una función exportada sin alcance, o una consulta sin filtro de
+   contacto.
+
+**Por qué tres y no una.** Comprobar que las funciones de hoy filtran se cumple
+hasta que alguien añada una que no lo haga, y entonces la prueba sigue verde. La
+capa 3 es la única que convierte «esto está bien escrito» en «esto no se puede
+escribir mal», y es la que pide el criterio. Las capas 1 y 2 existen porque una
+protección que solo actúa en el momento de la prueba llega tarde: quien escribe el
+código quiere saberlo mientras lo escribe.
+
+**Qué encontró la prueba nada más existir.** Falló al primer intento, señalando un
+`INSERT`. Tenía razón sobre el síntoma y la regla estaba mal: una inserción que
+**escribe** `contacto_id` no puede filtrar por él. La regla distingue ahora leer
+de escribir — leer sin filtro devuelve filas ajenas; insertar sin atribuir deja una
+fila sin dueño que ninguna consulta filtrada volverá a encontrar. Es la clase de
+matiz que no aparece razonando en abstracto.
+
+**Una alternativa considerada y no descartada del todo: *row‑level security* de
+PostgreSQL.** Es la defensa nativa de la base y sería más fuerte en un aspecto
+concreto: protegería también de una consulta escrita fuera de `src/repos/`, o de
+un script de mantenimiento. No se adopta ahora por dos motivos — obliga a
+establecer el rol en cada conexión, con lo que la garantía pasa a depender de la
+configuración del grupo de conexiones; y añade una capa de depuración justo donde
+menos conviene equivocarse. **Queda anotada para revisarla en la fase 8**, cuando
+exista despliegue real y la configuración de conexión esté fijada.
+
+**Impacto.** Fase 1. `src/repos/alcance.ts`, `src/repos/conversaciones.ts` y
+`tests/repos-alcance.test.ts`. La fase 5 hereda la regla: las herramientas de
+acción no aceptan destinatario desde el texto, y el alcance es lo que lo garantiza
+del lado de los datos.
 
 ---
 
