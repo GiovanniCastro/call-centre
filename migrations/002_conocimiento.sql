@@ -21,7 +21,6 @@
 -- `src/repos/documentos.ts` figura explícitamente en la lista de exenciones de la
 -- prueba estructural de la fase 1, con este motivo escrito al lado.
 
-BEGIN;
 
 CREATE TABLE documentos (
   -- Derivado de la ruta, estable cuando el contenido cambia. Ver
@@ -53,6 +52,3 @@ CREATE TABLE documentos (
 
 CREATE INDEX documentos_por_suma ON documentos (suma);
 
-INSERT INTO esquema_migraciones (version, nombre) VALUES (2, '002_conocimiento');
-
-COMMIT;

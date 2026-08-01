@@ -19,13 +19,6 @@
 -- después obliga a rellenar las filas existentes con algo, y ese algo siempre
 -- acaba siendo un valor que no significa nada.
 
-BEGIN;
-
-CREATE TABLE esquema_migraciones (
-  version      INTEGER     PRIMARY KEY,
-  nombre       TEXT        NOT NULL,
-  aplicada_en  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
 
 -- ── Contactos ────────────────────────────────────────────────────────────────
 -- La persona al otro lado, identificada por canal. El mismo teléfono en
@@ -221,6 +214,3 @@ CREATE UNIQUE INDEX prospectos_clave_operacion_unica
   ON prospectos (clave_operacion) WHERE clave_operacion IS NOT NULL;
 CREATE INDEX prospectos_por_contacto ON prospectos (contacto_id);
 
-INSERT INTO esquema_migraciones (version, nombre) VALUES (1, '001_inicial');
-
-COMMIT;
