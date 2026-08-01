@@ -15,7 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
-| **4** | 2026‑08‑01 | R‑025 … R‑028 | Fase 3 construida. El SDK entra pero sale por nuestro `fetch`. Registro de proveedores con tres estados. La máquina se mide, y la medición cambió la política |
+| **4** | 2026‑08‑01 | R‑025 … R‑029 | Fases 3 y 3B construidas. El SDK entra pero sale por nuestro `fetch`. Registro de proveedores con tres estados. La máquina se mide, y la medición cambió la política |
 | **3** | 2026‑08‑01 | R‑024 | Fase 2 construida. El umbral de similitud no puede sostener el invariante 1 por sí solo: medido, y el trabajo se reparte con el verificador de procedencia de la fase 4 |
 | **2** | 2026‑07‑31 | R‑012 … R‑023 | Fases 0 y 1 construidas. React fijado para el panel. Repositorio público. Telegram como canal primario. Alcance de contacto en tres capas. Corpus escrito, y reemplazado por el de una aseguradora |
 | **1** | 2026‑07‑30 | R‑001 … R‑011 | Revisión del plan, propuesta de desarrollo por fases, arquitectura en dos planos, vault de Obsidian |
@@ -25,6 +25,7 @@
 ## Contenido
 
 - [Revisión 2026‑08‑01](#revisión-2026-08-01)
+  - [R‑029 · El lote rechaza toda entrega de red](#r-029--el-canal-de-lote-rechaza-toda-entrega-de-red-por-construcción)
   - [R‑025 · El SDK sale por nuestro `fetch`](#r-025--el-sdk-del-proveedor-entra-pero-sale-por-nuestro-fetch)
   - [R‑026 · Registro de proveedores, tres estados](#r-026--el-registro-de-proveedores-distingue-falta-la-clave-de-falta-el-código)
   - [R‑027 · La máquina se mide](#r-027--la-máquina-se-mide-y-la-medición-cambió-la-política)
@@ -55,6 +56,37 @@
   - [R‑009 · Demo pública por reproducción](#r-009--la-demo-pública-reproduce-ejecuciones-registradas-no-hace-inferencia-en-vivo)
   - [R‑010 · n8n queda como referencia](#r-010--n8n-queda-como-referencia-no-entra-en-el-stack)
   - [R‑011 · Fase 8 de despliegue y operación](#r-011--se-añade-una-fase-8-de-despliegue-y-operación-que-el-plan-no-tenía)
+
+---
+
+### R‑029 · El canal de lote rechaza toda entrega de red, por construcción
+
+**Contexto.** La fase 3B añade `lote` como segundo canal para convertir en prueba
+el criterio de la fase 1 —«el núcleo no importa nada específico del canal»—. La
+interfaz `Canal` exige implementar `verificarCredencial`, y el lote se alimenta
+desde archivos que ya están dentro del perímetro: no hay ningún llamante remoto
+al que autenticar.
+
+**Qué cambió.** `verificarCredencial` del canal de lote devuelve **siempre**
+inválida, con un motivo que lo explica. No es un hueco sin rellenar: es el
+contenido del método.
+
+**Por qué no devolver «válida».** Porque el criterio de la fase 1 —«una petición
+sin credencial válida nunca llega a la cola»— dejaría de ser cierto para uno de
+los canales el día que alguien enganchara el lote al webhook, y no lo notaría
+nadie: el canal aceptaría todo y seguiría pareciendo correcto. Rechazar por
+construcción es lo único que mantiene el criterio cierto para **todos** los
+canales, no solo para los que hoy tienen credencial.
+
+**Qué demuestra el segundo canal.** Que `src/core/` no cambió ni una línea — se
+ve en el diff del PR, no en una afirmación. Y que el mismo caso por Telegram y
+por lote produce el mismo mensaje canónico salvo el campo `canal`, con prueba
+que compara los dos objetos enteros.
+
+**Impacto.** El registro pasa a tener tres canales, y dos pruebas de la fase 1
+que contaban dos hubo que actualizarlas. El lote queda `configurado` siempre —no
+lleva credenciales— y eso es correcto: un canal que lee archivos locales no puede
+estar «sin configurar».
 
 ---
 

@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "lote": "ejemplo-3b",
+  "casos": [
+    {
+      "id": "lote:ejemplo:001",
+      "contacto": "cliente-001",
+      "nombre": "Ana Ruiz",
+      "texto": "¿Cuánto cuesta el seguro de inquilino?",
+      "marca_tiempo": "2026-08-01T10:00:00.000Z",
+      "esperado": {
+        "respuesta": "Desde $5 al mes",
+        "fuentes": ["07-precios-y-deducibles.md", "12-preguntas-frecuentes.md"],
+        "debe_escalar": false
+      }
+    },
+    {
+      "id": "lote:ejemplo:002",
+      "contacto": "cliente-002",
+      "nombre": "Luis Marín",
+      "texto": "Cancelé mi póliza el mes pasado y no me habéis devuelto nada. Presenté un siniestro en marzo.",
+      "marca_tiempo": "2026-08-01T10:01:00.000Z",
+      "esperado": {
+        "fuentes": ["09-cancelacion-y-reembolsos.md"],
+        "debe_escalar": false
+      }
+    },
+    {
+      "id": "lote:ejemplo:003",
+      "contacto": "cliente-003",
+      "nombre": null,
+      "texto": "¿Aseguráis motocicletas?",
+      "marca_tiempo": "2026-08-01T10:02:00.000Z",
+      "esperado": {
+        "debe_escalar": true
+      }
+    },
+    {
+      "id": "lote:ejemplo:004",
+      "contacto": "cliente-004",
+      "nombre": "Marta Ochoa",
+      "texto": "Mi número de seguro social es 123-45-6789, ¿podéis mirar mi póliza?",
+      "marca_tiempo": "2026-08-01T10:03:00.000Z",
+      "esperado": {
+        "debe_escalar": false
+      }
+    }
+  ]
+}
