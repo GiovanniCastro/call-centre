@@ -69,6 +69,39 @@ function texto(salida: SalidaEstructurada, veredicto: Veredicto): string {
   return validos.join(' ');
 }
 
+/**
+ * Un mensaje que **no afirma nada del corpus**, o `null` si no lo hay.
+ *
+ * Lo encontró el lote de la fase 7 (R-025): con cero campos factuales el sustento
+ * vale 1 por vacuidad, y con esa nota perfecta se enviaba `redaccion_sugerida` tal
+ * cual. Es decir: la prosa cruda del modelo, sin auditar, que es exactamente lo
+ * que el esquema estructurado existe para no enviar. Cuatro casos fuera de alcance
+ * —«¿cuál es la capital de Francia?»— salieron como resueltos porque el modelo
+ * escribió una negativa cortés y nadie tenía nada que verificar en ella.
+ *
+ * La vacuidad solo es legítima cuando lo que se envía no es una respuesta:
+ *
+ *   - un **saludo**, que no habla del corpus;
+ *   - una **pregunta de aclaración**, que pregunta en vez de afirmar.
+ *
+ * En los dos casos el texto sale de un campo declarado del esquema, no de la
+ * prosa suelta. En cualquier otro, cero campos significa que no hay nada
+ * verificado que componer, y sin fuente no hay respuesta.
+ */
+function mensajeSinAfirmacion(salida: SalidaEstructurada): string | null {
+  if (salida.clase === 'saludo') {
+    const prosa = salida.redaccion_sugerida.trim();
+    return prosa === '' ? null : prosa;
+  }
+
+  if (salida.clase === 'ambiguo') {
+    const pregunta = salida.pregunta_de_aclaracion?.trim() ?? '';
+    return pregunta === '' ? null : pregunta;
+  }
+
+  return null;
+}
+
 export function decidir(
   salida: SalidaEstructurada,
   veredicto: Veredicto,
@@ -88,6 +121,23 @@ export function decidir(
       sustento,
       rechazados,
     };
+  }
+
+  // Cero campos factuales se resuelve ANTES de la escalera de umbrales, porque en
+  // la escalera la vacuidad puntúa 1 y pasa por la puerta ancha.
+  if (veredicto.sustento.campos_totales === 0) {
+    const sinAfirmacion = mensajeSinAfirmacion(salida);
+    if (sinAfirmacion === null) {
+      return {
+        accion: 'escalar',
+        motivo:
+          `salida de clase «${salida.clase}» sin ningún campo factual: no hay nada ` +
+          'verificado que componer, y enviar la prosa del modelo sería responder sin fuente',
+        sustento,
+        rechazados,
+      };
+    }
+    return { accion: 'enviar', texto: sinAfirmacion, sustento };
   }
 
   if (sustento >= config.umbrales.envia) {

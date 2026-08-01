@@ -8,6 +8,7 @@
     "node": ">=22.18.0"
   },
   "scripts": {
+    "lote": "node --env-file-if-exists=.env src/lote/ordenes.ts",
     "servicios": "docker compose up -d",
     "servicios:parar": "docker compose down",
     "dev": "node --env-file-if-exists=.env --watch src/main.ts",

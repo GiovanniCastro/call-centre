@@ -34,6 +34,12 @@ export const EsquemaCasoDeLote = z.object({
       respuesta: z.string().optional(),
       fuentes: z.array(z.string()).optional(),
       debe_escalar: z.boolean().optional(),
+      // Lo que el corredor de la fase 7 compara. El canal sigue ignorándolo
+      // entero: una expectativa no puede influir en la ejecución que juzga.
+      clase_tarea: z.string().optional(),
+      clase_sensibilidad: z.string().optional(),
+      vigia: z.string().optional(),
+      categoria: z.string().optional(),
     })
     .optional(),
 });
