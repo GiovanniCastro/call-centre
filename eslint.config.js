@@ -153,6 +153,34 @@ export default [
     },
   },
 
+  // ── Invariante 3 · Cero salida sin pasar por la lista blanca ─────────────
+  // Criterio de aceptación de la fase 3: «una llamada a un dominio no declarado
+  // se bloquea aunque el código la intente». Para que eso sea cierto, el código
+  // no puede tener otra forma de llamar.
+  //
+  // Se usa `no-restricted-globals` y no `no-restricted-syntax` a propósito: ese
+  // segundo ya lo ocupa la regla de costeo sobre `src/**`, y en la configuración
+  // plana un segundo bloque con el mismo nombre de regla la SUSTITUYE en lugar
+  // de sumarse. Habría desactivado en silencio la fuente única de costo, que es
+  // exactamente la clase de daño que estas reglas existen para no sufrir.
+  {
+    files: ['src/**/*.ts', 'proyeccion/**/*.ts', 'lote/**/*.ts'],
+    ignores: ['src/salida/**'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        {
+          name: 'fetch',
+          message:
+            'Invariante 3: toda salida del perímetro pasa por src/salida/salir.ts, ' +
+            'que comprueba el destino contra config/destinos.json antes de abrir el ' +
+            'socket y registra qué salió y hacia dónde. Un `fetch` suelto es un canal ' +
+            'de exfiltración que ninguna inyección tendría que buscar mucho.',
+        },
+      ],
+    },
+  },
+
   // Las pruebas ejercitan las reglas; se les permite mirar los precios de frente.
   {
     files: ['tests/**/*.ts'],

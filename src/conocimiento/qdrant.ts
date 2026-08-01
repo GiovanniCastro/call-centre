@@ -19,6 +19,7 @@ import { z } from 'zod';
 import type { Fragmento, FragmentoRecuperado } from '../core/conocimiento/documento.ts';
 import { puntoDe } from '../core/conocimiento/documento.ts';
 import type { AlmacenVectorial } from '../core/conocimiento/puertos.ts';
+import { salir } from '../salida/salir.ts';
 
 const EsquemaCarga = z.object({
   fragmento_id: z.string(),
@@ -61,7 +62,7 @@ export class AlmacenQdrant implements AlmacenVectorial {
   }
 
   private async pedir(ruta: string, opciones: RequestInit = {}): Promise<Response> {
-    const respuesta = await fetch(`${this.url}${ruta}`, {
+    const respuesta = await salir(`${this.url}${ruta}`, {
       ...opciones,
       headers: { 'content-type': 'application/json', ...opciones.headers },
       signal: AbortSignal.timeout(this.tiempoMaximoMs),

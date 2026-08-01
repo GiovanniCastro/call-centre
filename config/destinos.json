@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "nota": "La lista blanca de salida. Ningún destino que no esté aquí recibe una petición del perímetro, y no hay forma de saltarse esto desde el código: `fetch` está prohibido fuera de src/salida/ por lint y por el check de arquitectura. Añadir un destino es un cambio en este archivo, con diff, autor y fecha — que es exactamente lo que hace auditable la pregunta «¿a dónde han ido los datos?».",
+
+  "por_que": "Sin esta lista, una inyección exitosa convierte al agente en el mensajero del atacante: bastaría con que el modelo emitiera una URL para que el perímetro la visitara con lo que tuviera en contexto. Con la lista, la inyección puede pedir lo que quiera y el destino se rechaza antes de abrir el socket.",
+
+  "destinos": {
+    "api.anthropic.com": {
+      "clase": "externo",
+      "para": "Inferencia en la nube. Es la única salida del sistema que puede llevar contenido de una conversación fuera del perímetro.",
+      "esquemas": ["https"],
+      "egreso": true
+    },
+    "api.telegram.org": {
+      "clase": "externo",
+      "para": "Envío de respuestas por el canal primario.",
+      "esquemas": ["https"],
+      "egreso": true
+    },
+    "graph.facebook.com": {
+      "clase": "externo",
+      "para": "Envío de respuestas por WhatsApp. El conector está declarado y sin configurar (R-020); el destino se declara igual, para que activarlo sea poner credenciales y no tocar esta lista.",
+      "esquemas": ["https"],
+      "egreso": true
+    },
+    "localhost": {
+      "clase": "perimetro",
+      "para": "Ollama y Qdrant, que corren dentro del perímetro. No es egreso: el dato no sale de la máquina.",
+      "esquemas": ["http", "https"],
+      "egreso": false
+    },
+    "127.0.0.1": {
+      "clase": "perimetro",
+      "para": "Lo mismo que localhost, por dirección.",
+      "esquemas": ["http", "https"],
+      "egreso": false
+    }
+  },
+
+  "por_que_la_clase": "`egreso: false` no es una excusa para relajar la comprobación: el destino se valida igual. Lo que cambia es qué se registra. El vigía de perímetro de la fase 4B-1 cuenta salidas de sensibilidad alta, y contar la llamada a Ollama como egreso inflaría ese numerador con tráfico que nunca abandonó la máquina — haciendo que el número que sostiene la tesis del proyecto signifique otra cosa.",
+
+  "permitir_por_entorno": {
+    "variable": "DESTINOS_EXTRA",
+    "nota": "Lista separada por comas, solo para desarrollo — un túnel de pruebas, un servicio de simulación. Se registra en el arranque con un aviso visible, porque un destino que no está en este archivo no tiene diff que auditar. NUNCA en producción."
+  }
+}

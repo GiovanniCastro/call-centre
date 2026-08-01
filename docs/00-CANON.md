@@ -111,15 +111,23 @@ el webhook y no depende de que la máquina con Ollama esté encendida.
 
 > Medido contra el disco el **1-ago-2026**. Nada copiado de otro documento.
 
-**Las fases 0, 1 y 2 están construidas.** Entra un mensaje por Telegram, se
-verifica, se agrupa y se guarda. El corpus está indexado y se puede consultar con
-cita y umbral. **Nadie responde todavía**: no hay enrutador ni modelo redactando,
-así que el sistema escucha, registra y recupera, pero no conversa.
+**Las fases 0, 1, 2 y 3 están construidas.** Entra un mensaje por Telegram, se
+verifica, se agrupa y se guarda. El corpus está indexado y se consulta con cita y
+umbral. El enrutador clasifica, decide plano, sanea y redacta, con respaldo de
+local a nube registrado como desvío. **Falta la credencial de nube**: sin
+`ANTHROPIC_API_KEY` el plano de nube está declarado y sin configurar, así que el
+sistema conversa solo en local — y lo dice al arrancar en lugar de fallar en la
+primera queja.
 
-Medido contra el CI **y, desde el 31‑jul‑2026, también en local**: **138 pruebas,
-138 pasan, 0 omitidas** — incluidas las que corren contra Redis, PostgreSQL y
+**Lo que la fase 3 hace cierto, con prueba.** Una petición de sensibilidad alta
+jamás produce una llamada externa: el espía sobre el módulo de salida lo verifica
+con adaptadores que salen de verdad, no con dobles. Y una llamada a un dominio no
+declarado se bloquea antes de abrir el socket, aunque el código la intente.
+
+Medido contra el CI **y también en local**: **199 pruebas, 199 pasan, 0
+omitidas** — incluidas las que corren contra Redis, PostgreSQL y
 Qdrant reales, en contenedores. `tsc --noEmit`, `eslint` y `depcruise` sin
-problemas. 10 dependencias directas.
+problemas. 11 dependencias directas.
 
 **El corpus está indexado**: 17 documentos, 106 fragmentos, `bge-m3` local por
 Ollama, 8 segundos de ingestión completa. La reingestión sin cambios cuesta cero
@@ -142,8 +150,8 @@ dicen Perímetro, y son ellos los que mandan.
 |---|---|---|
 | 0 | Contrato de datos, telemetría, costeo, andamiaje | **CONSTRUIDO** |
 | 1 | Canal Telegram endurecido y aislamiento en repositorio | **CONSTRUIDO** |
-| 2 | Corpus y base de conocimiento con citación | PROPUESTO |
-| 3 | Enrutador local/nube y frontera de salida | PROPUESTO |
+| 2 | Corpus y base de conocimiento con citación | **CONSTRUIDO** |
+| 3 | Enrutador local/nube y frontera de salida | **CONSTRUIDO** |
 | 3B | Segundo canal (`lote`) y conector de WhatsApp | PROPUESTO |
 | 4 | Salida estructurada con procedencia, validación y escalado | PROPUESTO |
 | 4B‑1 | Vigías que detienen | PROPUESTO |

@@ -14,6 +14,7 @@
 import { z } from 'zod';
 
 import type { Embeddings } from '../../core/conocimiento/puertos.ts';
+import { salir } from '../../salida/salir.ts';
 
 const EsquemaRespuesta = z.object({
   embeddings: z.array(z.array(z.number())),
@@ -46,7 +47,7 @@ export class EmbeddingsOllama implements Embeddings {
   async incrustar(textos: readonly string[]): Promise<readonly (readonly number[])[]> {
     if (textos.length === 0) return [];
 
-    const respuesta = await fetch(`${this.url}/api/embed`, {
+    const respuesta = await salir(`${this.url}/api/embed`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ model: this.modelo, input: [...textos] }),
@@ -99,7 +100,7 @@ export class EmbeddingsOllama implements Embeddings {
   /** ¿Responde el servicio y tiene el modelo? Se usa al arrancar, no por consulta. */
   async disponible(): Promise<{ ok: true } | { ok: false; motivo: string }> {
     try {
-      const respuesta = await fetch(`${this.url}/api/tags`, {
+      const respuesta = await salir(`${this.url}/api/tags`, {
         signal: AbortSignal.timeout(3_000),
       });
       if (!respuesta.ok) return { ok: false, motivo: `Ollama respondió ${respuesta.status}` };

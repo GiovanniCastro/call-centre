@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "nota": "Catálogo de modelos locales y qué hace falta para correrlos. Lo usa `npm run maquina`, que mide la RAM y la VRAM reales de esta máquina y las cruza con esta tabla.",
+
+  "heuristica": {
+    "margen_vram_gb": 1.5,
+    "por_que": "Un modelo necesita su tamaño en disco MÁS espacio para el contexto (la caché de claves y valores) y para el propio controlador. 1.5 GB es un margen prudente para contextos de trabajo normales; con contextos muy largos hace falta más. Es una REGLA APROXIMADA declarada, no una medición: sirve para decidir qué probar, no para prometer que algo entrará justo.",
+    "por_que_vram_y_no_ram": "Si el modelo no cabe en la VRAM, Ollama lo reparte con la RAM del sistema y la generación pasa de decenas de fichas por segundo a unidades. No falla: va lento. Y un local lento sesga a favor de la nube justo la comparación que este proyecto existe para medir, así que «cabe» y «arranca» no son lo mismo."
+  },
+
+  "fuente_de_tamanos": {
+    "medidos": "Los modelos ya instalados se miden con la API de Ollama (/api/tags): tamaño en bytes, parámetros y cuantización exactos. Esos números son medición, y pisan a los declarados de este archivo. Las cifras van en GiB (1024³), que es la unidad en la que se cuenta la VRAM; en GB decimales los mismos modelos salen ~7% mayores y la comparación con la tarjeta deja de cuadrar.",
+    "declarados": "Los candidatos no instalados llevan el tamaño DECLARADO, no medido. Están marcados con `verificado: false` y el informe lo dice al lado de la cifra. Antes de comprar hardware apoyándose en uno de ellos, confírmalo con `ollama show <modelo>`.",
+    "fuente": "ollama.com/library",
+    "consultado": "2026-08-01"
+  },
+
+  "candidatos": [
+    {
+      "modelo": "gemma4:latest",
+      "tamano_gb": 8.9,
+      "verificado": true,
+      "proposito": "redaccion",
+      "nota": "Medido en esta máquina el 2026-08-01. Cabe en 12 GB de VRAM con margen."
+    },
+    {
+      "modelo": "qwen3.6:latest",
+      "tamano_gb": 22.3,
+      "verificado": true,
+      "proposito": "redaccion",
+      "nota": "Medido en esta máquina el 2026-08-01. NO cabe en 12 GB: se reparte con la RAM del sistema y va lento."
+    },
+    {
+      "modelo": "bge-m3:latest",
+      "tamano_gb": 1.1,
+      "verificado": true,
+      "proposito": "embeddings",
+      "nota": "Medido. Es el de la fase 2."
+    },
+    {
+      "modelo": "qwen3:8b",
+      "tamano_gb": 5.2,
+      "verificado": false,
+      "proposito": "redaccion",
+      "nota": "Candidato ligero. Tamaño declarado, sin verificar."
+    },
+    {
+      "modelo": "qwen3:14b",
+      "tamano_gb": 9.3,
+      "verificado": false,
+      "proposito": "redaccion",
+      "nota": "Candidato intermedio. Tamaño declarado, sin verificar."
+    },
+    {
+      "modelo": "qwen3:32b",
+      "tamano_gb": 20.0,
+      "verificado": false,
+      "proposito": "redaccion",
+      "nota": "Candidato grande. Tamaño declarado, sin verificar."
+    }
+  ],
+
+  "como_ampliar": "Añade una entrada con el modelo, su tamaño y `verificado: false`. Si lo instalas, `npm run maquina` medirá el tamaño real y lo dirá; entonces se puede pasar a `verificado: true` con la fecha."
+}

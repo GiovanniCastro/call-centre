@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "nota": "La política de enrutamiento. Declarativa: cambiar a dónde va una clase de tarea es cambiar este archivo, sin recompilar. Las reglas se evalúan en orden y la primera que casa gana, salvo la regla dura, que se evalúa antes que todas y no se puede desactivar desde aquí.",
+
+  "regla_dura": {
+    "nombre": "sensibilidad alta nunca sale del perímetro",
+    "clase_sensibilidad": "alta",
+    "destino": "local",
+    "por_que": "Es la tesis del proyecto hecha código. No está entre las reglas de abajo a propósito: si fuera una regla más, reordenar el archivo la desactivaría, y una tesis que se desactiva reordenando un JSON no es una garantía. El enrutador la aplica antes de mirar las reglas, y hay una prueba con espía sobre el módulo de salida que falla si un caso alto produce una llamada externa.",
+    "se_puede_desactivar": false
+  },
+
+  "reglas": [
+    {
+      "nombre": "saludos y despedidas, en local",
+      "si": { "clase_tarea": ["saludo"] },
+      "destino": "local",
+      "por_que": "Devolver un saludo no requiere ni capacidad ni contexto. Mandarlo a la nube es pagar por «hola» — y sobre volumen real, los saludos son una fracción que se nota en el costo por caso resuelto."
+    },
+    {
+      "nombre": "quejas, a la nube",
+      "si": { "clase_tarea": ["queja"] },
+      "destino": "nube",
+      "por_que": "Es donde peor sienta una respuesta torpe y donde más pesa el tono. Si la queja trae datos sensibles, la regla dura ya la habrá retenido antes de llegar aquí."
+    },
+    {
+      "nombre": "ambiguo, a la nube",
+      "si": { "clase_tarea": ["ambiguo"] },
+      "destino": "nube",
+      "por_que": "El clasificador dice que no sabe qué es. Desambiguar es justo lo que peor hace un modelo pequeño, y equivocarse aquí propaga el error a toda la conversación."
+    },
+    {
+      "nombre": "el resto, en local con respaldo",
+      "si": { "clase_tarea": ["catalogo", "extraccion", "agendamiento"] },
+      "destino": "local",
+      "por_que": "Son las tareas con fragmentos ya recuperados y verificados delante: el modelo redacta a partir de un contexto acotado, que es lo que un modelo local hace bien. Si no alcanza, el respaldo lo desvía a la nube y eso se registra como desvío, nunca como escalado a humano."
+    }
+  ],
+
+  "respaldo": {
+    "activo": true,
+    "tiempo_maximo_ms": 20000,
+    "de": "local",
+    "a": "nube",
+    "por_que": "Un desvío controlado cuando el local no alcanza —por tiempo o por fallo—. Se registra en `desvio_ejecucion` como `local_a_nube` con su motivo, y NO como `escalado_humano`: son dos hechos distintos y meterlos en el mismo contador produce dos cifras para lo mismo (R-002). El techo de tiempo existe porque un local que tarda cuarenta segundos ya ha perdido el caso aunque acabe respondiendo."
+  },
+
+  "modelos": {
+    "local": "gemma4:latest",
+    "nube": "claude-sonnet-5",
+    "por_que_local": "Medido con `npm run maquina` el 2026-08-01: gemma4 pide ~10.4 GB y la RTX 4070 de esta máquina tiene 12 GB de VRAM, así que corre entera en la tarjeta. Antes estaba qwen3.6, que pide ~23.8 GB: arranca, pero se reparte con la RAM del sistema y la generación cae de decenas de fichas por segundo a unidades. No es un detalle de rendimiento — el proyecto existe para comparar local contra nube, y medir esa comparación contra un local derramado a RAM la haría ganar a la nube por un motivo que no tiene nada que ver con la nube.",
+    "por_que_nube": "Redactar a partir de fragmentos ya recuperados y verificados no exige el modelo más caro, y el proyecto mide costo por caso resuelto: elegir arriba sesga la cifra que más importa. Se revisa si la fase 4 demuestra que la salida estructurada con procedencia necesita más."
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "nota": "El registro de proveedores de inferencia. Pega la clave en la variable que dice cada uno y el proveedor se activa; sin ella queda declarado, y el arranque dice qué le falta y cómo conseguirlo. Ningún proveedor de aquí puede recibir una petición si su anfitrión no está también en config/destinos.json: son dos listas y las dos tienen que decir que sí.",
+
+  "por_que_dos_estados": "«no_configurado» y «sin_adaptador» no son lo mismo y confundirlos haría que el panel prometiera algo que no ocurre. Al primero le falta una credencial: pegas la clave y funciona. Al segundo le falta código: pegar la clave no lo activaría. Cada entrada declara cuál de los dos es.",
+
+  "proveedores": {
+    "anthropic": {
+      "adaptador": "escrito",
+      "anfitrion": "api.anthropic.com",
+      "modelo_por_defecto": "claude-sonnet-5",
+      "por_que": "Es el proveedor con tarifas declaradas en config/precios.json, con fuente y fecha. Cambiar de proveedor por omisión exige añadir su bloque de tarifas antes, o el costeo dejaría de poder calcular lo que cuesta un caso.",
+      "requisitos": [
+        {
+          "variable": "ANTHROPIC_API_KEY",
+          "descripcion": "Clave de la API de Anthropic. Es lo único que hace falta para activar este proveedor.",
+          "como_obtenerlo": "En platform.claude.com → Settings → API keys → Create key. Va en .env, que está en .gitignore y vigilado por gitleaks en CI. NUNCA se versiona."
+        }
+      ]
+    },
+
+    "openai": {
+      "adaptador": "sin_escribir",
+      "anfitrion": "api.openai.com",
+      "modelo_por_defecto": "gpt-5.6-sol",
+      "nota": "Declarado para que el registro sea la lista completa de opciones, no solo de lo instalado. Escribir el adaptador es implementar la interfaz `Inferencia` en src/providers/inferencia/ y añadir su bloque de tarifas a config/precios.json con fuente y fecha.",
+      "requisitos": [
+        {
+          "variable": "OPENAI_API_KEY",
+          "descripcion": "Clave de la API de OpenAI.",
+          "como_obtenerlo": "En platform.openai.com → API keys. Va en .env."
+        }
+      ]
+    },
+
+    "google": {
+      "adaptador": "sin_escribir",
+      "anfitrion": "generativelanguage.googleapis.com",
+      "modelo_por_defecto": "gemini-3.1-pro",
+      "nota": "Igual que OpenAI: declarado, sin adaptador.",
+      "requisitos": [
+        {
+          "variable": "GOOGLE_API_KEY",
+          "descripcion": "Clave de la API de Google AI Studio.",
+          "como_obtenerlo": "En aistudio.google.com → Get API key. Va en .env."
+        }
+      ]
+    },
+
+    "xai": {
+      "adaptador": "sin_escribir",
+      "anfitrion": "api.x.ai",
+      "modelo_por_defecto": "grok-4.1-fast",
+      "nota": "Declarado, sin adaptador.",
+      "requisitos": [
+        {
+          "variable": "XAI_API_KEY",
+          "descripcion": "Clave de la API de xAI.",
+          "como_obtenerlo": "En console.x.ai → API keys. Va en .env."
+        }
+      ]
+    },
+
+    "deepseek": {
+      "adaptador": "sin_escribir",
+      "anfitrion": "api.deepseek.com",
+      "modelo_por_defecto": "deepseek-v4",
+      "nota": "Declarado, sin adaptador.",
+      "requisitos": [
+        {
+          "variable": "DEEPSEEK_API_KEY",
+          "descripcion": "Clave de la API de DeepSeek.",
+          "como_obtenerlo": "En platform.deepseek.com → API keys. Va en .env."
+        }
+      ]
+    },
+
+    "mistral": {
+      "adaptador": "sin_escribir",
+      "anfitrion": "api.mistral.ai",
+      "modelo_por_defecto": "mistral-large-3",
+      "nota": "Declarado, sin adaptador.",
+      "requisitos": [
+        {
+          "variable": "MISTRAL_API_KEY",
+          "descripcion": "Clave de la API de Mistral.",
+          "como_obtenerlo": "En console.mistral.ai → API Keys. Va en .env."
+        }
+      ]
+    }
+  },
+
+  "local": {
+    "motor": "ollama",
+    "url_por_defecto": "http://localhost:11434",
+    "nota": "El proveedor local no lleva clave: lleva modelo descargado. Qué modelos caben en esta máquina lo dice `npm run maquina`, que mide la RAM y la VRAM reales y las cruza con config/modelos-locales.json."
+  }
+}

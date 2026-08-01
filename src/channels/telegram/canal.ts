@@ -12,6 +12,7 @@
 // impide.
 
 import { igualEnTiempoConstante } from '../../core/credencial.ts';
+import { salir } from '../../salida/salir.ts';
 import { normalizarActualizacion } from './normalizar.ts';
 import type {
   Canal,
@@ -51,7 +52,7 @@ type Opciones = {
 };
 
 async function enviarPorHttps(url: string, cuerpo: unknown): Promise<void> {
-  const respuesta = await fetch(url, {
+  const respuesta = await salir(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(cuerpo),

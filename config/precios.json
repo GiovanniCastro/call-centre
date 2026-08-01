@@ -35,10 +35,30 @@
 
   "local": {
     "nota": "El costo de la ejecución local NO es por token. Sale del tiempo de cómputo por la tarifa horaria de la máquina de referencia, que vive en config/maquina-referencia.json. Estos modelos se declaran para que el enrutador los conozca; su costo lo calcula la misma función `costear`.",
+    "medido": "Lista tomada de `ollama list` en la máquina de desarrollo el 2026-08-01. Antes declaraba llama3.1:8b, qwen2.5:14b y nomic-embed-text, ninguno de los cuales estaba instalado: eran una intención, no un inventario. Un enrutador que conoce modelos inexistentes falla en la primera petición que los elija.",
     "modelos": {
-      "llama3.1:8b": { "motor": "ollama", "parametros_mm": 8 },
-      "qwen2.5:14b": { "motor": "ollama", "parametros_mm": 14 },
-      "nomic-embed-text": { "motor": "ollama", "proposito": "embeddings" }
+      "qwen3.6:latest": {
+        "motor": "ollama",
+        "parametros": "36.0B",
+        "cuantizacion": "Q4_K_M",
+        "bytes": 23938333577,
+        "proposito": "redaccion"
+      },
+      "gemma4:latest": {
+        "motor": "ollama",
+        "parametros": "8.0B",
+        "cuantizacion": "Q4_K_M",
+        "bytes": 9600000000,
+        "proposito": "redaccion"
+      },
+      "bge-m3:latest": {
+        "motor": "ollama",
+        "parametros": "566.70M",
+        "cuantizacion": "F16",
+        "bytes": 1200000000,
+        "proposito": "embeddings",
+        "nota": "El de la fase 2. Su elección y su motivo están en config/conocimiento.json → embeddings.por_que_bge_m3."
+      }
     }
   }
 }
