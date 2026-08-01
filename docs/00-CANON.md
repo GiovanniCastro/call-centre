@@ -126,7 +126,7 @@ jamás produce una llamada externa: el espía sobre el módulo de salida lo veri
 con adaptadores que salen de verdad, no con dobles. Y una llamada a un dominio no
 declarado se bloquea antes de abrir el socket, aunque el código la intente.
 
-Medido contra el CI **y también en local**: **305 pruebas, 305 pasan, 0
+Medido contra el CI **y también en local**: **318 pruebas, 318 pasan, 0
 omitidas** — incluidas las que corren contra Redis, PostgreSQL y
 Qdrant reales, en contenedores. `tsc --noEmit`, `eslint` y `depcruise` sin
 problemas. 11 dependencias directas.
@@ -159,7 +159,7 @@ dicen Perímetro, y son ellos los que mandan.
 | 4B‑1 | Vigías que detienen | **CONSTRUIDO** |
 | 4B‑2 | Vigías que observan | **CONSTRUIDO** |
 | 4C | Detección | **CONSTRUIDO** |
-| 5 | Acciones, idempotencia, interfaz CRM | PROPUESTO |
+| 5 | Acciones, idempotencia, interfaz CRM | **CONSTRUIDO** |
 | 6 | Panel sobre histórico real | PROPUESTO |
 | 7 | Lote de casos y corredor tri‑modo | PROPUESTO |
 | 6B | Selector de modo y punto de equilibrio | PROPUESTO |
