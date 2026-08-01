@@ -77,7 +77,14 @@ export class InferenciaAnthropic implements Inferencia {
         // lo hizo la recuperación, y lo hará el verificador de procedencia de la
         // fase 4. Pensar aquí es latencia y tokens que el costo por caso paga.
         thinking: { type: 'disabled' },
-        output_config: { effort: 'low' },
+        output_config:
+          peticion.esquema === undefined
+            ? { effort: 'low' }
+            : // Salida estructurada: el proveedor restringe la respuesta al
+              // esquema, así que lo que vuelve valida por construcción y no por
+              // suerte. Sin esto, el verificador de procedencia tendría que
+              // empezar por adivinar si el modelo devolvió JSON.
+              { effort: 'low', format: { type: 'json_schema', schema: peticion.esquema } },
       },
       { timeout: peticion.tiempo_maximo_ms },
     );

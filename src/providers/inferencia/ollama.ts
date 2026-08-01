@@ -70,6 +70,11 @@ export class InferenciaOllama implements Inferencia {
           { role: 'user', content: componerTurno(peticion) },
         ],
         options: { num_predict: peticion.maximo_tokens },
+        // Ollama admite un esquema JSON en `format` y restringe la generación a
+        // él. Es el equivalente local de la salida estructurada del proveedor de
+        // nube: los dos planos devuelven la misma forma, o la comparación entre
+        // modos estaría comparando dos contratos distintos.
+        ...(peticion.esquema === undefined ? {} : { format: peticion.esquema }),
       }),
       signal: AbortSignal.timeout(peticion.tiempo_maximo_ms),
     });

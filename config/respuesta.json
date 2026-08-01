@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "nota": "Umbrales de la respuesta. Deciden qué se envía, qué se envía con matiz de incertidumbre y qué se escala a un humano. Cambiarlos cambia el comportamiento sin recompilar.",
+
+  "umbrales": {
+    "envia": 1.0,
+    "matiza": 0.7,
+    "por_que_envia_es_uno": "Se envía sin reservas solo si TODOS los campos factuales tienen procedencia verificada. Un 0.9 querría decir que una de cada diez afirmaciones puede ir sin respaldo y aun así salir como respuesta firme — y el invariante 1 no admite «casi siempre». Es exigente a propósito: la zona de matiz existe justo para no tener que relajar esto.",
+    "por_que_matiza_es_cero_siete": "Entre 0.7 y 1 la respuesta tiene la mayor parte sustentada y una parte que no; enviarla en seco afirmaría de más, y escalarla mandaría a un humano casos que en su mayoría están respondidos. El matiz dice al cliente lo que el sistema sabe de sí mismo. El valor es PROVISIONAL hasta que el lote de la fase 7 mida cuántas respuestas caen en cada franja."
+  },
+
+  "reintento": {
+    "activo": true,
+    "maximo": 1,
+    "por_que": "Un reintento con el contexto corregido —diciéndole al modelo qué campos rechazó el verificador y por qué— recupera bastantes casos en que el modelo parafraseó una cifra en vez de copiarla. Más de uno no: si a la segunda sigue sin poder citar, el problema no es la redacción, y seguir reintentando es gastar presupuesto para llegar al mismo escalado más tarde."
+  },
+
+  "matiz": "Esta respuesta se apoya en parte en información que no he podido verificar contra nuestros documentos. Si necesitas una confirmación en firme, te paso con una persona del equipo."
+}
