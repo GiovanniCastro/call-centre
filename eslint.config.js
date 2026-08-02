@@ -208,10 +208,41 @@ export default [
                 'decide si son falsas — y la banda de demostración dejaría de ser una ' +
                 'consecuencia para volver a ser una promesa.',
             },
+          ],
+        },
+      ],
+    },
+  },
+
+  // El panel no importa código del perímetro: lee la proyección publicada. Los
+  // tipos sí se comparten —se borran al compilar y no entran al paquete— pero
+  // ningún valor.
+  //
+  // `Calculadora.tsx` queda fuera, y no es un hueco sino una orden del manual:
+  // «Reimplementar el costeo» está en la lista de prohibido, y «la calculadora de
+  // la fase 6B importa `costear`» está escrito con esas palabras. Copiar la
+  // aritmética al panel daría dos sitios donde se decide cuánto cuesta un caso, y
+  // el día que cambiara la política de costeo el panel enseñaría la cifra vieja
+  // sin que nadie lo notara.
+  //
+  // La excepción no se queda en este `ignores`: hay una prueba —«la calculadora
+  // solo alcanza el módulo de costeo»— que falla si ese archivo importa cualquier
+  // otra parte del perímetro. El `ignores` la abre; la prueba la acota.
+  {
+    files: ['panel/**/*.ts', 'panel/**/*.tsx'],
+    ignores: ['panel/src/Calculadora.tsx'],
+    languageOptions: {
+      parser: tsParser,
+      ecmaVersion: 2023,
+      sourceType: 'module',
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    },
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
             {
-              // El panel lee la proyección publicada, no el perímetro. Los tipos
-              // sí se comparten —se borran al compilar y no entran al paquete—
-              // pero ningún valor.
               group: ['**/src/core/**', '**/src/repos/**', '**/src/providers/**', '**/src/borde/**'],
               message:
                 'El panel no importa código del perímetro. Lee la proyección publicada. ' +
