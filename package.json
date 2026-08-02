@@ -13,7 +13,7 @@
     "servicios:parar": "docker compose down",
     "dev": "node --env-file-if-exists=.env --watch src/main.ts",
     "arrancar": "node --env-file-if-exists=.env src/main.ts",
-    "verificar": "npm run check:tipos && npm run check:lint && npm run check:arquitectura && npm run test",
+    "verificar": "npm run check:tipos && npm run check:lint && npm run check:panel && npm run check:arquitectura && npm run test",
     "maquina": "node --env-file-if-exists=.env src/diagnostico/ordenes.ts",
     "conocimiento:ingerir": "node --env-file-if-exists=.env src/conocimiento/ordenes.ts ingerir",
     "conocimiento:reindexar": "node --env-file-if-exists=.env src/conocimiento/ordenes.ts reindexar",
@@ -23,11 +23,16 @@
     "check:lint": "eslint .",
     "check:arquitectura": "depcruise src proyeccion lote --config .dependency-cruiser.cjs",
     "test": "node --env-file-if-exists=.env --test --experimental-test-module-mocks \"tests/**/*.test.ts\"",
-    "publicar": "node --env-file-if-exists=.env proyeccion/ordenes.ts"
+    "publicar": "node --env-file-if-exists=.env proyeccion/ordenes.ts",
+    "panel": "vite --config panel/vite.config.ts",
+    "panel:construir": "vite build --config panel/vite.config.ts",
+    "check:panel": "tsc --noEmit -p panel/tsconfig.json"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
     "pg": "^8.22.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "redis": "^6.1.0",
     "unpdf": "^1.8.0",
     "zod": "^4.4.3"
@@ -35,10 +40,14 @@
   "devDependencies": {
     "@types/node": "^26.1.2",
     "@types/pg": "^8.20.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
+    "@vitejs/plugin-react": "^6.0.5",
     "dependency-cruiser": "^18.1.0",
     "eslint": "^10.8.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^8.2.0"
   }
 }

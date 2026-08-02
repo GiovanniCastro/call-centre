@@ -1,0 +1,170 @@
+/* El panel. Sobrio a propósito: lo que tiene que destacar son las cifras y las
+   advertencias, no la decoración. */
+
+:root {
+  --tinta: #16181d;
+  --tinta-suave: #5b616e;
+  --linea: #dfe3ea;
+  --fondo: #fbfcfe;
+  --acento: #1f5fd0;
+  --alerta: #8a4b00;
+  --alerta-fondo: #fff4e0;
+  --alta: #f6f0ff;
+  color-scheme: light dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--tinta);
+  font: 15px/1.55 system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+main {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0 0 0.25rem;
+}
+
+h2 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tinta-suave);
+  margin: 2.5rem 0 0.75rem;
+}
+
+/* La banda de demostración. Imposible de confundir con una nota al pie: si el
+   panel enseña cifras inventadas, tiene que verse antes que las cifras. */
+.banda-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--alerta-fondo);
+  border: 2px solid var(--alerta);
+  border-radius: 8px;
+  color: var(--alerta);
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.banda-demo strong {
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.origen {
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.origen code {
+  font-size: 0.8rem;
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.85rem;
+}
+
+.cifra {
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  background: white;
+  padding: 0.9rem 1rem;
+}
+
+.cifra-titulo {
+  color: var(--tinta-suave);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cifra-valor {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0.3rem 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Los supuestos, junto al número. «$0.004 por caso» a secas invita a una
+   pregunta sin respuesta; con la ficha del equipo al lado, es defendible. */
+.cifra-nota {
+  color: var(--tinta-suave);
+  font-size: 0.78rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--linea);
+}
+
+th {
+  color: var(--tinta-suave);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+tr.alta {
+  background: var(--alta);
+  font-weight: 600;
+}
+
+.explica {
+  color: var(--tinta-suave);
+  font-size: 0.88rem;
+  margin: 0.6rem 0 0;
+}
+
+.vacio {
+  border: 1px dashed var(--linea);
+  border-radius: 8px;
+  padding: 1.25rem;
+  color: var(--tinta-suave);
+}
+
+footer {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--linea);
+  color: var(--tinta-suave);
+  font-size: 0.82rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tinta: #e9ecf2;
+    --tinta-suave: #9aa2b1;
+    --linea: #2b303a;
+    --fondo: #101319;
+    --alta: #1d1a2b;
+    --alerta: #ffc46b;
+    --alerta-fondo: #3a2a10;
+  }
+
+  .cifra {
+    background: #171b23;
+  }
+}
