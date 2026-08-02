@@ -1,0 +1,88 @@
+rules_version = '2';
+
+// Reglas de la proyección. Invariante 8: la proyección es de un solo sentido.
+//
+// Cómo funcionan estas reglas, dicho con precisión porque es fácil equivocarse:
+// Firestore **deniega por omisión** y las reglas se unen por OR — se concede el
+// acceso si ALGUNA coincide y evalúa a verdadero. No hay herencia ni prioridad,
+// y una regla `if false` no cierra lo que otra abre.
+//
+// De ahí dos consecuencias:
+//
+//   - `allow write: if false` no está haciendo el trabajo: sin ningún `allow
+//     write`, escribir ya estaría denegado. Está escrito para que la intención
+//     sea explícita y para que añadir un permiso de escritura sea un cambio que
+//     hay que hacer a mano, borrando una línea que dice lo contrario.
+//   - Quien sostiene el invariante 8 no es una regla, es que **el Admin SDK no
+//     evalúa estas reglas**. El publicador escribe porque las salta, no porque
+//     tenga permiso; y como nadie más usa el Admin SDK fuera del perímetro,
+//     nadie más puede escribir.
+//
+// Si un día hace falta que un cliente escriba algo, no se relaja esto: se abre un
+// endpoint dentro del perímetro, que es donde vive la escritura.
+//
+// La segunda mitad es la separación de roles. Ver métricas agregadas no implica
+// ver el contenido de las conversaciones que las produjeron, y por eso son dos
+// `custom claims` distintos y no un nivel con dos escalones: un nivel invita a
+// pensar que el de arriba incluye al de abajo, y aquí no queremos que lo incluya.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Nadie escribe. Ni un operador, ni un administrador, ni App Check. ──
+    // El publicador entra por el Admin SDK y no evalúa estas reglas.
+    match /{documento=**} {
+      allow write: if false;
+    }
+
+    function autenticado() {
+      return request.auth != null;
+    }
+
+    function tieneRol(rol) {
+      return autenticado() && request.auth.token[rol] == true;
+    }
+
+    // ── Agregados: cifras sin contenido de nadie. Rol de métricas. ──
+    //
+    // Ninguna consulta que los produce puede devolver un identificador de
+    // contacto, de conversación o de caso: lo impide una prueba estructural
+    // sobre el árbol sintáctico de `src/repos/agregados.ts`. Estas reglas son la
+    // segunda línea, no la única.
+    match /agregados/{ventana} {
+      allow read: if tieneRol('metricas') || tieneRol('trazas');
+    }
+
+    match /vigias/{vigia} {
+      allow read: if tieneRol('metricas') || tieneRol('trazas');
+    }
+
+    // ── Trazas: llevan el motivo de decisión y las fuentes citadas. ──
+    //
+    // Solo el rol de trazas. **Tener `metricas` no basta**, y esa es justo la
+    // propiedad que la fase 6 exige probar en el emulador: una prueba falla si
+    // un usuario con rol de métricas puede leer esto.
+    match /trazas/{caso} {
+      allow read: if tieneRol('trazas');
+    }
+
+    // ── La demo pública: ejecuciones registradas del lote de la fase 7. ──
+    //
+    // Lectura abierta, y por eso NO contiene trazas con contenido: es una
+    // reproducción saneada, publicada a propósito. App Check la protege del
+    // tráfico automatizado; las reglas, de que se cuele algo que no sea esto.
+    match /demo/{documento} {
+      allow read: if true;
+    }
+
+    // ── Todo lo demás ──
+    //
+    // No hace falta escribirlo: una colección que no aparece arriba está
+    // denegada porque ninguna regla la concede, no porque esta la niegue. Se deja
+    // como recordatorio de que abrir una colección se hace añadiéndola arriba,
+    // con su rol, y no tocando nada aquí.
+    match /{documento=**} {
+      allow read: if false;
+    }
+  }
+}

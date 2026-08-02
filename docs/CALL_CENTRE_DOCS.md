@@ -15,6 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
+| **6** | 2026‑08‑02 | R‑034 … R‑039 | Fase 6 construida. La reconciliación se hace imposible en vez de comprobarse. Los eventos se persisten. La banda de demostración sale del tipo, no de un acuerdo. Y una corrección: un `allow read: if false` final no cierra nada |
 | **5** | 2026‑08‑01 | R‑031 … R‑033 | Fase 7 construida. El lote encontró cuatro defectos que ninguna prueba unitaria podía encontrar, dos de ellos métricas que premiaban lo contrario de lo que había que premiar. La inferencia local no es reproducible, y el muestreo pasa a configuración |
 | **4** | 2026‑08‑01 | R‑025 … R‑030 | Fases 3, 3B y 4 construidas. El SDK entra pero sale por nuestro `fetch`. Registro de proveedores con tres estados. La máquina se mide, y la medición cambió la política |
 | **3** | 2026‑08‑01 | R‑024 | Fase 2 construida. El umbral de similitud no puede sostener el invariante 1 por sí solo: medido, y el trabajo se reparte con el verificador de procedencia de la fase 4 |
@@ -25,6 +26,13 @@
 
 ## Contenido
 
+- [Revisión 2026‑08‑02 · fase 6](#revisión-2026-08-02--fase-6)
+  - [R‑034 · La reconciliación se hace imposible, no se comprueba](#r-034--la-reconciliación-no-se-comprueba-se-hace-imposible)
+  - [R‑035 · Los eventos no se persistían](#r-035--los-eventos-no-se-persistían-y-sin-eso-el-panel-no-tiene-de-qué-hablar)
+  - [R‑036 · Dos exenciones al alcance, con reglas más estrictas](#r-036--dos-exenciones-nuevas-al-alcance-de-contacto-cada-una-con-una-regla-más-estricta)
+  - [R‑037 · La banda de demostración deja de ser una promesa](#r-037--la-banda-de-demostración-deja-de-ser-una-promesa)
+  - [R‑038 · El panel no importa el perímetro](#r-038--el-panel-no-importa-el-perímetro-y-se-verifica-sobre-el-paquete-construido)
+  - [R‑039 · Corrección: las reglas de Firestore se unen por OR](#r-039--una-corrección-un-allow-read-if-false-final-no-cierra-nada)
 - [Revisión 2026‑08‑01 · fase 7](#revisión-2026-08-01--fase-7)
   - [R‑031 · Dos defectos que solo se ven con carga](#r-031--dos-defectos-que-ninguna-prueba-unitaria-podía-encontrar)
   - [R‑032 · Dos cifras que mentían por su forma](#r-032--dos-cifras-que-mentían-por-su-forma-la-inyección-y-el-perímetro)
@@ -62,6 +70,177 @@
   - [R‑009 · Demo pública por reproducción](#r-009--la-demo-pública-reproduce-ejecuciones-registradas-no-hace-inferencia-en-vivo)
   - [R‑010 · n8n queda como referencia](#r-010--n8n-queda-como-referencia-no-entra-en-el-stack)
   - [R‑011 · Fase 8 de despliegue y operación](#r-011--se-añade-una-fase-8-de-despliegue-y-operación-que-el-plan-no-tenía)
+
+---
+
+## Revisión 2026‑08‑02 · fase 6
+
+### R‑034 · La reconciliación no se comprueba: se hace imposible
+
+**Contexto.** El criterio de aceptación de la fase 6 que más cuesta cumplir no es
+ninguna regla de Firebase: «dos métricas que cuenten lo mismo se derivan del mismo
+campo». Viene de un defecto observado — la maqueta original del panel enseñaba dos
+cifras distintas de escalados en la misma pantalla.
+
+**La vía descartada.** Calcular las dos y añadir una prueba que compruebe que
+coinciden. Suena razonable y es frágil: mientras haya dos cálculos, hay dos cosas
+que mantener a la vez, y la prueba solo avisa cuando ya han divergido.
+
+**Lo que se hizo.** Que solo exista uno. `derivar()` calcula el recuento por
+desenlace **una vez**, y tanto el KPI de arriba como el reparto de abajo leen de
+la misma variable. Que cuadren no es una comprobación: son el mismo número mirado
+dos veces.
+
+La prueba que lo demuestra no es «coinciden», es **«cambiar el origen mueve las
+dos a la vez»**. Si hubiera dos cálculos, uno se movería y el otro no.
+
+**Y lo mismo aguas arriba.** Los agregados de `src/repos/agregados.ts` son la
+fuente única: `porResultado` es la única consulta que cuenta desenlaces. No hay
+una segunda que cuente escalados «para el KPI».
+
+---
+
+### R‑035 · Los eventos no se persistían, y sin eso el panel no tiene de qué hablar
+
+**Qué se encontró.** Al empezar la fase 6, los eventos de telemetría solo vivían
+en memoria: se emitían, el arnés comprobaba que fueran exactamente uno, y se
+perdían al terminar el proceso. Suficiente para probar el invariante 5,
+insuficiente para el criterio «toda cifra del panel se rastrea hasta eventos
+reales en PostgreSQL».
+
+**El problema de diseño.** `Emisor.emitir` es **síncrono**, y a propósito: una
+ruta de ejecución no puede quedarse esperando a una base de datos para poder decir
+que terminó. Escribir dentro de `emitir` con un `void promesa` pierde los errores
+de verdad — la promesa rechazada no la mira nadie.
+
+**Lo que se hizo.** `EmisorPostgres` valida y **encola** en `emitir`; `volcar()`
+escribe. La consecuencia se mira de frente en vez de taparse: entre los dos, los
+eventos viven en memoria y un proceso que muere en medio los pierde. Se acota con
+tres cosas — `volcar()` al cerrar cada caso, `pendientes()` expuesto para que un
+apagado ordenado compruebe que no deja nada, y **lo que falla al escribir vuelve a
+la cola** y sale en el resultado.
+
+Idempotente por `evento_id`. El arnés cubre «ni dos veces» en el proceso; esto
+cubre el reintento de escritura tras un corte de red, que doblaría cada cifra del
+panel.
+
+---
+
+### R‑036 · Dos exenciones nuevas al alcance de contacto, cada una con una regla más estricta
+
+`src/repos/` tiene una regla dura: toda función exportada recibe `AlcanceContacto`
+y toda consulta filtra por él. La fase 6 necesita dos excepciones, y la forma de
+concederlas sin abrir un hueco es que **cada una traiga una comprobación propia más
+estricta que la exención**.
+
+**`agregados.ts`.** Un agregado cruza contactos por definición: filtrarlo por uno
+daría la cifra de una persona presentada como la del sistema, que es peor que no
+darla. Lo que lo contiene no es el alcance, es **la forma de lo que devuelve**:
+
+> Ninguna consulta de ese archivo puede seleccionar `contacto_id`,
+> `conversacion_id`, `caso_id`, `motivo_decision`, `destinos_egreso` ni `fuentes`,
+> ni usar `SELECT *`.
+
+Sin columna por la que salgan, una consulta sin filtro no filtra. Lo comprueba una
+prueba estructural sobre el árbol sintáctico **y** otra contra la base real que
+mira lo que sale de verdad — porque una consulta puede seleccionar solo columnas
+permitidas y aun así devolver un identificador en un alias.
+
+`caso_id` está en la lista y merece explicación: no es un nombre ni un teléfono,
+pero es la llave con la que se pide la traza completa. Un agregado que devolviera
+identificadores de caso convertiría una cifra pública en un índice de las
+conversaciones que hay detrás.
+
+**`accesos.ts`.** Aquí la razón es otra: **el sujeto del registro es el operador,
+no el cliente.** Un acceso lo genera quien mira. Lo que lo contiene es que el
+archivo no lee datos de conversaciones, y hay una prueba que falla si alguna de
+sus consultas toca `eventos`, `mensajes`, `escalados`, `conversaciones` o
+`prospectos`.
+
+**Y una tercera, más fina.** Al persistir los vigías apareció el caso mixto: una
+**actuación** es un hecho del sistema —un techo cruzado— y no pertenece a nadie;
+un **incidente** sí es de alguien. Están en el mismo archivo, así que se eximen
+las dos funciones de actuaciones **por nombre** en vez de eximir el archivo, y
+`guardarIncidente` pasó a recibir alcance. El check pilló el archivo nuevo y se
+arregló cambiando el código, no la regla.
+
+---
+
+### R‑037 · La banda de demostración deja de ser una promesa
+
+**Contexto.** El criterio: «activar el módulo de datos de demostración renderiza
+la banda automáticamente; no hay forma de tener uno sin la otra». En la maqueta
+original la banda era un `<div>` que alguien podía borrar sin que nada dejara de
+funcionar.
+
+**Lo que se hizo.** Tres piezas, y la primera es la que de verdad lo sostiene:
+
+1. **El tipo.** `Fuente` es una unión discriminada. No existe un valor con cifras
+   y sin bandera: para leer la proyección hay que pasar por `es_demostracion`, y
+   la rama de demostración lleva un `aviso` **obligatorio** —una demostración que
+   no dice qué es engaña igual que no avisar—. `App` recibe la fuente entera, no
+   la proyección; cambiar esa firma es la única forma de separar las cifras de su
+   bandera, y hay una prueba que lo detecta.
+2. **El lint.** Solo `panel/src/main.tsx` puede importar `demo.fixtures.ts`, que
+   es donde se elige la fuente. Si cualquier componente pudiera pedir cifras
+   falsas, se podría montar una pantalla sin pasar por el sitio que decide si son
+   falsas. Comprobado añadiendo la violación y viéndola fallar.
+3. **El componente.** La banda cuelga de la misma bandera que trae las cifras.
+
+**Lo que la comprobación NO alcanza, dicho aquí.** Node borra tipos pero no
+transforma JSX, así que la prueba del componente es **textual**, no un render. Es
+más débil y es lo que hay sin meter un transformador en las pruebas del perímetro.
+Lo fuerte de verdad no es esa prueba: es que `Fuente` sea una unión discriminada,
+y eso lo comprueba el compilador en cada `npm run check:panel`.
+
+**Y las cifras de demostración tampoco se contradicen.** El KPI y el reparto dan
+lo mismo también ahí, y el costo sale `PROVISIONAL` y no cero. Una demo que
+enseñara el defecto que el panel existe para no tener lo enseñaría a más gente.
+
+---
+
+### R‑038 · El panel no importa el perímetro, y se verifica sobre el paquete construido
+
+`CLAUDE.md` dice que `panel/**` no importa `src/**`. El panel necesita los tipos
+de la proyección, y copiarlos sería crear un segundo sitio donde se declara qué es
+un KPI.
+
+**La distinción que resuelve la tensión**: se comparten **tipos**, nunca valores.
+`import type` se borra al compilar, así que no entra nada al paquete. Lo sostienen
+tres cosas: `verbatimModuleSyntax`, un lint que prohíbe importar de
+`src/core|repos|providers|borde`, y una comprobación sobre el JavaScript
+construido — `costear`, `zod`, `pg` y los JSON de configuración están **ausentes**
+de los 194 kB del paquete, que son React.
+
+**Además, el check de arquitectura solo recorría `src/`.** Las reglas que ya
+anticipaban `proyeccion/` —escritas en la fase 0— nunca se habían evaluado. Ahora
+recorre `src`, `proyeccion` y `lote`, y hay una regla nueva para la dirección que
+faltaba: **`src/` no importa `proyeccion/`**. El invariante 8 en la otra dirección;
+un camino de vuelta por dentro no lo ve ninguna regla de Firestore.
+
+---
+
+### R‑039 · Una corrección: un `allow read: if false` final no cierra nada
+
+Al escribir las reglas de Firestore puse un comentario que sonaba bien y era
+falso: que la regla final hacía que una colección nueva «naciera inaccesible en
+vez de heredar el permiso de la anterior».
+
+**Firestore deniega por omisión y las reglas se unen por OR**: se concede el acceso
+si alguna coincide y evalúa a verdadero. No hay herencia ni prioridad, y una regla
+`if false` no cierra lo que otra abre. La colección nueva está denegada porque
+ninguna regla la concede, no porque otra la niegue.
+
+Lo mismo con `allow write: if false`: sin ningún `allow write`, escribir ya estaría
+denegado. Está escrito para que la intención sea explícita y para que añadir
+escritura obligue a borrar una línea que dice lo contrario.
+
+**Quien sostiene el invariante 8 no es una regla: es que el Admin SDK no evalúa
+reglas.** El publicador escribe porque las salta, y como nadie más usa el Admin SDK
+fuera del perímetro, nadie más puede escribir.
+
+Queda escrito porque un comentario equivocado en un archivo de seguridad es peor
+que ninguno: el siguiente que lo lea creerá que hay una protección donde no la hay.
 
 ---
 

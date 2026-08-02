@@ -102,6 +102,17 @@ module.exports = {
       to: { dependencyTypes: CUALQUIER_PAQUETE, path: '^(firebase-admin|firebase|@firebase/)' },
     },
     {
+      name: 'el-perimetro-no-depende-de-su-proyeccion',
+      comment:
+        'Invariante 8, en la otra dirección. `proyeccion/` lee del perímetro; el ' +
+        'perímetro no sabe que existe. Un `src/` que importara del publicador ' +
+        'crearía el camino de vuelta que el invariante prohíbe — y lo crearía por ' +
+        'dentro, donde ninguna regla de Firestore llega.',
+      severity: 'error',
+      from: { path: '^src/' },
+      to: { path: '^proyeccion/' },
+    },
+    {
       name: 'perimetro-no-depende-del-panel',
       comment:
         'El panel es React y lee la proyección de Firestore, nunca el perímetro. ' +

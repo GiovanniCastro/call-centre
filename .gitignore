@@ -19,3 +19,5 @@ docs/.obsidian/workspace*.json
 # .claude/skills/call_centre_docs/ sí se versiona: define cómo se documenta
 # Perímetro. Los permisos concedidos en una sesión, no: son rutas de un disco.
 .claude/settings.local.json
+panel/dist/
+proyeccion/salida/

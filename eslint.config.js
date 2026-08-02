@@ -38,8 +38,7 @@ export default [
       'coverage/**',
       'docs/**',
       'bitacoras/**',
-      // El panel es React y llega en la fase 6, con su propia configuración.
-      'panel/**',
+      'panel/dist/**',
     ],
   },
 
@@ -176,6 +175,49 @@ export default [
             'que comprueba el destino contra config/destinos.json antes de abrir el ' +
             'socket y registra qué salió y hacia dónde. Un `fetch` suelto es un canal ' +
             'de exfiltración que ninguna inyección tendría que buscar mucho.',
+        },
+      ],
+    },
+  },
+
+  // ── El panel ────────────────────────────────────────────────────────────────
+  //
+  // Dos reglas, y la primera es un criterio de aceptación de la fase 6.
+  {
+    files: ['panel/**/*.ts', 'panel/**/*.tsx'],
+    // `main.tsx` es el único que elige la fuente de datos, y por eso el único
+    // que puede pedir la de demostración.
+    ignores: ['panel/src/main.tsx', 'panel/src/demo.fixtures.ts'],
+    languageOptions: {
+      parser: tsParser,
+      ecmaVersion: 2023,
+      sourceType: 'module',
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    },
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/demo.fixtures*'],
+              message:
+                'Los datos de demostración solo se piden desde panel/src/main.tsx, que es ' +
+                'donde se elige la fuente. Si cualquier componente pudiera pedirlos, se ' +
+                'podría montar una pantalla con cifras falsas sin pasar por el sitio que ' +
+                'decide si son falsas — y la banda de demostración dejaría de ser una ' +
+                'consecuencia para volver a ser una promesa.',
+            },
+            {
+              // El panel lee la proyección publicada, no el perímetro. Los tipos
+              // sí se comparten —se borran al compilar y no entran al paquete—
+              // pero ningún valor.
+              group: ['**/src/core/**', '**/src/repos/**', '**/src/providers/**', '**/src/borde/**'],
+              message:
+                'El panel no importa código del perímetro. Lee la proyección publicada. ' +
+                'Compartir tipos con `import type` sí vale: se borran al compilar.',
+            },
+          ],
         },
       ],
     },

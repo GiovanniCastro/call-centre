@@ -243,6 +243,39 @@ la salida estructurada con citas literales**. «sustento 0 %», «sustento 50 %�
 modelo no devolvió JSON analizable». No se arregla aflojando el verificador — es
 la medición que la fase existía para producir.
 
+De la fase 6:
+
+- **Persistencia de eventos** (`src/telemetry/emisor-postgres.ts`, `src/repos/eventos.ts`).
+  Hasta ahora solo vivían en memoria. Encola y vuelca; lo que falla vuelve a la
+  cola y se dice.
+- **Agregados** (`src/repos/agregados.ts`), fuente única de cada concepto. Ninguna
+  de sus consultas puede devolver una columna que identifique a alguien —prueba
+  estructural sobre el árbol sintáctico, más otra contra la base real.
+- **Publicador** (`proyeccion/`) sobre un puerto que **no sabe leer**: el invariante
+  8 escrito en el tipo. Adaptador de archivos construido; el de Firestore es lo que
+  falta.
+- **Reglas de Firestore** escritas y razonadas (`proyeccion/reglas/firestore.rules`).
+  **Sin probar**: el emulador necesita `firebase-tools`.
+- **Registro de acceso al panel, incluidas las lecturas** (`migrations/005_accesos.sql`).
+  Dos roles que no se incluyen: ver métricas no es ver contenido.
+- **Actuaciones de vigía e incidentes** persistidos (`migrations/006_actuaciones.sql`),
+  en dos tablas porque son dos cosas: un límite cruzado y un intento de alguien.
+- **Panel en React** (`panel/`), único sitio del repositorio con React. Lee la
+  proyección publicada; no calcula nada. La banda de demostración es una
+  consecuencia del tipo, no un `<div>` que alguien pueda borrar.
+
+## Lo que falta de la fase 6
+
+Tres criterios de aceptación quedan **sin cumplir**, todos por la misma razón:
+necesitan Firebase, y sus dependencias no están aprobadas.
+
+- Una prueba en el emulador que falle si un cliente autenticado puede escribir en
+  la proyección.
+- Una prueba que falle si un rol de métricas puede leer una traza con contenido.
+  *La lógica sí está probada* (`decidirAcceso`) y las reglas están escritas; lo
+  que falta es ejercitarlas contra Firestore.
+- Firebase Auth con `custom claims` para los dos roles.
+
 De antes:
 
 - La maqueta HTML de la pantalla de Operación. **Sus cifras son inventadas y se
@@ -341,3 +374,8 @@ Cada una con su entrada en [[CALL_CENTRE_DOCS]].
 | R‑031 | Cero campos factuales escala, salvo saludo y pregunta de aclaración; el costo provisional no se publica | Enviar la prosa del modelo con sustento pleno por vacuidad; imprimir `$0.0000` |
 | R‑032 | La inyección se juzga por incidente registrado y ausencia de fuga; «12 de 12 retenidos» en local sale con su advertencia | `debe_escalar: false`, que premiaba responder inyecciones; publicar la cifra de contención a secas |
 | R‑033 | El muestreo vive en `config/politica.json`, en 0, y viaja por el puerto de inferencia | Temperatura por omisión del proveedor; o fijarla solo en el corredor de la fase 7 |
+| R‑034 | El KPI y el reparto leen la misma variable: la reconciliación se hace imposible | Dos cálculos más una prueba de que coinciden |
+| R‑035 | Emisor que encola y vuelca, con lo fallido de vuelta a la cola | Escribir dentro de `emitir` con `void promesa`, perdiendo los errores |
+| R‑036 | Exenciones al alcance con una comprobación propia más estricta que la exención | Eximir el archivo y confiar; o relajar el patrón de la regla |
+| R‑037 | La banda de demostración sale de una unión discriminada, no de un acuerdo | Un `<div>` que el panel se acuerda de renderizar |
+| R‑038 | El panel comparte tipos con el perímetro, nunca valores, verificado sobre el paquete | Duplicar los tipos en `panel/`; o dejar que importe código |
