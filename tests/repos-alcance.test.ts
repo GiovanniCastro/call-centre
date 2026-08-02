@@ -103,6 +103,13 @@ const EXCEPCIONES = new Map([
   // reciben alcance y sí filtran; exigírselo a la fábrica sería exigir un
   // alcance para decidir con qué base de datos hablar.
   ['crmSobrePostgres', 'es una fábrica de adaptador, no una consulta'],
+  // Fase 6. Las dos operan sobre `actuaciones_vigia`, que es un hecho del
+  // sistema y no de nadie: no hay contacto al que acotarlas, y exigirles un
+  // alcance obligaría a inventar uno, haciendo que el filtro afirmara algo falso.
+  // Se nombran una a una en vez de eximir el archivo, porque en el mismo archivo
+  // están las de incidentes, que SÍ llevan alcance y tienen que seguir llevándolo.
+  ['guardarActuacion', 'una actuación de vigía no pertenece a ningún contacto'],
+  ['ultimaActuacionPorVigia', 'lee el estado del sistema, no datos de nadie'],
 ]);
 
 /**
@@ -117,7 +124,17 @@ const EXCEPCIONES = new Map([
  * tabla, no relajando el patrón: una excepción por nombre es un cambio visible
  * en el diff; un patrón más laxo dejaría pasar también lo que no debe.
  */
-const TABLAS_COMPARTIDAS = ['huecos'];
+const TABLAS_COMPARTIDAS = [
+  'huecos',
+  // Fase 6. Una actuación de vigía es un hecho del SISTEMA, no de nadie: un
+  // techo de presupuesto cruzado, un límite de pasos alcanzado. La tabla no
+  // tiene `contacto_id` y no puede tenerlo — filtrarla por contacto no sería más
+  // seguro, sería incorrecto, igual que con `huecos`.
+  //
+  // Los incidentes de seguridad NO están en esta lista, y esa es la distinción
+  // que importa: un incidente sí es de alguien, y sus lecturas llevan alcance.
+  'actuaciones_vigia',
+];
 
 type FuncionExportada = {
   archivo: string;

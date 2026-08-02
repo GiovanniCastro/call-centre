@@ -180,6 +180,34 @@ export async function sustentoAgregado(
   return filas[0] ?? { campos_totales: 0, campos_con_procedencia: 0, casos_con_sustento: 0 };
 }
 
+export type RecuentoDeIncidentes = {
+  readonly clase: string;
+  readonly nivel: string;
+  readonly incidentes: number;
+};
+
+/**
+ * Incidentes de seguridad por clase y nivel. Sin contacto y sin fragmento.
+ *
+ * Es lo único de esa tabla que puede ir al panel de métricas: **cuenta, no
+ * enseña**. Quién lo provocó y qué escribió exige el rol de trazas y pasa por
+ * `incidentesDelContacto`, que sí filtra por contacto.
+ *
+ * Vive aquí y no en `actuaciones.ts` justamente para quedar bajo la regla que
+ * impide a un agregado devolver columnas identificatorias. Tenerlo al lado de la
+ * escritura lo habría dejado fuera de la única comprobación que lo contiene.
+ */
+export async function incidentesPorClase(
+  bd: Consultador,
+): Promise<readonly RecuentoDeIncidentes[]> {
+  return bd.consultar<RecuentoDeIncidentes>(
+    `SELECT clase, nivel, COUNT(*)::int AS incidentes
+       FROM incidentes_seguridad
+      GROUP BY clase, nivel
+      ORDER BY incidentes DESC`,
+  );
+}
+
 export type LatenciaDePrimeraRespuesta = {
   readonly casos: number;
   readonly mediana_ms: string | null;
