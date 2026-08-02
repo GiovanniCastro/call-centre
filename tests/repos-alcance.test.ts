@@ -57,7 +57,38 @@ const SIN_ALCANCE = new Set([
   // pertenecen a alguien—. La exención es a la regla del alcance, no a la de
   // aislamiento: en `documentos` no hay ni un dato de cliente.
   'documentos.ts',
+  // Agregados del panel (fase 6). Un agregado cruza contactos por definición:
+  // filtrarlo por uno daría la cifra de una persona presentada como la del
+  // sistema, que es peor que no darla. La contención aquí no es el alcance sino
+  // LA FORMA DE LO QUE DEVUELVE, y tiene su propia prueba más abajo —
+  // «los agregados no pueden filtrar datos de nadie»— que es más estricta que
+  // esta exención, no más laxa.
+  'agregados.ts',
+  // Registro de acceso al panel (fase 6). La excepción es de otra naturaleza:
+  // aquí el SUJETO del registro es el operador, no el cliente. Un acceso lo
+  // genera quien mira. Y lo que hace que no abra un hueco es que este archivo no
+  // lee datos de conversaciones: escribe quién miró qué y lee ese mismo
+  // registro. Ninguna de sus consultas toca eventos, mensajes ni escalados —
+  // comprobado por la prueba «el registro de accesos no lee conversaciones».
+  'accesos.ts',
 ]);
+
+/**
+ * Columnas por las que se identifica a alguien.
+ *
+ * `caso_id` está en la lista y merece explicación: no es un nombre ni un
+ * teléfono, pero es la llave con la que se pide la traza completa de una
+ * conversación. Un agregado que devolviera identificadores de caso convertiría
+ * una cifra pública en un índice de las conversaciones que hay detrás.
+ */
+const COLUMNAS_QUE_IDENTIFICAN = [
+  'contacto_id',
+  'conversacion_id',
+  'caso_id',
+  'motivo_decision',
+  'destinos_egreso',
+  'fuentes',
+];
 
 /**
  * Funciones exceptuadas por nombre, con su motivo.
@@ -222,6 +253,81 @@ describe('src/repos/ — ninguna consulta puede saltarse el filtro de contacto',
       infractoras,
       [],
       'Hay consultas en src/repos/ que no filtran por contacto:\n' + infractoras.join('\n'),
+    );
+  });
+
+  test('LOS AGREGADOS NO PUEDEN FILTRAR DATOS DE NADIE', () => {
+    // `agregados.ts` está exento del filtro de contacto porque un agregado cruza
+    // contactos por definición. Lo que lo contiene no es el alcance, es que sus
+    // consultas no puedan devolver nada que identifique a alguien: sin columna
+    // por la que salga, una consulta sin filtro no filtra.
+    //
+    // Esta regla es MÁS estricta que la exención, no una forma de esquivarla.
+    const { consultas } = analizar('agregados.ts');
+    assert.ok(consultas.length > 0, 'no se analizó ninguna consulta de agregados.ts');
+
+    const infractoras: string[] = [];
+
+    for (const consulta of consultas) {
+      const normalizada = consulta.replace(/\s+/g, ' ');
+      // Solo la lista de selección: `caso_id` puede aparecer en un WHERE o en un
+      // GROUP BY sin salir del servidor. Lo que no puede es viajar al panel.
+      const seleccion = /SELECT\b([\s\S]*?)\bFROM\b/i.exec(normalizada)?.[1] ?? normalizada;
+
+      for (const columna of COLUMNAS_QUE_IDENTIFICAN) {
+        if (new RegExp(`\\b${columna}\\b`, 'i').test(seleccion)) {
+          infractoras.push(`«${columna}» en: ${normalizada.slice(0, 80)}…`);
+        }
+      }
+
+      // Y ningún `SELECT *`, que traería la tabla entera incluidas esas columnas.
+      if (/SELECT\s+\*/i.test(normalizada)) {
+        infractoras.push(`SELECT * en: ${normalizada.slice(0, 80)}…`);
+      }
+    }
+
+    assert.deepEqual(
+      infractoras,
+      [],
+      'Hay agregados que devuelven columnas identificatorias:\n' + infractoras.join('\n'),
+    );
+  });
+
+  test('EL REGISTRO DE ACCESOS NO LEE CONVERSACIONES', () => {
+    // `accesos.ts` está exento del filtro de contacto porque el sujeto de sus
+    // filas es el operador, no el cliente. Esa exención solo se sostiene mientras
+    // el archivo no toque las tablas donde sí hay datos de alguien.
+    const { consultas } = analizar('accesos.ts');
+    assert.ok(consultas.length > 0, 'no se analizó ninguna consulta de accesos.ts');
+
+    const PROHIBIDAS = ['eventos', 'mensajes', 'escalados', 'conversaciones', 'prospectos'];
+    const infractoras: string[] = [];
+
+    for (const consulta of consultas) {
+      const normalizada = consulta.replace(/\s+/g, ' ');
+      for (const tabla of PROHIBIDAS) {
+        if (new RegExp(`\\b(FROM|JOIN|INTO|UPDATE)\\s+${tabla}\\b`, 'i').test(normalizada)) {
+          infractoras.push(`«${tabla}» en: ${normalizada.slice(0, 80)}…`);
+        }
+      }
+    }
+
+    assert.deepEqual(
+      infractoras,
+      [],
+      'El registro de accesos toca tablas con datos de clientes:\n' + infractoras.join('\n'),
+    );
+  });
+
+  test('esa regla detecta de verdad un agregado que se lleva un identificador', () => {
+    // Una prueba estructural que nunca ha fallado puede estar comprobando la
+    // propiedad equivocada.
+    const sospechosa = 'SELECT caso_id, COUNT(*) FROM eventos GROUP BY caso_id';
+    const seleccion = /SELECT\b([\s\S]*?)\bFROM\b/i.exec(sospechosa)?.[1] ?? '';
+
+    assert.ok(
+      COLUMNAS_QUE_IDENTIFICAN.some((c) => new RegExp(`\\b${c}\\b`, 'i').test(seleccion)),
+      'la regla dejó pasar un agregado que devuelve caso_id',
     );
   });
 

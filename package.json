@@ -21,8 +21,9 @@
     "conocimiento:verificar": "node --env-file-if-exists=.env src/conocimiento/ordenes.ts verificar",
     "check:tipos": "tsc --noEmit",
     "check:lint": "eslint .",
-    "check:arquitectura": "depcruise src --config .dependency-cruiser.cjs",
-    "test": "node --env-file-if-exists=.env --test --experimental-test-module-mocks \"tests/**/*.test.ts\""
+    "check:arquitectura": "depcruise src proyeccion lote --config .dependency-cruiser.cjs",
+    "test": "node --env-file-if-exists=.env --test --experimental-test-module-mocks \"tests/**/*.test.ts\"",
+    "publicar": "node --env-file-if-exists=.env proyeccion/ordenes.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
