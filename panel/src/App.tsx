@@ -10,6 +10,7 @@
 // saca de PostgreSQL. Un panel que calculara sería un segundo sitio donde se
 // decide qué significa «escalado», y acabaría discrepando del primero.
 
+import { Calculadora } from './Calculadora.tsx';
 import type { Fuente } from './fuente.ts';
 import type { Proyeccion } from '../../proyeccion/derivar.ts';
 
@@ -234,6 +235,8 @@ export function App({ fuente }: { fuente: Fuente }): React.JSX.Element {
           <Escalados p={p} />
         </>
       )}
+
+      <Calculadora />
 
       <footer>
         Toda cifra de esta pantalla sale de un evento registrado en PostgreSQL, derivado por el

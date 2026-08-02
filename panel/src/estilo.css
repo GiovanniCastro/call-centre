@@ -168,3 +168,30 @@ footer {
     background: #171b23;
   }
 }
+
+/* Campos de la calculadora. */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  background: white;
+  padding: 0.7rem 0.85rem;
+}
+
+.campo input {
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--linea);
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+}
+
+@media (prefers-color-scheme: dark) {
+  .campo {
+    background: #171b23;
+  }
+}
