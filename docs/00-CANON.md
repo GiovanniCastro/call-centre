@@ -416,3 +416,4 @@ Cada una con su entrada en [[CALL_CENTRE_DOCS]].
 | R‑043 | Los secretos se declaran, y una prueba estructural falla si falta alguno | Una lista mantenida a mano; redactar solo lo que alguien recuerde |
 | R‑044 | La demo pública es una tercera clase de fuente: ni en vivo ni de demostración | Reutilizar la bandera de demostración, vendiendo como falso lo que sí se midió |
 | R‑045 | Corrección: el canon daba por PROPUESTAS las fases 6, 7 y 6B, ya construidas | Dejar la tabla como estaba y confiar en el texto de más abajo |
+| R‑046 | La exención de gitleaks es por valor literal, y en la sintaxis que el CI entiende | Eximir la ruta del archivo de prueba, que lo deja abierto para siempre |

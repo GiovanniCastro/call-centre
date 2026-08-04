@@ -15,7 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
-| **7** | 2026‑08‑04 | R‑040 … R‑045 | Fase 8 partida en 8A y 8B; 8A construida. El respaldo y su restauración son la misma orden. Los secretos se declaran, y la prueba encontró uno sin declarar. La demo pública es una tercera clase de fuente. Y las reglas de Firestore, por fin ejercitadas: dos criterios de la fase 6 que llevaban abiertos desde el día 2 |
+| **7** | 2026‑08‑04 | R‑040 … R‑046 | Fase 8 partida en 8A y 8B; 8A construida. El respaldo y su restauración son la misma orden. Los secretos se declaran, y la prueba encontró uno sin declarar. La demo pública es una tercera clase de fuente. Las reglas de Firestore, por fin ejercitadas: dos criterios de la fase 6 que llevaban abiertos desde el día 2. Y la exención de gitleaks, por valor y no por ruta, que es lo que desbloquea el cierre |
 | **6** | 2026‑08‑02 | R‑034 … R‑039 | Fase 6 construida. La reconciliación se hace imposible en vez de comprobarse. Los eventos se persisten. La banda de demostración sale del tipo, no de un acuerdo. Y una corrección: un `allow read: if false` final no cierra nada |
 | **5** | 2026‑08‑01 | R‑031 … R‑033 | Fase 7 construida. El lote encontró cuatro defectos que ninguna prueba unitaria podía encontrar, dos de ellos métricas que premiaban lo contrario de lo que había que premiar. La inferencia local no es reproducible, y el muestreo pasa a configuración |
 | **4** | 2026‑08‑01 | R‑025 … R‑030 | Fases 3, 3B y 4 construidas. El SDK entra pero sale por nuestro `fetch`. Registro de proveedores con tres estados. La máquina se mide, y la medición cambió la política |
@@ -34,6 +34,7 @@
   - [R‑043 · Los secretos se declaran, y una prueba lo comprueba](#r-043--los-secretos-se-declaran-y-la-prueba-encontró-uno-que-nadie-había-declarado)
   - [R‑044 · La demo pública es una tercera clase de fuente](#r-044--la-demo-pública-no-es-en-vivo-ni-de-demostración-es-una-tercera-clase)
   - [R‑045 · Corrección: el canon daba por PROPUESTAS tres fases construidas](#r-045--corrección-el-canon-daba-por-propuestas-tres-fases-ya-construidas)
+  - [R‑046 · La exención de gitleaks es por valor, nunca por ruta](#r-046--la-exención-de-gitleaks-es-por-valor-nunca-por-ruta)
 - [Revisión 2026‑08‑02 · fase 6](#revisión-2026-08-02--fase-6)
   - [R‑034 · La reconciliación se hace imposible, no se comprueba](#r-034--la-reconciliación-no-se-comprueba-se-hace-imposible)
   - [R‑035 · Los eventos no se persistían](#r-035--los-eventos-no-se-persistían-y-sin-eso-el-panel-no-tiene-de-qué-hablar)
@@ -272,6 +273,56 @@ una premisa falsa. Y la tabla es lo primero que se mira.
 retroactiva, pero queda dicho aquí que su registro falta.
 
 **Impacto.** [[00-CANON]] §Parte 4.
+
+---
+
+### R‑046 · La exención de gitleaks es por valor, nunca por ruta
+
+**Contexto.** El check «Sin credenciales en el repositorio» llevaba en rojo desde
+el commit de la fase 8A, y con él el PR #31 sin poder cerrarse. Dos hallazgos,
+los dos en `tests/secretos.test.ts`: el secreto de aplicación de WhatsApp y el
+cuerpo del PEM. Son las credenciales inventadas que esa prueba necesita para
+demostrar que `redactar()` tapa lo que tiene forma de credencial — una prueba de
+redacción sin nada que redactar no prueba nada. El escáner acierta en la forma y
+se equivoca en el fondo.
+
+**La vía descartada, y por qué se descartó después de probarla.** La exención
+obvia es por ruta: `paths` con el archivo, más `regexes` con los dos valores, y
+`condition = "AND"` para exigir las dos cosas. Se escribió así y se comprobó al
+revés antes de darla por buena — se añadió un secreto de verdad a ese mismo
+archivo y **dejó de detectarse**. Con la ruta dentro de la exención, el archivo
+queda abierto para siempre y para todo lo que caiga ahí dentro, en este commit y
+en los futuros. Un archivo que se llama «secretos» es el último sitio del
+repositorio donde conviene apagar el escáner.
+
+**Qué cambió.** `.gitleaks.toml` nuevo, que **extiende** el catálogo de fábrica
+—no sustituye ninguna regla ni toca el workflow— con una sola exención de dos
+literales concretos. Ni rutas, ni reglas desactivadas.
+
+**El segundo hallazgo, que es el que deja lección.** La primera corrección pasaba
+en local y seguía en rojo en el CI. El motivo no era la exención sino la
+sintaxis: `[[allowlists]]` en plural pertenece a una versión de gitleaks
+posterior a la que instala la acción —8.24.3 allí, 8.30.1 en la imagen de
+docker—, y al no reconocerla **no protesta: la ignora**. Media configuración se
+estaba saltando sin decirlo. Con `[allowlist]` en singular, que entienden las
+dos, lo que se prueba en local es lo que se aplica en el CI.
+
+**Cómo se comprobó.** Con la imagen de docker de gitleaks, en las dos versiones y
+en los dos sentidos:
+
+| | 8.24.3 | 8.30.1 |
+|---|---|---|
+| Historial entero, sin la configuración | 2 hallazgos | 2 hallazgos |
+| Historial entero, con ella | 0 | 0 |
+| Cambiando el cuerpo del PEM y añadiendo otro secreto al mismo archivo | 2 hallazgos | 2 hallazgos |
+
+La tercera fila es la que importa: es la que demuestra que la exención no es un
+agujero. Mismo criterio que [R‑036](#r-036--dos-exenciones-nuevas-al-alcance-de-contacto-cada-una-con-una-regla-más-estricta)
+— una exención viene con una comprobación más estricta que ella misma.
+
+**Impacto.** `.gitleaks.toml`, archivo nuevo. Sin efecto en código ni en pruebas:
+433 pruebas siguen pasando, más las 6 del emulador. Desbloquea el PR #31 y con él
+el cierre de la fase 8A.
 
 ---
 
