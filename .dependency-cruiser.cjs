@@ -182,6 +182,19 @@ module.exports = {
       },
     },
     {
+      name: 'el-informe-propone-no-aplica',
+      comment:
+        'Criterio de aceptación de la fase 9: «el informe propone; nunca aplica». Las ' +
+        'pruebas comprueban que hoy no aplica nada; esta regla comprueba que no PUEDE. ' +
+        'src/core/fallas/ no alcanza al repositorio, ni al módulo de salida, ni a ningún ' +
+        'adaptador de proveedor, ni a las acciones o el CRM — que son las cuatro formas ' +
+        'que tiene este sistema de cambiar algo. Sus entradas son datos y su salida es ' +
+        'texto. Sin esto, «propone» sería una promesa sobre el código de hoy.',
+      severity: 'error',
+      from: { path: '^src/core/fallas/' },
+      to: { path: '^src/(repos|salida|providers|conocimiento|core/(acciones|crm))/' },
+    },
+    {
       name: 'sin-ciclos',
       comment:
         'Un ciclo de dependencias hace que «qué depende de qué» deje de tener ' +

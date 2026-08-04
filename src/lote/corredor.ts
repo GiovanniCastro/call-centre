@@ -16,6 +16,8 @@
 import { costear, type Tramo } from '../core/costeo/costear.ts';
 import { atender, type Dependencias, type SalidaDeCaso } from '../core/caso/atender.ts';
 import { politicaDesde, POLITICA, type Politica } from '../core/enrutador/politica.ts';
+import { observacionDe } from '../core/fallas/desde-caso.ts';
+import { VigiaDeFallas, type Encabezado, type GrupoDeFallas } from '../core/fallas/vigia.ts';
 import type { CasoDeLote } from '../channels/lote/normalizar.ts';
 import { EmisorEnMemoria } from '../telemetry/emisor.ts';
 import { vigilarCaso } from '../telemetry/arnes.ts';
@@ -86,6 +88,28 @@ export type ResultadoDeCaso = {
   readonly acerto: boolean;
   readonly por_que_no: string | null;
   readonly error: string | null;
+  /**
+   * Cómo terminó el escalado, con el enum del propio sistema.
+   *
+   * Se graba desde la fase 9 porque es lo que el vigía de fallas necesita para
+   * separar «el sistema no pudo» de «el sistema decidió correctamente que no».
+   * Antes solo quedaba `por_que_no`, que es el juicio de acierto contra la
+   * expectativa del caso — otra cosa, y derivar fallas de ahí habría hecho que
+   * la disponibilidad dependiera de lo bien escrito que estuviera el lote.
+   */
+  readonly clase_escalado: string | null;
+};
+
+/**
+ * Lo que el vigía de fallas observó durante la ejecución.
+ *
+ * Se graba con los resultados para que `npm run salud` pueda componer el informe
+ * sin volver a correr el lote ni encender nada — la misma propiedad que tiene la
+ * demo pública desde R-009: se sirve lo que quedó registrado.
+ */
+export type SaludDeEjecucion = {
+  readonly encabezado: Encabezado;
+  readonly grupos: readonly GrupoDeFallas[];
 };
 
 export type Ejecucion = {
@@ -96,6 +120,8 @@ export type Ejecucion = {
   readonly resultados: readonly ResultadoDeCaso[];
   /** Numerador y denominador del vigía de perímetro tras el lote entero. */
   readonly perimetro: { altos: number; retenidos: number; escapados: number };
+  /** `null` en los modos que no se corrieron: sin ejecución no hay salud. */
+  readonly salud: SaludDeEjecucion | null;
 };
 
 /**
@@ -233,6 +259,7 @@ export async function correr(
         motivo: montaje.disponible.motivo,
         resultados: [],
         perimetro: { altos: 0, retenidos: 0, escapados: 0 },
+        salud: null,
       });
       continue;
     }
@@ -240,6 +267,9 @@ export async function correr(
     avisar(`  ▶ modo ${modo} — ${casos.length} casos`);
     const politica = politicaDelModo(modo);
     const resultados: ResultadoDeCaso[] = [];
+    // Uno por modo, no uno para el lote entero: mezclar la disponibilidad de
+    // local con la de nube daría una cifra que no describe ningún despliegue.
+    const fallas = new VigiaDeFallas();
 
     for (const caso of casos) {
       const emisor = new EmisorEnMemoria();
@@ -323,7 +353,21 @@ export async function correr(
           acerto: juicio.acerto,
           por_que_no: juicio.por_que,
           error: null,
+          clase_escalado: salida.clase_escalado,
         });
+
+        fallas.observar(
+          observacionDe({
+            caso_id: caso.id,
+            canal: 'lote',
+            clase_tarea: e.clase_tarea,
+            resultado: salida.resultado,
+            clase_escalado: salida.clase_escalado,
+            motivo_escalado: salida.motivo_escalado,
+            mensaje: caso.texto,
+            momento: e.marca_tiempo,
+          }),
+        );
       } catch (error) {
         // Un caso que revienta NO tumba el lote: queda anotado como fallo y el
         // informe lo cuenta. Parar en el primero daría un informe sobre un
@@ -350,7 +394,22 @@ export async function correr(
           acerto: false,
           por_que_no: 'el caso reventó',
           error: comoTexto(error),
+          clase_escalado: null,
         });
+
+        fallas.observar(
+          observacionDe({
+            caso_id: caso.id,
+            canal: 'lote',
+            clase_tarea: 'ambiguo',
+            resultado: 'descartado',
+            clase_escalado: null,
+            motivo_escalado: null,
+            mensaje: caso.texto,
+            momento: new Date().toISOString(),
+            error: comoTexto(error),
+          }),
+        );
       }
     }
 
@@ -360,6 +419,7 @@ export async function correr(
       motivo: null,
       resultados,
       perimetro: montaje.perimetro(),
+      salud: { encabezado: fallas.encabezado(), grupos: fallas.agrupadas() },
     });
   }
 

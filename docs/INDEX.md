@@ -52,6 +52,10 @@ costeable y auditable.
 Partes de jornada en `bitacoras/AAAA/MM/`. Uno por día de trabajo, con lo que se
 hizo, lo que quedó abierto y las entradas de manual que salieron.
 
+- `bitacoras/2026/08/2026-08-04_fase-9.md` — fase 9: vigía de fallas e informe de
+  salud. Qué cuenta como falla y por qué un escalado correcto no lo es; la
+  clasificación mira a dónde iba la llamada; «propone, nunca aplica» pasa de
+  promesa a regla del grafo
 - `bitacoras/2026/08/2026-08-04_fase-8a.md` — fase 8A: secretos, respaldos con
   restauración verificada (14 tablas, 1016 filas), demo pública por reproducción y
   las reglas de Firestore por fin ejercitadas; los tres checks nuevos comprobados

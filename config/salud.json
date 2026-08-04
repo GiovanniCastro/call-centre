@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "nota": "Umbrales del vigía de fallas y del informe de salud (fase 9). Como todos los umbrales del proyecto, viven aquí y no en código: un umbral que puede cambiar sin dejar diff, autor y fecha no es auditable.",
+
+  "objetivo_disponibilidad": 0.95,
+  "por_que_ese_objetivo": "95 % es lo que hoy se puede defender, no lo que suena bien. La única carga medida —el lote de la fase 7 en modo local— resolvió 51 de cada 100 casos, y buena parte de lo que falló fue contrato roto del modelo. Poner 99.9 % aquí produciría un presupuesto de error desbordado desde el primer minuto y una alarma permanente, que es una alarma apagada. Se sube cuando la medición lo sostenga.",
+
+  "minimo_observaciones": 30,
+  "por_que_un_minimo": "Con cinco observaciones, «100 % de disponibilidad» y «20 % de tasa de error» son la misma cifra con distinta suerte. Por debajo de este mínimo el informe NO imprime el encabezado: dice que no es concluyente y enseña el denominador. Es la misma regla que el vigía de perímetro aprendió en R-032 — un cero con denominador cero no prueba nada.",
+
+  "umbral_presupuesto_consumido": 1.0,
+  "por_que_uno": "El presupuesto de error es la proporción del margen de fallo que ya se ha gastado. Uno significa gastado entero: por debajo del objetivo. Avisar antes obligaría a elegir un número intermedio sin nada que lo justifique; avisar al agotarse es el único punto que el objetivo mismo define.",
+
+  "ventana_horas": 24,
+  "por_que_veinticuatro": "Un informe de salud responde a «¿cómo está esto ahora?». Una ventana larga diluye una caída reciente en semanas de normalidad y hace que el encabezado siga verde mientras el sistema se cae. Se puede pedir otra ventana por línea de órdenes cuando la pregunta sea otra.",
+
+  "grupos_en_el_informe": 12,
+  "por_que_un_tope": "Un informe con doscientas filas no se lee, y uno que se lee a medias es peor que uno corto. Se ordenan por frecuencia y se enseñan los primeros. El informe SIEMPRE dice cuántos grupos dejó fuera: un tope silencioso se lee como «esto es todo»."
+}
