@@ -1,0 +1,16 @@
+{
+  "version": 1,
+
+  "carpeta": "respaldos",
+  "retencion_dias": 14,
+
+  "base_de_verificacion": "perimetro_verificacion",
+  "servicio_docker": "postgres",
+
+  "por_que": {
+    "carpeta": "Dónde se dejan los volcados y sus manifiestos. Está en .gitignore: un respaldo es la base de datos entera, y el sitio donde nunca puede acabar es el repositorio.",
+    "retencion_dias": "Los respaldos más viejos se borran al crear uno nuevo. Una carpeta que crece sin límite acaba llenando el disco del anfitrión, y el primer síntoma es que PostgreSQL deja de aceptar escrituras.",
+    "base_de_verificacion": "La restauración de prueba NO se hace sobre la base de producción: se crea esta, se restaura dentro y se comparan los recuentos. El módulo se niega a arrancar si este nombre coincide con el de la base de la que se hizo el volcado.",
+    "servicio_docker": "Si pg_dump no está en el PATH, se invoca dentro de este servicio de docker-compose.yml. Es lo normal en una máquina de desarrollo: PostgreSQL corre en un contenedor y sus herramientas viven ahí dentro."
+  }
+}

@@ -109,7 +109,13 @@ el webhook y no depende de que la máquina con Ollama esté encendida.
 
 # PARTE 4 · ESTADO REAL
 
-> Medido contra el disco el **1-ago-2026**. Nada copiado de otro documento.
+> Medido contra el disco el **4-ago-2026**. Nada copiado de otro documento.
+
+**Medición de hoy, tras la fase 8A:** **433 pruebas, 433 pasan, 0 omitidas**, más
+**6 pruebas de reglas contra el emulador de Firestore**. `tsc --noEmit`, `eslint`
+y `depcruise` sin problemas. **21 dependencias directas**, de las que 8 son de
+producción — cuatro de Firebase entraron en esta fase, tres de ellas solo de
+desarrollo (R‑041).
 
 **Las fases 0, 1, 2, 3 y 3B están construidas.** Hay tres canales: Telegram,
 WhatsApp declarado sin credenciales, y `lote`, que alimenta casos desde archivos
@@ -126,10 +132,10 @@ jamás produce una llamada externa: el espía sobre el módulo de salida lo veri
 con adaptadores que salen de verdad, no con dobles. Y una llamada a un dominio no
 declarado se bloquea antes de abrir el socket, aunque el código la intente.
 
-Medido contra el CI **y también en local**: **331 pruebas, 331 pasan, 0
-omitidas** — incluidas las que corren contra Redis, PostgreSQL y
-Qdrant reales, en contenedores. `tsc --noEmit`, `eslint` y `depcruise` sin
-problemas. 11 dependencias directas.
+Medido contra el CI **y también en local** al cerrar la fase 3: **331 pruebas,
+331 pasan, 0 omitidas** — incluidas las que corren contra Redis, PostgreSQL y
+Qdrant reales, en contenedores. 11 dependencias directas. (La cifra de hoy está
+arriba: las fases 4 a 8A añadieron cien pruebas más.)
 
 **El corpus está indexado**: 17 documentos, 106 fragmentos, `bge-m3` local por
 Ollama, 8 segundos de ingestión completa. La reingestión sin cambios cuesta cero
@@ -160,10 +166,11 @@ dicen Perímetro, y son ellos los que mandan.
 | 4B‑2 | Vigías que observan | **CONSTRUIDO** |
 | 4C | Detección | **CONSTRUIDO** |
 | 5 | Acciones, idempotencia, interfaz CRM | **CONSTRUIDO** |
-| 6 | Panel sobre histórico real | PROPUESTO |
-| 7 | Lote de casos y corredor tri‑modo | PROPUESTO |
-| 6B | Selector de modo y punto de equilibrio | PROPUESTO |
-| 8 | Despliegue, operación y demo pública | PROPUESTO |
+| 6 | Panel sobre histórico real | **CONSTRUIDO** |
+| 7 | Lote de casos y corredor tri‑modo | **CONSTRUIDO** |
+| 6B | Selector de modo y punto de equilibrio | **CONSTRUIDO** |
+| 8A | Operación autoalojada, respaldos, secretos, demo por reproducción | **CONSTRUIDO** |
+| 8B | Hosting, Auth, App Check y webhook en producción | PROPUESTO · falta proyecto de Firebase |
 | 9 | Vigía de fallas e informe de salud | PROPUESTO |
 | 10 | Canal de voz | PROPUESTO · opcional |
 
@@ -264,17 +271,40 @@ De la fase 6:
   proyección publicada; no calcula nada. La banda de demostración es una
   consecuencia del tipo, no un `<div>` que alguien pueda borrar.
 
-## Lo que falta de la fase 6
+De la fase 8A:
 
-Tres criterios de aceptación quedan **sin cumplir**, todos por la misma razón:
-necesitan Firebase, y sus dependencias no están aprobadas.
+- **Capa de secretos** (`src/operacion/secretos.ts`). Declara cada credencial —de
+  qué es, qué se pierde sin ella, de dónde sale—, la informa al arrancar sin decir
+  su valor y **redacta** todo lo que salga del proceso, por valor y por forma. Una
+  prueba estructural falla si aparece una variable con forma de credencial sin
+  declarar; encontró `EMBEDDINGS_NUBE_CLAVE`, sin declarar desde la fase 2.
+- **Respaldos con restauración verificada** (`src/operacion/respaldo.ts`). Una
+  sola orden que vuelca, restaura en una base aparte y compara los recuentos tabla
+  por tabla. Se niega a restaurar sobre producción. Ejecutado: **14 tablas, 1016
+  filas, restauradas y verificadas**.
+- **Demo pública por reproducción** (`proyeccion/demo.ts`). Se publica sin
+  `DATABASE_URL`, sin Ollama y sin una sola llamada de red — con espía sobre
+  `fetch`, con la regla `demo-sin-inferencia` en el grafo de dependencias, y con
+  el saneo actuando: los doce casos de sensibilidad alta salieron enmascarados.
+- **Adaptador de Firestore** (`proyeccion/destinos/firestore.ts`), el único módulo
+  del repositorio que importa el SDK de Firebase.
+- **Runbook de despliegue** en [[DESPLIEGUE]], con cada sección marcada como
+  ejecutada o no ejecutada.
 
-- Una prueba en el emulador que falle si un cliente autenticado puede escribir en
-  la proyección.
-- Una prueba que falle si un rol de métricas puede leer una traza con contenido.
-  *La lógica sí está probada* (`decidirAcceso`) y las reglas están escritas; lo
-  que falta es ejercitarlas contra Firestore.
-- Firebase Auth con `custom claims` para los dos roles.
+## Lo que la fase 8A cerró de la fase 6
+
+Los dos criterios de la fase 6 que llevaban abiertos desde el 2‑ago‑2026 **están
+cumplidos**, contra el emulador de Firestore y con `Java 21` en el CI:
+
+- Una prueba falla si un cliente autenticado puede escribir en la proyección.
+- Una prueba falla si un rol de métricas puede leer una traza con contenido.
+
+Seis pruebas de reglas en total, comprobadas además al revés: se rompió
+`allow write: if false` a propósito y la prueba lo detectó.
+
+**Sigue faltando Firebase Auth con `custom claims` para los dos roles**, que es
+fase 8B: las reglas ya distinguen los roles, pero no hay cuentas reales a las que
+asignárselos.
 
 De antes:
 
@@ -379,3 +409,10 @@ Cada una con su entrada en [[CALL_CENTRE_DOCS]].
 | R‑036 | Exenciones al alcance con una comprobación propia más estricta que la exención | Eximir el archivo y confiar; o relajar el patrón de la regla |
 | R‑037 | La banda de demostración sale de una unión discriminada, no de un acuerdo | Un `<div>` que el panel se acuerda de renderizar |
 | R‑038 | El panel comparte tipos con el perímetro, nunca valores, verificado sobre el paquete | Duplicar los tipos en `panel/`; o dejar que importe código |
+| R‑039 | Las reglas de Firestore se unen por OR: un `allow read: if false` final no cierra nada | Creer que la última regla escrita manda |
+| R‑040 | La fase 8 se parte en 8A (autoalojada) y 8B (nube) | Cerrar la fase 8 con dos criterios sin cumplir, anotados como pendientes |
+| R‑041 | Cuatro dependencias de Firebase; tres de desarrollo, y se dice el peso de `firebase-tools` | Meterlas todas en producción; o esquivar el emulador y dejar las reglas sin probar |
+| R‑042 | El respaldo y su restauración son la misma orden, y la base de verificación nunca es producción | Volcar y comprobar por separado; confiar en el código de salida de `pg_dump` |
+| R‑043 | Los secretos se declaran, y una prueba estructural falla si falta alguno | Una lista mantenida a mano; redactar solo lo que alguien recuerde |
+| R‑044 | La demo pública es una tercera clase de fuente: ni en vivo ni de demostración | Reutilizar la bandera de demostración, vendiendo como falso lo que sí se midió |
+| R‑045 | Corrección: el canon daba por PROPUESTAS las fases 6, 7 y 6B, ya construidas | Dejar la tabla como estaba y confiar en el texto de más abajo |

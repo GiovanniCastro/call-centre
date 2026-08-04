@@ -21,3 +21,7 @@ docs/.obsidian/workspace*.json
 .claude/settings.local.json
 panel/dist/
 proyeccion/salida/
+
+# Los respaldos son la base de datos entera. El único sitio donde no pueden
+# acabar es el repositorio. Ver config/respaldos.json y docs/DESPLIEGUE.md.
+respaldos/

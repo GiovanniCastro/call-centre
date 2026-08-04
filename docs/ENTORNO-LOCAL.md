@@ -179,9 +179,49 @@ Todas son opcionales. Sin ellas, el sistema arranca y avisa de lo que le falta.
 | `TELEGRAM_BOT_TOKEN` | Canal primario | Canal declarado, sin configurar |
 | `TELEGRAM_WEBHOOK_SECRET` | Verificación de entrega | Igual |
 | `WHATSAPP_*` | Conector de WhatsApp | Conector declarado, sin configurar |
+| `FIREBASE_PROYECTO` | Publicar la proyección en Firestore | Se publica en `proyeccion/salida/` como archivos, que es el modo por omisión y no uno degradado |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Ruta a la clave de cuenta de servicio | Credenciales por omisión del anfitrión |
 
-El arranque imprime el estado de cada canal y lo que le falta a cada uno. Si algo
-no está configurado, lo dice; no falla en silencio.
+El arranque imprime el estado de cada canal y lo que le falta a cada uno, más el
+**parte de secretos**: qué hay puesto, qué falta, qué se pierde por faltar y de
+dónde sale cada cosa. Nunca un valor — todo lo que sale del proceso pasa por la
+capa de redacción. Si algo no está configurado, lo dice; no falla en silencio.
+
+---
+
+## Respaldos, en local
+
+```bash
+npm run respaldo
+```
+
+Vuelca PostgreSQL, **lo restaura en una base de verificación aparte y compara los
+recuentos tabla por tabla**. No hay una orden para respaldar y otra para
+comprobar: un respaldo que nunca se ha restaurado no es un respaldo.
+
+No hace falta tener `pg_dump` instalado. Si no está en el PATH, se invoca dentro
+del contenedor de `docker-compose.yml`, que lo trae. Los volcados van a
+`respaldos/`, que está en `.gitignore`.
+
+---
+
+## El emulador de Firestore
+
+Las reglas de la proyección se prueban contra el emulador, y el emulador es un
+binario de **Java**. Con Java 21 instalado:
+
+```bash
+npm run test:reglas   # levanta el emulador, corre las pruebas y lo apaga
+npm run emulador      # lo deja levantado, para trastear
+```
+
+**No hace falta cuenta de Firebase.** El proyecto se llama `demo-perimetro`, y el
+prefijo `demo-` le dice a las herramientas que es de emulador: sin credencial, sin
+facturación y sin acceso a nada real. Por eso este check puede correr en cada PR.
+
+Sin Java, esas pruebas se **omiten diciéndolo**. Y una prueba omitida no es una
+prueba aprobada: `npm run verificar` las incluye, así que antes de dar una fase
+por terminada hay que haberlas visto pasar.
 
 ---
 

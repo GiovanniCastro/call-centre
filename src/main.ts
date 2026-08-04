@@ -16,6 +16,7 @@ import { LIMITES } from './borde/limites.ts';
 import { persistirGrupo } from './borde/persistir.ts';
 import { crearConsultador, type Consultador } from './repos/cliente.ts';
 import { migrar } from './repos/migrar.ts';
+import { parteDeSecretos } from './operacion/secretos.ts';
 import type { AlmacenDeBorde } from './borde/almacen.ts';
 
 const PUERTO = Number(process.env['PUERTO'] ?? 8787);
@@ -64,6 +65,11 @@ const despachador = crearDespachador(
 );
 
 console.warn(parteDeCanales(registro));
+
+// El parte de secretos, junto al de canales y por el mismo motivo (fase 8): lo
+// que falta se dice al arrancar, con qué se pierde por faltar y de dónde sale.
+// Nunca imprime un valor, y lo poco que imprime pasa por `redactar`.
+console.warn(parteDeSecretos());
 
 if (registro.activos().length === 0) {
   console.warn(

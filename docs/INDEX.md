@@ -35,6 +35,11 @@ costeable y auditable.
   bloquear, `null` ≠ `OK`, detector de ausencias, registro de vigías con autoridad
   y regla de la mudez, y los candados que barren el código. **PROPUESTO** — §9
   lista los diez cambios que exige.
+- [[DESPLIEGUE]] — 🚀 **runbook de cero a demo pública**: la máquina del
+  perímetro, los secretos en producción, los respaldos con su restauración
+  verificada, la proyección y lo que falta para la nube. Cada sección dice si está
+  ejecutada o no; la lista de verificación del final tiene cuatro casillas sin
+  marcar, y son las de la fase 8B.
 - [[ENTORNO-LOCAL]] — 🧰 cómo ejecutar el perímetro en tu máquina: qué funciona
   solo con Node, qué exige Docker, y los dos comandos elevados que hacen falta en
   Windows. Una prueba omitida no es una prueba aprobada.
@@ -47,6 +52,10 @@ costeable y auditable.
 Partes de jornada en `bitacoras/AAAA/MM/`. Uno por día de trabajo, con lo que se
 hizo, lo que quedó abierto y las entradas de manual que salieron.
 
+- `bitacoras/2026/08/2026-08-04_fase-8a.md` — fase 8A: secretos, respaldos con
+  restauración verificada (14 tablas, 1016 filas), demo pública por reproducción y
+  las reglas de Firestore por fin ejercitadas; los tres checks nuevos comprobados
+  fallando, y uno que falló solo
 - `bitacoras/2026/07/2026-07-30_cambios.md` — revisión del plan y del panel,
   propuesta de desarrollo, montaje del vault
 - `bitacoras/2026/07/2026-07-31_cambios.md` — fase 0 construida: telemetría,
