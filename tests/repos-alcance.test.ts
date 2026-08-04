@@ -64,6 +64,13 @@ const SIN_ALCANCE = new Set([
   // «los agregados no pueden filtrar datos de nadie»— que es más estricta que
   // esta exención, no más laxa.
   'agregados.ts',
+  // Inventario de filas (fase 8). Un recuento de filas no es un dato de nadie:
+  // es un hecho del esquema, y sirve para una sola cosa —comprobar que una
+  // restauración devolvió lo que el respaldo se llevó—. Exigirle alcance
+  // obligaría a inventar un contacto y el filtro afirmaría algo falso. Igual que
+  // con `agregados.ts`, la exención va con una regla propia MÁS estricta, abajo:
+  // sus consultas no pueden nombrar una tabla ni seleccionar una columna.
+  'inventario.ts',
   // Registro de acceso al panel (fase 6). La excepción es de otra naturaleza:
   // aquí el SUJETO del registro es el operador, no el cliente. Un acceso lo
   // genera quien mira. Y lo que hace que no abra un hueco es que este archivo no
@@ -307,6 +314,61 @@ describe('src/repos/ — ninguna consulta puede saltarse el filtro de contacto',
       infractoras,
       [],
       'Hay agregados que devuelven columnas identificatorias:\n' + infractoras.join('\n'),
+    );
+  });
+
+  test('EL INVENTARIO NO PUEDE LEER NADA, SOLO CONTAR', () => {
+    // `inventario.ts` está exento del filtro de contacto porque un recuento de
+    // filas no pertenece a nadie. Lo que sostiene la exención es que sus
+    // consultas no tengan por dónde devolver un dato: no nombran ninguna tabla
+    // del perímetro —la lista sale del catálogo de PostgreSQL— y no seleccionan
+    // ninguna columna, solo `count(*)`.
+    //
+    // Más estricta que la exención, no una forma de esquivarla.
+    const { consultas } = analizar('inventario.ts');
+    assert.ok(consultas.length > 0, 'no se analizó ninguna consulta de inventario.ts');
+
+    const TABLAS_DEL_PERIMETRO = [
+      'eventos',
+      'mensajes',
+      'escalados',
+      'conversaciones',
+      'prospectos',
+      'contactos',
+      'accesos',
+      'incidentes',
+    ];
+
+    const infractoras: string[] = [];
+
+    for (const consulta of consultas) {
+      const normalizada = consulta.replace(/\s+/g, ' ');
+
+      for (const tabla of TABLAS_DEL_PERIMETRO) {
+        if (new RegExp(`\\b(FROM|JOIN|INTO|UPDATE)\\s+${tabla}\\b`, 'i').test(normalizada)) {
+          infractoras.push(`nombra la tabla «${tabla}»: ${normalizada.slice(0, 80)}…`);
+        }
+      }
+
+      // Ningún `SELECT *`, que traería filas enteras de donde sea.
+      if (/SELECT\s+\*/i.test(normalizada)) {
+        infractoras.push(`SELECT * en: ${normalizada.slice(0, 80)}…`);
+      }
+
+      // Y ninguna columna identificatoria, por si algún día alguien amplía el
+      // recuento con «un campito más para el informe».
+      const seleccion = /SELECT\b([\s\S]*?)\bFROM\b/i.exec(normalizada)?.[1] ?? normalizada;
+      for (const columna of COLUMNAS_QUE_IDENTIFICAN) {
+        if (new RegExp(`\\b${columna}\\b`, 'i').test(seleccion)) {
+          infractoras.push(`«${columna}» en: ${normalizada.slice(0, 80)}…`);
+        }
+      }
+    }
+
+    assert.deepEqual(
+      infractoras,
+      [],
+      'El inventario de filas puede devolver algo más que recuentos:\n' + infractoras.join('\n'),
     );
   });
 

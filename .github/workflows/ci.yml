@@ -124,3 +124,47 @@ jobs:
       # Invariante 5: el arnés falla si una ruta emite cero eventos o dos.
       - name: Pruebas
         run: npm run test
+
+      # El panel es TypeScript aparte, con su propio tsconfig. Sin este paso, un
+      # error de tipos del panel solo aparecería al construirlo para desplegar.
+      - name: Tipos del panel
+        run: npm run check:panel
+
+  # ── Las reglas de Firestore, contra el emulador ─────────────────────────────
+  #
+  # Job aparte, y no un paso más del anterior, por una razón práctica: el
+  # emulador de Firestore corre sobre Java, y meterlo en el job de los
+  # invariantes obligaría a instalar un JDK para ejecutar pruebas que no lo
+  # necesitan. Aquí también se ve mejor qué falló: «las reglas» o «el perímetro».
+  #
+  # Los dos criterios que cierra son de la fase 6 y estuvieron abiertos hasta la
+  # 8A: las reglas estaban escritas y razonadas, pero sin ejercitar. Una regla de
+  # seguridad que nadie ha ejecutado es una creencia sobre cómo se comporta.
+  reglas:
+    name: Reglas de Firestore en el emulador
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      # El emulador de Firestore es un binario de Java. Se fija la versión en vez
+      # de confiar en la que traiga la imagen del ejecutor: el día que cambie, el
+      # fallo aparecería aquí sin que nada de este repositorio se hubiera tocado.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - run: npm ci
+
+      # `--project demo-perimetro`: el prefijo `demo-` le dice a las herramientas
+      # de Firebase que es un proyecto de emulador. No hace falta cuenta, ni
+      # credencial, ni facturación — y por eso este check puede correr en cada PR
+      # sin que nadie tenga que administrar un secreto.
+      - name: Reglas
+        run: npm run test:reglas

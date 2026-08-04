@@ -19,6 +19,7 @@
 // Es la diferencia entre una promesa y una garantía.
 
 import type { Proyeccion } from '../../proyeccion/derivar.ts';
+import type { CasoReproducido, Reproduccion } from '../../proyeccion/demo.ts';
 
 export type Fuente =
   | {
@@ -61,4 +62,48 @@ export async function leerProyeccion(url: string): Promise<Fuente> {
 
   const proyeccion = (await respuesta.json()) as Proyeccion;
   return { es_demostracion: false, proyeccion, origen: url };
+}
+
+/**
+ * La fuente de la demo pública: ejecuciones registradas del lote de la fase 7.
+ *
+ * Es una tercera clase de fuente y no una variante de las otras dos, porque no
+ * es ninguna de ellas. No son cifras en vivo —no las hay: nada se está
+ * ejecutando— y tampoco son inventadas como las de demostración: cada una salió
+ * de una corrida real que quedó grabada. Llamarla «demostración» sería vender
+ * como falso lo que sí se midió; llamarla «en vivo» sería lo contrario.
+ *
+ * Igual que en la fase 6, el aviso y el identificador del lote son obligatorios
+ * en el tipo: no existe un valor de reproducción sin decir qué reproduce.
+ */
+export type FuenteDeReproduccion = {
+  readonly es_reproduccion: true;
+  readonly datos: Reproduccion;
+  readonly casos: readonly CasoReproducido[];
+  readonly origen: string;
+};
+
+/**
+ * Lee la demo publicada.
+ *
+ * Dos peticiones a dos documentos estáticos. Ninguna llamada de inferencia, y
+ * ninguna posibilidad de hacerla: aquí no hay más que `fetch` de dos JSON que el
+ * publicador dejó escritos.
+ */
+export async function leerReproduccion(base: string): Promise<FuenteDeReproduccion> {
+  const pedir = async (que: string): Promise<unknown> => {
+    const respuesta = await fetch(`${base}/${que}.json`);
+    if (!respuesta.ok) {
+      throw new ErrorDeFuente(
+        `No se pudo leer la reproducción en ${base}/${que}.json (${respuesta.status}). ` +
+          'Publícala con `npm run publicar:demo`.',
+      );
+    }
+    return respuesta.json();
+  };
+
+  const datos = (await pedir('lote')) as Reproduccion;
+  const casos = (await pedir('casos')) as { casos: readonly CasoReproducido[] };
+
+  return { es_reproduccion: true, datos, casos: casos.casos, origen: base };
 }

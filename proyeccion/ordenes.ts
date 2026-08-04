@@ -4,7 +4,7 @@
 // escribe en el destino. Es el único componente con permiso de escritura sobre
 // la proyección, y corre aquí dentro. Invariante 8.
 //
-// Sin `FIRESTORE_*` publica en archivos, y eso no es un modo degradado: la
+// Sin `FIREBASE_PROYECTO` publica en archivos, y eso no es un modo degradado: la
 // proyección en archivos es la que sirve la demo pública de la fase 8 —estática,
 // sin presupuesto por visitante y sin depender de que el perímetro esté
 // encendido— y la que permite construir y probar toda esta fase sin credenciales
@@ -22,7 +22,7 @@ import {
 } from '../src/repos/agregados.ts';
 import { costear } from '../src/core/costeo/costear.ts';
 import { POLITICA } from '../src/core/enrutador/politica.ts';
-import { DestinoDeArchivos } from './destinos/archivos.ts';
+import { elegirDestino, nombreDelDestino } from './destino.ts';
 import { publicar } from './publicar.ts';
 import type { Agregados } from './derivar.ts';
 
@@ -87,8 +87,9 @@ const agregados: Agregados = {
 // decisión pertenece al operador que investiga un caso, no a un cron. La fase 8
 // añadirá la publicación de las trazas del lote de la 7, que son las de la demo
 // y no las de nadie.
-const r = await publicar(new DestinoDeArchivos(carpeta), agregados, [], new Date().toISOString());
+const r = await publicar(elegirDestino(carpeta), agregados, [], new Date().toISOString());
 
+console.warn(`  destino: ${nombreDelDestino()}`);
 console.warn(`  ${r.documentos} documento(s) en ${carpeta}`);
 console.warn(`  casos: ${r.proyeccion.kpi.casos} · escalados: ${r.proyeccion.kpi.escalados_a_humano}`);
 if (r.proyeccion.kpi.casos === 0) {

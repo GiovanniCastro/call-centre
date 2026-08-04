@@ -14,14 +14,33 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { App } from './App.tsx';
-import { leerProyeccion, type Fuente } from './fuente.ts';
+import { Reproduccion } from './Reproduccion.tsx';
+import {
+  leerProyeccion,
+  leerReproduccion,
+  type Fuente,
+  type FuenteDeReproduccion,
+} from './fuente.ts';
 import { fuenteDeDemostracion } from './demo.fixtures.ts';
 import './estilo.css';
 
 const EN_DEMOSTRACION = import.meta.env['VITE_DEMOSTRACION'] === '1';
 const URL_PROYECCION = import.meta.env['VITE_PROYECCION'] ?? '/proyeccion.json';
 
-async function obtenerFuente(): Promise<Fuente> {
+/**
+ * La demo pública (fase 8). Con esta variable puesta, el panel sirve la
+ * reproducción del lote en lugar de la operación.
+ *
+ * Es una superficie distinta y no una pestaña de la misma: la de operación pide
+ * autenticación de operador y enseña trazas; esta es pública, anónima y solo
+ * lleva lo que el corredor grabó. Mezclarlas obligaría a decidir en tiempo de
+ * ejecución qué puede ver quién, que es justo la decisión que las reglas de
+ * Firestore y los `custom claims` toman en un sitio y no en cada componente.
+ */
+const URL_REPRODUCCION = import.meta.env['VITE_REPRODUCCION'] ?? '';
+
+async function obtenerFuente(): Promise<Fuente | FuenteDeReproduccion> {
+  if (URL_REPRODUCCION !== '') return leerReproduccion(URL_REPRODUCCION);
   if (EN_DEMOSTRACION) return fuenteDeDemostracion();
   return leerProyeccion(URL_PROYECCION);
 }
@@ -35,7 +54,11 @@ obtenerFuente()
   .then((fuente) => {
     root.render(
       <StrictMode>
-        <App fuente={fuente} />
+        {'es_reproduccion' in fuente ? (
+          <Reproduccion fuente={fuente} />
+        ) : (
+          <App fuente={fuente} />
+        )}
       </StrictMode>,
     );
   })

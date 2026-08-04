@@ -15,6 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
+| **7** | 2026‑08‑04 | R‑040 … R‑046 | Fase 8 partida en 8A y 8B; 8A construida. El respaldo y su restauración son la misma orden. Los secretos se declaran, y la prueba encontró uno sin declarar. La demo pública es una tercera clase de fuente. Las reglas de Firestore, por fin ejercitadas: dos criterios de la fase 6 que llevaban abiertos desde el día 2. Y la exención de gitleaks, por valor y no por ruta, que es lo que desbloquea el cierre |
 | **6** | 2026‑08‑02 | R‑034 … R‑039 | Fase 6 construida. La reconciliación se hace imposible en vez de comprobarse. Los eventos se persisten. La banda de demostración sale del tipo, no de un acuerdo. Y una corrección: un `allow read: if false` final no cierra nada |
 | **5** | 2026‑08‑01 | R‑031 … R‑033 | Fase 7 construida. El lote encontró cuatro defectos que ninguna prueba unitaria podía encontrar, dos de ellos métricas que premiaban lo contrario de lo que había que premiar. La inferencia local no es reproducible, y el muestreo pasa a configuración |
 | **4** | 2026‑08‑01 | R‑025 … R‑030 | Fases 3, 3B y 4 construidas. El SDK entra pero sale por nuestro `fetch`. Registro de proveedores con tres estados. La máquina se mide, y la medición cambió la política |
@@ -26,6 +27,14 @@
 
 ## Contenido
 
+- [Revisión 2026‑08‑04 · fase 8A](#revisión-2026-08-04--fase-8a)
+  - [R‑040 · La fase 8 se parte en 8A y 8B](#r-040--la-fase-8-se-parte-en-8a-autoalojada-y-8b-nube)
+  - [R‑041 · Cuatro dependencias de Firebase, y dónde va cada una](#r-041--cuatro-dependencias-de-firebase-y-por-qué-tres-son-de-desarrollo)
+  - [R‑042 · El respaldo y su restauración son la misma orden](#r-042--el-respaldo-y-su-restauración-son-la-misma-orden)
+  - [R‑043 · Los secretos se declaran, y una prueba lo comprueba](#r-043--los-secretos-se-declaran-y-la-prueba-encontró-uno-que-nadie-había-declarado)
+  - [R‑044 · La demo pública es una tercera clase de fuente](#r-044--la-demo-pública-no-es-en-vivo-ni-de-demostración-es-una-tercera-clase)
+  - [R‑045 · Corrección: el canon daba por PROPUESTAS tres fases construidas](#r-045--corrección-el-canon-daba-por-propuestas-tres-fases-ya-construidas)
+  - [R‑046 · La exención de gitleaks es por valor, nunca por ruta](#r-046--la-exención-de-gitleaks-es-por-valor-nunca-por-ruta)
 - [Revisión 2026‑08‑02 · fase 6](#revisión-2026-08-02--fase-6)
   - [R‑034 · La reconciliación se hace imposible, no se comprueba](#r-034--la-reconciliación-no-se-comprueba-se-hace-imposible)
   - [R‑035 · Los eventos no se persistían](#r-035--los-eventos-no-se-persistían-y-sin-eso-el-panel-no-tiene-de-qué-hablar)
@@ -70,6 +79,250 @@
   - [R‑009 · Demo pública por reproducción](#r-009--la-demo-pública-reproduce-ejecuciones-registradas-no-hace-inferencia-en-vivo)
   - [R‑010 · n8n queda como referencia](#r-010--n8n-queda-como-referencia-no-entra-en-el-stack)
   - [R‑011 · Fase 8 de despliegue y operación](#r-011--se-añade-una-fase-8-de-despliegue-y-operación-que-el-plan-no-tenía)
+
+---
+
+## Revisión 2026‑08‑04 · fase 8A
+
+### R‑040 · La fase 8 se parte en 8A (autoalojada) y 8B (nube)
+
+**Contexto.** La fase 8 mezcla dos clases de trabajo que no se parecen en nada:
+lo que se puede construir y comprobar en la máquina de desarrollo —respaldos,
+secretos, la demo por reproducción— y lo que exige un proyecto de Firebase, un
+dominio con TLS y una máquina expuesta: Hosting, Auth, App Check y la
+verificación del webhook contra el despliegue real.
+
+**La vía descartada.** Cerrar la fase 8 entera dejando dos criterios de
+aceptación sin cumplir, anotados como pendientes. Es lo cómodo y es justo lo que
+§9 del plan llama deuda invisible: un criterio relajado en silencio.
+
+**Qué cambió.** Dos fases, cada una con sus criterios completos:
+
+- **8A** — perímetro autoalojado documentado, secretos, respaldos con
+  restauración verificada, demo pública por reproducción, adaptador de Firestore
+  y reglas probadas en el emulador. **Construida.**
+- **8B** — despliegue del panel por etiqueta, App Check, Auth con los dos roles
+  y el webhook de producción rechazando lo que no venga firmado. **Propuesta**,
+  a la espera del proyecto de Firebase.
+
+**Por qué.** Porque partir una fase es una salida que el protocolo de fracaso ya
+contempla, y usarla *antes* de gastar los tres intentos es mejor que usarla
+después. 8A cierra con todos sus criterios cumplidos y medidos; 8B queda
+esperando lo único que le falta, que no es código.
+
+**Impacto.** [[Propuesta-Desarrollo-Por-Fases]] §7 y §Fase 8. El runbook está en
+[[DESPLIEGUE]], con cada sección marcada como ejecutada o no ejecutada, y una
+lista de verificación donde las cuatro casillas de 8B están sin marcar.
+
+---
+
+### R‑041 · Cuatro dependencias de Firebase, y por qué tres son de desarrollo
+
+**Contexto.** La fase 6 dejó tres criterios sin cumplir —las reglas de Firestore
+sin ejercitar y Auth sin construir— por la misma razón: necesitaban Firebase, y
+sus dependencias no estaban aprobadas. El canon presume de once dependencias
+directas, así que añadirlas no es un trámite.
+
+**Qué cambió.** Cuatro paquetes, aprobados por el responsable:
+
+| Paquete | Dónde | Para qué |
+|---|---|---|
+| `firebase-admin` | dependencia | El adaptador de Firestore del publicador. Es el único que corre dentro del perímetro |
+| `firebase-tools` | desarrollo | El emulador y, en 8B, el despliegue |
+| `@firebase/rules-unit-testing` | desarrollo | Las pruebas de reglas |
+| `firebase` | desarrollo | SDK cliente, que el paquete de pruebas exige como par. Pasará a dependencia cuando el panel tenga Auth, en 8B |
+
+**Por qué así.** `firebase-tools` arrastra cientos de paquetes transitivos, y eso
+no se esconde: va en `devDependencies`, no viaja al perímetro y se dice aquí. Una
+herramienta de CI no es parte del producto, pero fingir que no está tampoco vale.
+
+**Lo que hizo falta ajustar.** `firebase-admin/app` y `firebase-admin/firestore`
+son subrutas del mapa de `exports` del paquete, no carpetas. El resolvedor de
+`dependency-cruiser` no las seguía y la regla `sin-dependencias-no-declaradas`
+las acusaba de algo que no eran. Se enseñó al resolvedor a leer el mapa
+(`exportsFields`, `conditionNames`) **en vez de relajar la regla**: un check que
+señala lo que no es manda a quien lo lee a arreglar lo que no está roto.
+
+**Impacto.** 21 dependencias directas, de las que 8 son de producción. El check
+`perimetro-sin-firebase` sigue confinando el SDK a `proyeccion/`, y ahora tiene a
+quién confinar.
+
+---
+
+### R‑042 · El respaldo y su restauración son la misma orden
+
+**Contexto.** El criterio de la fase 8 no es «existe un respaldo», es «una
+restauración de respaldo se ha ejecutado y verificado». El plan lo dice sin
+rodeos: **un respaldo que no se ha restaurado nunca no es un respaldo.**
+
+**La vía descartada.** Dos órdenes: una para volcar, otra para comprobar. Un
+comprobante que hay que acordarse de ejecutar es uno que dentro de tres meses
+nadie ejecuta, y entonces la carpeta se llena de archivos que nadie ha abierto.
+
+**Qué se hizo.** `npm run respaldo` vuelca con `pg_dump`, restaura en una base de
+verificación aparte con `pg_restore` y **compara los recuentos tabla por tabla**.
+Lo que se afirma al final no es que el proceso terminó con código cero —eso lo
+cumple un archivo vacío— sino que las filas están todas.
+
+Tres detalles que no son adorno:
+
+- **La base de verificación nunca puede ser la de producción.** Comprobación
+  explícita antes de cualquier `DROP DATABASE`. Un verificador de respaldos capaz
+  de destruir la base que protege es un riesgo mayor que no verificar.
+- **Todo viaja por entrada y salida estándar**, no por rutas que las herramientas
+  abran. Es lo que hace que funcione igual con `pg_dump` en el PATH que dentro
+  del contenedor de docker‑compose, que es lo normal en desarrollo.
+- **Los recuentos se toman antes y después del volcado.** Una tabla que cambió
+  entre ambos se marca volátil y se verifica por intervalo. Sin eso, respaldar un
+  sistema en marcha daría fallos falsos, y un comprobante que falla cuando todo
+  está bien acaba ignorado.
+
+**Medido.** 4‑ago‑2026, PostgreSQL 16.14 en contenedor: **14 tablas, 1016 filas,
+restauradas y verificadas**, en el primer intento.
+
+**Impacto.** `config/respaldos.json`, `src/operacion/`, `src/repos/inventario.ts`
+—exento del alcance de contacto con su propia regla más estricta, según el patrón
+de [[CALL_CENTRE_DOCS#R‑036]]—. `respaldos/` va en `.gitignore`: un respaldo es la
+base entera, y el único sitio donde no puede acabar es el repositorio.
+
+---
+
+### R‑043 · Los secretos se declaran, y la prueba encontró uno que nadie había declarado
+
+**Contexto.** «Secretos en producción fuera del repositorio y fuera del informe
+de salud.» Lo primero ya lo sostenían `.gitignore` y `gitleaks`. Lo segundo no lo
+sostenía nadie: cualquier módulo que quisiera explicar un fallo de conexión podía
+escribir la URL de PostgreSQL entera —con su contraseña— en la consola.
+
+**Qué se hizo.** Un módulo que declara cada secreto —de qué es, qué se pierde sin
+él, de dónde sale—, lo informa al arrancar sin decir su valor, y **redacta** todo
+lo que salga del proceso en dos capas: por valor, para los declarados; y por
+forma, para lo que parece credencial aunque no esté declarado. Ninguna sobra: la
+primera no puede tapar un secreto que este proceso no tiene en el entorno; la
+segunda no puede tapar una contraseña que no se parece a nada.
+
+**Lo que encontró la prueba.** Una prueba estructural recorre el árbol sintáctico
+de `src/`, `proyeccion/` y `lote/` buscando nombres con forma de credencial y
+falla si alguno no está declarado. La escribí esperando que pasara a la primera y
+señaló **`EMBEDDINGS_NUBE_CLAVE`**, que llevaba sin declarar desde la fase 2. No
+era una fuga —no hay proveedor de embeddings elegido— pero era exactamente el
+hueco que la lista existía para no tener.
+
+**Una segunda prueba, en la frontera que más importa.** Vite incrusta las
+variables `VITE_*` en el paquete que se sirve al navegador. Una credencial ahí no
+es una fuga potencial: es una fuga publicada. La prueba falla si `panel/`
+menciona un nombre con forma de credencial.
+
+**Un detalle que se vio al ejecutarlo.** La primera versión de la orden de
+respaldo imprimía «Respaldando ●●●●●●»: en desarrollo la contraseña de
+docker‑compose es `perimetro`, igual que el nombre de la base, así que la capa de
+valor lo tapaba por coincidencia. La redacción hacía lo correcto; taparlo ahí era
+pedirle que adivinara. El nombre de la base sale del camino de la URL y no se
+redacta.
+
+---
+
+### R‑044 · La demo pública no es «en vivo» ni «de demostración»: es una tercera clase
+
+**Contexto.** R‑009 fijó que la demo pública reproduce ejecuciones registradas.
+Al construirla apareció una pregunta que el plan no resolvía: ¿qué es esa fuente
+de datos para el panel? La fase 6 tenía dos —la proyección real y los datos de
+demostración, con su banda—.
+
+**Qué se decidió.** Una tercera, `FuenteDeReproduccion`. Llamarla «demostración»
+vendería como falso lo que sí se midió; llamarla «en vivo» sería lo contrario,
+porque no hay nada ejecutándose. Lleva el identificador del lote y su aviso como
+campos **obligatorios en el tipo**: no existe un valor de reproducción sin decir
+qué reproduce.
+
+**Cómo se sostiene «ninguna llamada de inferencia».** Por tres vías, y cada una
+tapa lo que la otra no ve:
+
+1. Un espía sobre `fetch` durante la derivación y la publicación completas.
+2. La orden `npm run publicar:demo` **no pide `DATABASE_URL`**: se ejecuta sin
+   perímetro, sin Ollama y sin credenciales.
+3. La regla `demo-sin-inferencia` de `dependency-cruiser`: `proyeccion/` no puede
+   alcanzar `src/providers/`, `src/salida/` ni `src/conocimiento/` salvo por
+   imports de solo tipo. Comprobada añadiendo la violación y viéndola fallar.
+
+**Y ninguna cifra se calcula ahí.** La demo reutiliza `resumir` del informe de la
+fase 7 — de donde salen las cifras publicables y de ningún otro sitio. Los modos
+que no se corrieron salen con su motivo y sin casos, nunca con ceros.
+
+**Lo que apareció al publicar.** El saneo actuó: los doce casos de sensibilidad
+alta del lote llevan números de seguro social, cuentas y pólizas escritos a
+propósito, y salieron enmascarados. La colección `demo` es la única que las
+reglas abren a lectura anónima, así que es justo donde no podían acabar. Hay una
+prueba que busca esas formas sobre el archivo publicado tal cual se sirve.
+
+---
+
+### R‑045 · Corrección: el canon daba por PROPUESTAS tres fases ya construidas
+
+**Qué se encontró.** La tabla de estado de [[00-CANON]] §Parte 4 marcaba las
+fases 6, 7 y 6B como `PROPUESTO`, cuando las tres están en `main` con su etiqueta
+—`v0.6`, `v0.7`, `v0.6b`— y el propio canon las describe construidas doscientas
+líneas más abajo. El documento se contradecía consigo mismo.
+
+**Por qué importa.** Es el modo de fallo que este manual existe para evitar:
+quien razone desde el canon —que es lo que el proyecto pide hacer— decide sobre
+una premisa falsa. Y la tabla es lo primero que se mira.
+
+**Qué se corrigió.** Los tres estados, más la fila de la fase 8 partida en 8A y
+8B. Además, la fase 6B se cerró sin entrada de manual; no se inventa ahora una
+retroactiva, pero queda dicho aquí que su registro falta.
+
+**Impacto.** [[00-CANON]] §Parte 4.
+
+---
+
+### R‑046 · La exención de gitleaks es por valor, nunca por ruta
+
+**Contexto.** El check «Sin credenciales en el repositorio» llevaba en rojo desde
+el commit de la fase 8A, y con él el PR #31 sin poder cerrarse. Dos hallazgos,
+los dos en `tests/secretos.test.ts`: el secreto de aplicación de WhatsApp y el
+cuerpo del PEM. Son las credenciales inventadas que esa prueba necesita para
+demostrar que `redactar()` tapa lo que tiene forma de credencial — una prueba de
+redacción sin nada que redactar no prueba nada. El escáner acierta en la forma y
+se equivoca en el fondo.
+
+**La vía descartada, y por qué se descartó después de probarla.** La exención
+obvia es por ruta: `paths` con el archivo, más `regexes` con los dos valores, y
+`condition = "AND"` para exigir las dos cosas. Se escribió así y se comprobó al
+revés antes de darla por buena — se añadió un secreto de verdad a ese mismo
+archivo y **dejó de detectarse**. Con la ruta dentro de la exención, el archivo
+queda abierto para siempre y para todo lo que caiga ahí dentro, en este commit y
+en los futuros. Un archivo que se llama «secretos» es el último sitio del
+repositorio donde conviene apagar el escáner.
+
+**Qué cambió.** `.gitleaks.toml` nuevo, que **extiende** el catálogo de fábrica
+—no sustituye ninguna regla ni toca el workflow— con una sola exención de dos
+literales concretos. Ni rutas, ni reglas desactivadas.
+
+**El segundo hallazgo, que es el que deja lección.** La primera corrección pasaba
+en local y seguía en rojo en el CI. El motivo no era la exención sino la
+sintaxis: `[[allowlists]]` en plural pertenece a una versión de gitleaks
+posterior a la que instala la acción —8.24.3 allí, 8.30.1 en la imagen de
+docker—, y al no reconocerla **no protesta: la ignora**. Media configuración se
+estaba saltando sin decirlo. Con `[allowlist]` en singular, que entienden las
+dos, lo que se prueba en local es lo que se aplica en el CI.
+
+**Cómo se comprobó.** Con la imagen de docker de gitleaks, en las dos versiones y
+en los dos sentidos:
+
+| | 8.24.3 | 8.30.1 |
+|---|---|---|
+| Historial entero, sin la configuración | 2 hallazgos | 2 hallazgos |
+| Historial entero, con ella | 0 | 0 |
+| Cambiando el cuerpo del PEM y añadiendo otro secreto al mismo archivo | 2 hallazgos | 2 hallazgos |
+
+La tercera fila es la que importa: es la que demuestra que la exención no es un
+agujero. Mismo criterio que [R‑036](#r-036--dos-exenciones-nuevas-al-alcance-de-contacto-cada-una-con-una-regla-más-estricta)
+— una exención viene con una comprobación más estricta que ella misma.
+
+**Impacto.** `.gitleaks.toml`, archivo nuevo. Sin efecto en código ni en pruebas:
+433 pruebas siguen pasando, más las 6 del emulador. Desbloquea el PR #31 y con él
+el cierre de la fase 8A.
 
 ---
 

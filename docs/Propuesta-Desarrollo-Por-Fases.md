@@ -199,7 +199,8 @@ del webhook con cuatro fases de código y de pruebas encima.
 | **6** | Panel sobre histórico real, un modo | 3–4 | 4B‑2, 5 |
 | **7** | Lote de casos y corredor tri‑modo | 2–3 | 6 |
 | **6B** | Selector de modo y calculadora de punto de equilibrio | 1–2 | 7 |
-| **8** | Despliegue, operación y demo pública | 2 | 6B |
+| **8A** | Operación autoalojada: secretos, respaldos, demo por reproducción | 2 | 6B |
+| **8B** | Nube: Hosting, Auth, App Check, webhook en producción | 1–2 | 8A |
 | **9** | Vigía de fallas e informe de salud | 2–3 | 8 |
 | **10** | Canal de voz — opcional | 3+ | 8 |
 
@@ -744,6 +745,18 @@ llega en 6B, cuando la fase 7 lo haga posible.
 ---
 
 ### Fase 8 — Despliegue, operación y demo pública
+
+> **Partida en 8A y 8B el 4‑ago‑2026 (R‑040).** 8A es lo que se construye y se
+> comprueba sin cuenta de nadie —perímetro autoalojado, secretos, respaldos, demo
+> por reproducción, adaptador de Firestore y reglas probadas en el emulador— y
+> **está construida**. 8B es lo que exige proyecto de Firebase y máquina expuesta:
+> Hosting, Auth con los dos roles, App Check, despliegue por etiqueta y la
+> verificación del webhook contra el despliegue real.
+>
+> El motivo de partirla: cerrarla entera habría dejado dos criterios de aceptación
+> sin cumplir, anotados como pendientes. Un criterio relajado en silencio es deuda
+> invisible (§9). El runbook está en [[DESPLIEGUE]], con cada sección marcada como
+> ejecutada o no ejecutada.
 
 **Objetivo.** La fase que el plan original no tenía. Sin ella no hay demo, solo
 un repositorio.

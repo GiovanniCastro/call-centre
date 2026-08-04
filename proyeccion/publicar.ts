@@ -28,6 +28,7 @@
 
 import { sanear } from '../src/core/saneo/sanear.ts';
 import { derivar, type Agregados, type Proyeccion } from './derivar.ts';
+import type { Reproduccion } from './demo.ts';
 import type { DestinoDeProyeccion, DocumentoProyectado } from './puerto.ts';
 
 export class ErrorDePublicacion extends Error {
@@ -89,6 +90,59 @@ export type ResultadoDePublicacion = {
   /** Qué tipos de identificador se enmascararon al publicar. Nunca los valores. */
   readonly enmascarados: readonly string[];
 };
+
+/**
+ * Publica la demo pública: la reproducción del lote de la fase 7.
+ *
+ * Va por el mismo saneo que todo lo demás y por el mismo puerto, aunque su
+ * origen sea un archivo y no PostgreSQL. Es la colección que las reglas de
+ * Firestore abren a lectura anónima —`match /demo/{documento}`— y por eso es
+ * justo la que menos se puede publicar sin pasar por aquí.
+ *
+ * Dos documentos y no uno: el resumen se lee en cada visita y los casos solo al
+ * abrir la lista. Partirlos evita que el visitante que solo mira las cifras se
+ * descargue las tres corridas enteras.
+ */
+export type ResultadoDePublicacionDemo = {
+  readonly documentos: number;
+  readonly casos: number;
+  readonly enmascarados: readonly string[];
+};
+
+export async function publicarDemo(
+  destino: DestinoDeProyeccion,
+  reproduccion: Reproduccion,
+  avisar: (linea: string) => void = (l) => console.warn(l),
+): Promise<ResultadoDePublicacionDemo> {
+  const hallazgos: string[] = [];
+  const { casos, ...resumen } = reproduccion;
+
+  const documentos: DocumentoProyectado[] = [
+    { ruta: 'demo/lote', contenido: sanearProfundo(resumen, hallazgos) as Record<string, unknown> },
+    {
+      ruta: 'demo/casos',
+      contenido: sanearProfundo({ lote: reproduccion.lote, casos }, hallazgos) as Record<
+        string,
+        unknown
+      >,
+    },
+  ];
+
+  const enmascarados = [...new Set(hallazgos)];
+  if (enmascarados.length > 0) {
+    // Aquí el aviso pesa más que en la proyección de agregados: esto se publica
+    // a lectura anónima. Que el saneo tenga que actuar significa que un caso del
+    // lote traía algo con forma de identificador, y hay que mirarlo.
+    avisar(
+      `INCIDENTE DE PERÍMETRO en la demo pública: ${hallazgos.length} identificador(es) ` +
+        `de tipo(s) ${enmascarados.join(', ')} en el lote. Se publican enmascarados.`,
+    );
+  }
+
+  await destino.publicar(documentos);
+
+  return { documentos: documentos.length, casos: casos.length, enmascarados };
+}
 
 export async function publicar(
   destino: DestinoDeProyeccion,

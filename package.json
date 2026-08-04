@@ -13,8 +13,9 @@
     "servicios:parar": "docker compose down",
     "dev": "node --env-file-if-exists=.env --watch src/main.ts",
     "arrancar": "node --env-file-if-exists=.env src/main.ts",
-    "verificar": "npm run check:tipos && npm run check:lint && npm run check:panel && npm run check:arquitectura && npm run test",
+    "verificar": "npm run check:tipos && npm run check:lint && npm run check:panel && npm run check:arquitectura && npm run test && npm run test:reglas",
     "maquina": "node --env-file-if-exists=.env src/diagnostico/ordenes.ts",
+    "respaldo": "node --env-file-if-exists=.env src/operacion/ordenes.ts",
     "conocimiento:ingerir": "node --env-file-if-exists=.env src/conocimiento/ordenes.ts ingerir",
     "conocimiento:reindexar": "node --env-file-if-exists=.env src/conocimiento/ordenes.ts reindexar",
     "conocimiento:consultar": "node --env-file-if-exists=.env src/conocimiento/ordenes.ts consultar",
@@ -23,13 +24,17 @@
     "check:lint": "eslint .",
     "check:arquitectura": "depcruise src proyeccion lote --config .dependency-cruiser.cjs",
     "test": "node --env-file-if-exists=.env --test --experimental-test-module-mocks \"tests/**/*.test.ts\"",
+    "emulador": "firebase emulators:start --project demo-perimetro",
+    "test:reglas": "firebase emulators:exec --project demo-perimetro \"node --test tests/reglas-firestore.test.ts\"",
     "publicar": "node --env-file-if-exists=.env proyeccion/ordenes.ts",
+    "publicar:demo": "node --env-file-if-exists=.env proyeccion/ordenes-demo.ts",
     "panel": "vite --config panel/vite.config.ts",
     "panel:construir": "vite build --config panel/vite.config.ts",
     "check:panel": "tsc --noEmit -p panel/tsconfig.json"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
+    "firebase-admin": "^14.2.0",
     "pg": "^8.22.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -38,6 +43,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.1",
     "@types/node": "^26.1.2",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.18",
@@ -47,6 +53,8 @@
     "@vitejs/plugin-react": "^6.0.5",
     "dependency-cruiser": "^18.1.0",
     "eslint": "^10.8.0",
+    "firebase": "^12.17.0",
+    "firebase-tools": "^15.25.1",
     "typescript": "^5.9.3",
     "vite": "^8.2.0"
   }

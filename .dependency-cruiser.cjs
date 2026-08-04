@@ -164,6 +164,24 @@ module.exports = {
       to: { dependencyTypes: CUALQUIER_PAQUETE, path: SDKS_DE_PROVEEDOR },
     },
     {
+      name: 'demo-sin-inferencia',
+      comment:
+        'Criterio de aceptación de la fase 8: «la demo pública no realiza ninguna ' +
+        'llamada de inferencia» (R-009). Las pruebas comprueban que hoy no la hace; ' +
+        'esta regla comprueba que no PUEDE hacerla. El publicador y la demo derivan ' +
+        'de archivos ya grabados: no alcanzan a ningún adaptador de proveedor, ni al ' +
+        'módulo de salida, ni a la recuperación —que también sale a la red a por ' +
+        'embeddings—. Los imports de solo tipo se permiten: un tipo no ejecuta nada, ' +
+        'y sin esa distinción la demo no podría ni nombrar la forma de un resultado ' +
+        'del corredor.',
+      severity: 'error',
+      from: { path: '^proyeccion/' },
+      to: {
+        path: '^src/(providers|salida|conocimiento)/',
+        dependencyTypesNot: ['type-only'],
+      },
+    },
+    {
       name: 'sin-ciclos',
       comment:
         'Un ciclo de dependencias hace que «qué depende de qué» deje de tener ' +
@@ -198,6 +216,15 @@ module.exports = {
     enhancedResolveOptions: {
       extensions: ['.ts', '.js', '.json'],
       mainFields: ['module', 'main', 'types'],
+      // `firebase-admin/app` y `firebase-admin/firestore` son subrutas
+      // declaradas en el mapa de `exports` del paquete, no carpetas reales. Sin
+      // esto el resolvedor no las encuentra, las clasifica como dependencia no
+      // declarada y la regla `sin-dependencias-no-declaradas` las acusa de algo
+      // que no es: el paquete SÍ está en package.json. Se enseña al resolvedor a
+      // leer el mapa en vez de relajar la regla — un check que señala lo que no
+      // es manda a quien lo lee a arreglar lo que no está roto.
+      exportsFields: ['exports'],
+      conditionNames: ['node', 'import', 'require', 'default', 'types'],
     },
     reporterOptions: {
       text: { highlightFocused: true },
