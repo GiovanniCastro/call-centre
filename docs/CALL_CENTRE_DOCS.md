@@ -15,6 +15,7 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
+| **8** | 2026‑08‑04 | R‑047 … R‑050 | Fase 9 construida. Falla es que el sistema no pudiera, no que decidiera correctamente que no: contar un escalado por falta de fuente habría hecho que cumplir el invariante 1 bajara la disponibilidad. La clasificación mira a dónde iba la llamada, no solo qué devolvió. Y «el informe propone, nunca aplica» pasa de promesa a regla del grafo de dependencias |
 | **7** | 2026‑08‑04 | R‑040 … R‑046 | Fase 8 partida en 8A y 8B; 8A construida. El respaldo y su restauración son la misma orden. Los secretos se declaran, y la prueba encontró uno sin declarar. La demo pública es una tercera clase de fuente. Las reglas de Firestore, por fin ejercitadas: dos criterios de la fase 6 que llevaban abiertos desde el día 2. Y la exención de gitleaks, por valor y no por ruta, que es lo que desbloquea el cierre |
 | **6** | 2026‑08‑02 | R‑034 … R‑039 | Fase 6 construida. La reconciliación se hace imposible en vez de comprobarse. Los eventos se persisten. La banda de demostración sale del tipo, no de un acuerdo. Y una corrección: un `allow read: if false` final no cierra nada |
 | **5** | 2026‑08‑01 | R‑031 … R‑033 | Fase 7 construida. El lote encontró cuatro defectos que ninguna prueba unitaria podía encontrar, dos de ellos métricas que premiaban lo contrario de lo que había que premiar. La inferencia local no es reproducible, y el muestreo pasa a configuración |
@@ -27,6 +28,11 @@
 
 ## Contenido
 
+- [Revisión 2026‑08‑04 · fase 9](#revisión-2026-08-04--fase-9)
+  - [R‑047 · Qué cuenta como falla, y por qué un escalado correcto no lo es](#r-047--qué-cuenta-como-falla-y-por-qué-un-escalado-correcto-no-lo-es)
+  - [R‑048 · La clasificación mira a dónde iba la llamada](#r-048--la-clasificación-mira-a-dónde-iba-la-llamada-no-solo-qué-devolvió)
+  - [R‑049 · El informe se compone sobre lo grabado, y sus dos formatos son uno](#r-049--el-informe-se-compone-sobre-lo-grabado-y-sus-dos-formatos-son-uno)
+  - [R‑050 · «Propone, nunca aplica» se hace estructural](#r-050--propone-nunca-aplica-deja-de-prometerse-y-pasa-a-comprobarse)
 - [Revisión 2026‑08‑04 · fase 8A](#revisión-2026-08-04--fase-8a)
   - [R‑040 · La fase 8 se parte en 8A y 8B](#r-040--la-fase-8-se-parte-en-8a-autoalojada-y-8b-nube)
   - [R‑041 · Cuatro dependencias de Firebase, y dónde va cada una](#r-041--cuatro-dependencias-de-firebase-y-por-qué-tres-son-de-desarrollo)
@@ -79,6 +85,158 @@
   - [R‑009 · Demo pública por reproducción](#r-009--la-demo-pública-reproduce-ejecuciones-registradas-no-hace-inferencia-en-vivo)
   - [R‑010 · n8n queda como referencia](#r-010--n8n-queda-como-referencia-no-entra-en-el-stack)
   - [R‑011 · Fase 8 de despliegue y operación](#r-011--se-añade-una-fase-8-de-despliegue-y-operación-que-el-plan-no-tenía)
+
+---
+
+## Revisión 2026‑08‑04 · fase 9
+
+### R‑047 · Qué cuenta como falla, y por qué un escalado correcto no lo es
+
+**Contexto.** El vigía de fallas necesita una definición de fallo para poder
+calcular disponibilidad. La definición no es un detalle de implementación: sobre
+la misma corrida del lote, «todo escalado es un fallo» da un 51 % de
+disponibilidad y «solo lo que el sistema no pudo hacer» da otra cifra muy
+distinta. Las dos serían defendibles en una frase y solo una es correcta.
+
+**La vía descartada.** Contar como falla todo caso que no acabó en `resuelto`.
+Es la definición cómoda —sale de un campo que ya existe— y es la que corroe el
+sistema desde dentro: un caso que escala porque **no hay fuente que lo sostenga**
+es el invariante 1 funcionando. Contarlo como fallo hace que cumplir el
+invariante baje la disponibilidad, y en algún momento alguien mejora la cifra
+aflojando el invariante. Lo mismo con un caso bloqueado por el vigía de
+perímetro: penalizaría al sistema por proteger un dato.
+
+**Qué cambió.** La regla, en una frase: **falla es que el sistema no pudiera
+hacer su trabajo, no que decidiera correctamente no hacerlo.** Vive escrita una
+sola vez, en `src/core/fallas/desde-caso.ts`, y quien llama al vigía no puede
+saltársela porque no decide él.
+
+| Desenlace | ¿Falla? |
+|---|---|
+| excepción · `sin_sustento` · `esquema_invalido` · `fallo_de_ejecucion` | **sí** |
+| `sin_fuentes` · `modelo_no_puede` · `bloqueado` · `resuelto` | no |
+
+**La distinción que más cuesta ver** es `sin_fuentes` frente a `sin_sustento`, y
+es la que decide la cifra. En `sin_fuentes` no había nada que citar y el agente
+escaló: no se le puede pedir más. En `sin_sustento` **se le dieron fragmentos y
+no los citó** — el verificador bloqueó bien, pero el trabajo no se hizo. La falla
+es del modelo, no del verificador, y por eso no se arregla bajando el umbral. Es
+el hallazgo de la fase 7 con gemma4, ahora contable.
+
+**Impacto.** `src/core/fallas/desde-caso.ts` y el encabezado de todo informe de
+salud. El corredor graba `clase_escalado` desde esta fase: antes solo quedaba
+`por_que_no`, que es el juicio de acierto contra la expectativa del caso, y
+derivar fallas de ahí habría hecho que la disponibilidad dependiera de lo bien
+escrito que estuviera el lote en lugar de cómo fue la ejecución.
+
+---
+
+### R‑048 · La clasificación mira a dónde iba la llamada, no solo qué devolvió
+
+**Contexto.** El plan pide clasificar «por significado y no por número». La
+lectura fácil es traducir códigos a nombres —`401` → «no autorizado»—, que es
+cambiar un número por una etiqueta y seguir sin decir qué hacer.
+
+**Qué cambió.** Nueve clases definidas por su remedio, y cada una declara qué
+significa, qué hacer, **dónde mirar** —rutas del repositorio, comprobadas por una
+prueba que falla si alguna no existe— y si arreglarlo está en nuestra mano.
+
+Tres casos que sostienen la decisión:
+
+- **El mismo error, dos clases.** `ECONNREFUSED` contra `localhost:5432` es
+  «no levantaste los servicios» y se arregla con `npm run servicios`. El mismo
+  `ECONNREFUSED` contra un proveedor es «está caído» y no se arregla desde aquí.
+  Por eso la observación lleva **a dónde iba** la llamada: sin ese campo el
+  clasificador tendría que adivinar, y adivinaría mal la mitad de las veces.
+- **Números vecinos, remedios opuestos.** `429` es cuota nuestra —bajar el ritmo
+  la arregla—; `529` es saturación del proveedor —bajar el ritmo no la arregla,
+  solo la espera—. Un cajón de «errores del proveedor» los junta y manda a mirar
+  donde no es.
+- **Números distintos, la misma falla.** `401`, `403` y un cuerpo que dice
+  `invalid x-api-key` son lo mismo: la credencial no vale.
+
+**Y `desconocida` es una clase de primera.** La tentación es que todo caiga en
+algún cajón plausible; el resultado es un informe que siempre parece saber lo que
+pasa. Lo que no se reconoce sale como no reconocido, con su recuento, y ese
+recuento **es la lista de trabajo del propio clasificador**.
+
+**Impacto.** `src/core/fallas/clasificar.ts`. Ninguna de estas reglas llama a un
+modelo: invariante 7, y además un clasificador que preguntara a un proveedor qué
+significa un error fallaría justo cuando el proveedor está caído.
+
+---
+
+### R‑049 · El informe se compone sobre lo grabado, y sus dos formatos son uno
+
+**Contexto.** Un informe de salud necesita una fuente de fallas. Lo obvio es una
+tabla nueva en PostgreSQL con su migración y su repositorio.
+
+**La vía descartada, y qué se pierde.** `migrations/007_fallas.sql` más
+`src/repos/fallas.ts`. Se descartó porque ata el informe a que la base esté
+levantada, y **un informe de salud que exige el sistema encendido es inútil justo
+el día que hace falta**. El corredor de la fase 7 ya graba sus resultados en
+archivos; el vigía graba los suyos junto a ellos, y `npm run salud` se compone
+sobre eso — sin base de datos, sin Ollama y sin una sola llamada de red, la misma
+propiedad que la demo pública tiene desde R‑009.
+
+**Lo que eso cuesta, dicho aquí y no descubierto luego:** las fallas **no
+sobreviven entre procesos** fuera de una corrida del lote. Un fallo que ocurra
+atendiendo un mensaje real de Telegram se observa en memoria y se pierde al
+reiniciar. Queda como issue; el día que el perímetro corra en producción de
+verdad —que es 8B— la tabla tendrá quien la lea, y entonces escribirla no será
+escribir una tabla que nadie consulta.
+
+**Los dos formatos son una estructura y una vista de ella.** `componer()`
+produce el objeto; `enMarkdown()` lo renderiza. El Markdown no recalcula nada, no
+filtra nada y no redondea por su cuenta. Es R‑034 otra vez: dos superficies que
+cuentan lo mismo no se reconcilian con una prueba de que coinciden, se hacen
+imposibles de descuadrar derivándolas del mismo sitio.
+
+**Y el encabezado no se publica sin denominador.** Por debajo de
+`minimo_observaciones` el informe **no imprime** disponibilidad, tasa de error,
+recuperación media ni presupuesto consumido: dice que no es concluyente y enseña
+el denominador. No las imprime con una advertencia al lado — una cifra publicada
+con una nota que la desmiente se cita sin la nota. Los hallazgos agrupados sí
+salen: un fallo observado una vez es un fallo observado, aunque no se pueda
+calcular una tasa con él.
+
+**Impacto.** `src/core/fallas/informe.ts`, `src/operacion/ordenes-salud.ts`,
+`config/salud.json`, y el bloque `salud` que el corredor añade a cada ejecución.
+El objetivo de disponibilidad queda en **95 %**, no en 99.9 %: la única carga
+medida resolvió 51 de cada 100 casos, y un objetivo que desborda el presupuesto
+desde el primer minuto produce una alarma permanente, que es una alarma apagada.
+
+---
+
+### R‑050 · «Propone, nunca aplica» deja de prometerse y pasa a comprobarse
+
+**Contexto.** El tercer criterio de aceptación de la fase es una sola frase: «el
+informe propone; nunca aplica». Es de las que se cumplen el día que se escriben y
+se rompen seis meses después, cuando alguien añade «y ya de paso que reinicie el
+servicio».
+
+**Qué cambió.** Dos comprobaciones que se cubren los huecos la una a la otra:
+
+- **Regla del grafo de dependencias**, `el-informe-propone-no-aplica`:
+  `src/core/fallas/` no puede alcanzar `src/repos/`, `src/salida/`,
+  `src/providers/`, `src/conocimiento/`, `src/core/acciones/` ni `src/core/crm/`
+  — que son las cuatro formas que tiene este sistema de cambiar algo. Probada con
+  cebo: se metió el import prohibido, se vio el rojo, se quitó.
+- **Prueba sobre el árbol sintáctico** de la carpeta entera, que cubre lo que la
+  regla no ve: `fetch`, `writeFileSync`, `exec` y compañía no necesitan importar
+  nada. Se comprueba la carpeta, no las funciones que hay hoy, para que una
+  función nueva la rompa sin que nadie tenga que acordarse.
+
+**Impacto.** `.dependency-cruiser.cjs` y `tests/informe-salud.test.ts`. El campo
+`naturaleza: 'propuesta'` viaja además dentro del propio informe: la palabra está
+en el dato, no solo en la documentación.
+
+**Y se ejerció el mismo día.** La primera corrida real del informe encontró que
+siete casos del lote revientan por plazo de inferencia agotado y **pierden su
+evento de telemetría** —invariante 5—. El informe lo reportó; nadie lo arregló
+dentro de esta fase. Va al **issue #32**, con la etiqueta de la fase a la que
+pertenece el ciclo de caso. Es la primera vez que «propone, nunca aplica» ha
+tenido ocasión de incumplirse, y no se incumplió.
 
 ---
 

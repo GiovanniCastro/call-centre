@@ -122,6 +122,34 @@ la base no sobrevive a la avería que lo hace falta.
 
 ---
 
+## 3 bis. El informe de salud · ESTADO: ejecutado
+
+```bash
+npm run salud                  # sobre la corrida más reciente, modo local
+npm run salud -- --json        # la estructura, para un agente de código
+npm run salud -- --modo nube   # otro modo de la misma corrida
+```
+
+**No pide base de datos, ni Ollama, ni red.** Se compone sobre lo que el corredor
+del lote dejó grabado, igual que la demo pública: un informe de salud que
+exigiera el sistema encendido sería inútil justo el día que hace falta.
+
+Trae disponibilidad, tasa de error, tiempo medio de recuperación y presupuesto de
+error consumido — **y no los imprime si no hay observaciones suficientes**. Por
+debajo del mínimo de `config/salud.json` dice que no es concluyente y enseña el
+denominador. Los hallazgos agrupados sí salen igualmente.
+
+**El informe propone; no aplica nada**, y no por buena voluntad: el módulo que lo
+genera no alcanza al repositorio, ni a la salida, ni a ningún adaptador. Lo
+vigilan una regla del grafo de dependencias y una prueba sobre el árbol
+sintáctico.
+
+Lo que **no** cubre, y lo dice él mismo en su última sección: los incidentes de
+seguridad, que no se agrupan y viven uno a uno; y los escalados correctos, que no
+son fallas.
+
+---
+
 ## 4. El webhook expuesto · ESTADO: no ejecutado (8B)
 
 El perímetro escucha en `PUERTO` (8787 por omisión) sin TLS. Telegram exige

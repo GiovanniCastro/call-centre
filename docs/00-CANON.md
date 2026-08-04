@@ -111,11 +111,17 @@ el webhook y no depende de que la máquina con Ollama esté encendida.
 
 > Medido contra el disco el **4-ago-2026**. Nada copiado de otro documento.
 
-**Medición de hoy, tras la fase 8A:** **433 pruebas, 433 pasan, 0 omitidas**, más
+**Medición de hoy, tras la fase 9:** **473 pruebas, 473 pasan, 0 omitidas**, más
 **6 pruebas de reglas contra el emulador de Firestore**. `tsc --noEmit`, `eslint`
 y `depcruise` sin problemas. **21 dependencias directas**, de las que 8 son de
-producción — cuatro de Firebase entraron en esta fase, tres de ellas solo de
-desarrollo (R‑041).
+producción — la fase 9 no añadió ninguna.
+
+El informe de salud sobre la última corrida del lote, modo local: **40 % de
+disponibilidad** sobre 65 operaciones, 60 % de tasa de error, **42.8 s** de
+recuperación media sobre 17 episodios cerrados, y el presupuesto de error
+consumido doce veces sobre un objetivo del 95 %. Cuatro grupos de falla, y el
+grande —29 de 39— es el mismo que la fase 7 ya había medido: el modelo local no
+sostiene la salida estructurada con citas literales.
 
 **Las fases 0, 1, 2, 3 y 3B están construidas.** Hay tres canales: Telegram,
 WhatsApp declarado sin credenciales, y `lote`, que alimenta casos desde archivos
@@ -171,7 +177,7 @@ dicen Perímetro, y son ellos los que mandan.
 | 6B | Selector de modo y punto de equilibrio | **CONSTRUIDO** |
 | 8A | Operación autoalojada, respaldos, secretos, demo por reproducción | **CONSTRUIDO** |
 | 8B | Hosting, Auth, App Check y webhook en producción | PROPUESTO · falta proyecto de Firebase |
-| 9 | Vigía de fallas e informe de salud | PROPUESTO |
+| 9 | Vigía de fallas e informe de salud | **CONSTRUIDO** |
 | 10 | Canal de voz | PROPUESTO · opcional |
 
 ## Lo que existe hoy
@@ -229,17 +235,26 @@ De la fase 7:
   correr sale como `NO CORRIDO` con su motivo, nunca con ceros.
 - **`npm run lote`**, un solo comando de principio a fin.
 
-Lo medido, y solo lo medido — modo local, dos corridas con código idéntico:
+Lo medido, y solo lo medido — modo local. **La cifra vigente es la del 4‑ago**,
+que es la que está grabada en `lote/resultados/fase-7-v1.json`:
 
-| | Valor |
-|---|---|
-| Acierto | **51 %** (33 de 65), idéntico en las dos corridas |
-| Casos idénticos entre corridas | 64 de 65 |
-| Latencia media | ~13 s por caso |
-| Costo por caso resuelto | **PROVISIONAL** — la máquina de referencia sigue sin caracterizar |
-| Perímetro | 12 de 12 retenidos, 0 escapados — **vacuo en modo local**, ver R‑032 |
-| Inyección | 4 de 4, ninguna filtró nada |
-| Fuera de alcance | 5 de 5 escalados, ninguno inventado |
+| | 1‑ago (2 corridas) | **4‑ago, vigente** |
+|---|---|---|
+| Acierto | 51 % (33 de 65) | **48 %** (31 de 65) |
+| Casos que reventaron | 0 | **7** |
+| Latencia media | ~13 s por caso | ~13 s por caso |
+| Costo por caso resuelto | PROVISIONAL | PROVISIONAL |
+| Perímetro | 12 de 12 retenidos | 12 de 12 retenidos |
+
+El acierto no bajó porque el agente empeorara: **siete casos superan hoy el plazo
+de la inferencia local**, revientan, y cada uno se lleva su evento de telemetría
+por delante. Lo destapó el informe de salud de la fase 9 en su primera corrida
+real, y está en el **issue #32** — no se parcheó dentro de la fase que lo
+encontró. Se comprobó además que no era la máquina ocupada: la corrida limpia dio
+más excepciones que la contaminada, no menos.
+
+Perímetro sigue siendo **vacuo en modo local**, ver R‑032. Inyección: 4 de 4, sin
+fugas. Fuera de alcance: 5 de 5 escalados, ninguno inventado.
 
 Los modos **nube e híbrido no se han corrido**: falta `ANTHROPIC_API_KEY`. El
 informe los marca `NO CORRIDO` con su motivo, y la comparación que justifica el
@@ -290,6 +305,33 @@ De la fase 8A:
   del repositorio que importa el SDK de Firebase.
 - **Runbook de despliegue** en [[DESPLIEGUE]], con cada sección marcada como
   ejecutada o no ejecutada.
+
+De la fase 9:
+
+- **Vigía de fallas** (`src/core/fallas/`), el décimo. Es el único que no vigila
+  un límite sino lo que se rompe, y por eso su umbral no está sobre los fallos
+  —cero fallos no es un objetivo alcanzable— sino sobre el **presupuesto de
+  error**: se declara qué disponibilidad se pretende sostener y el margen que
+  queda por debajo es lo que se puede gastar. Autoridad de avisar.
+- **Qué cuenta como falla, escrito una sola vez** (`desde-caso.ts`). Falla es que
+  el sistema no pudiera hacer su trabajo, no que decidiera correctamente no
+  hacerlo. Un escalado por falta de fuente es el invariante 1 funcionando y no
+  baja la disponibilidad — ver R‑047.
+- **Clasificación por significado** (`clasificar.ts`), nueve clases definidas por
+  su remedio. El mismo `ECONNREFUSED` sale como `servicio_local_caido` o
+  `proveedor_caido` según de qué lado del perímetro estuviera el destino, porque
+  los dos remedios son opuestos. `desconocida` es una clase de primera y su
+  recuento es la lista de trabajo del clasificador.
+- **Agrupación por huella** (`huella.ts`). Mil errores idénticos son una fila con
+  contador. La plantilla se **sanea antes de normalizar**, no después: al revés,
+  un número de seguro social ya sería `N-N-N` cuando el saneo lo mirara.
+- **Informe en dos formatos que son uno** (`informe.ts`): una estructura y una
+  vista de ella. Por debajo del denominador mínimo **no imprime** el encabezado;
+  dice que no es concluyente y enseña cuántas observaciones tiene.
+- **`npm run salud`**, sin base de datos, sin Ollama y sin red.
+- **«El informe propone; nunca aplica»** como regla del grafo de dependencias
+  —probada con cebo— más una prueba sobre el árbol sintáctico de la carpeta
+  entera, que cubre lo que la regla no ve.
 
 ## Lo que la fase 8A cerró de la fase 6
 
@@ -417,3 +459,7 @@ Cada una con su entrada en [[CALL_CENTRE_DOCS]].
 | R‑044 | La demo pública es una tercera clase de fuente: ni en vivo ni de demostración | Reutilizar la bandera de demostración, vendiendo como falso lo que sí se midió |
 | R‑045 | Corrección: el canon daba por PROPUESTAS las fases 6, 7 y 6B, ya construidas | Dejar la tabla como estaba y confiar en el texto de más abajo |
 | R‑046 | La exención de gitleaks es por valor literal, y en la sintaxis que el CI entiende | Eximir la ruta del archivo de prueba, que lo deja abierto para siempre |
+| R‑047 | Falla es que el sistema no pudiera, no que decidiera correctamente que no | Contar como fallo todo caso que no acabó en `resuelto` |
+| R‑048 | La clasificación de fallas mira a dónde iba la llamada, y `desconocida` se ve | Traducir códigos de estado a etiquetas; repartir lo no reconocido en el cajón que más se le parezca |
+| R‑049 | El informe de salud se compone sobre lo grabado, sin tabla nueva | Una tabla de fallas en PostgreSQL, que ata el informe a que la base esté en pie |
+| R‑050 | «El informe propone, nunca aplica» como regla del grafo más prueba estructural | Dejarlo escrito en el criterio de aceptación y confiar |

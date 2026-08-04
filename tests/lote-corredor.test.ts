@@ -268,6 +268,7 @@ describe('el informe', () => {
     motivo: 'sin clave',
     resultados: [],
     perimetro: { altos: 0, retenidos: 0, escapados: 0 },
+    salud: null,
   };
 
   test('sin casos resueltos, el costo por caso es NULL y no cero', () => {
@@ -298,6 +299,7 @@ describe('el informe', () => {
         { resultado: 'resuelto', costo: 0, costo_provisional: true, latencia_ms: 100, acerto: true, categoria: 'x', hubo_egreso: false, sustento: 1, caso_id: 'a', error: null, por_que_no: null, vigias_que_actuaron: [], incidentes: [] },
       ] as never as Ejecucion['resultados'],
       perimetro: { altos: 0, retenidos: 0, escapados: 0 },
+      salud: null,
     };
 
     assert.equal(resumir(provisional).costo_provisional, true);
@@ -355,6 +357,7 @@ describe('el informe', () => {
           { caso_id: 'a', categoria: 'x', acerto: true, por_que_no: null, error: null, vigias_que_actuaron: ['perimetro'], incidentes: [], resultado: 'resuelto', costo: 0, costo_provisional: false, latencia_ms: 1, hubo_egreso: false, sustento: 1 },
         ] as never as Ejecucion['resultados'],
         perimetro: { altos: 1, retenidos: 1, escapados: 0 },
+        salud: null,
       },
     ]);
 

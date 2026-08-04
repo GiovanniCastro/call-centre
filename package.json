@@ -30,7 +30,8 @@
     "publicar:demo": "node --env-file-if-exists=.env proyeccion/ordenes-demo.ts",
     "panel": "vite --config panel/vite.config.ts",
     "panel:construir": "vite build --config panel/vite.config.ts",
-    "check:panel": "tsc --noEmit -p panel/tsconfig.json"
+    "check:panel": "tsc --noEmit -p panel/tsconfig.json",
+    "salud": "node --env-file-if-exists=.env src/operacion/ordenes-salud.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
