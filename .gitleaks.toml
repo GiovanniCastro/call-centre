@@ -28,8 +28,14 @@ useDefault = true
 #
 # Si estos literales cambian, el check vuelve a fallar y hay que actualizarlos
 # aquí. Es deliberado: obliga a mirar qué cambió.
-[[allowlists]]
-description = "Credenciales inventadas de la prueba de redacción (fase 8A)"
+#
+# Se escribe con `[allowlist]` en singular y no con `[[allowlists]]` en plural.
+# El plural es sintaxis de una versión posterior a la que corre el CI (8.24.3),
+# y lo peor de usarlo ahí no es que falle: es que **se ignora en silencio**. La
+# forma singular la entienden las dos, así que lo que se prueba en local es lo
+# que se aplica en CI.
+[allowlist]
+description = "Credenciales inventadas de tests/secretos.test.ts (fase 8A)"
 regexes = [
   # El secreto de aplicación de WhatsApp que la prueba mete en el entorno para
   # comprobar la redacción por valor. Café muerto, literalmente.
