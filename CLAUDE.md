@@ -4,7 +4,8 @@ Agente de atención al cliente con enrutamiento híbrido entre modelo local y mo
 en la nube, instrumentado para auditar costo y salida de datos.
 
 **La verdad única del proyecto es @docs/00-CANON.md.** El plan por fases está en
-@docs/Propuesta-Desarrollo-Por-Fases.md y el protocolo de sesión en
+@docs/Propuesta-Desarrollo-Por-Fases.md, la fase 11 —el lazo del canal, camino
+crítico— en @docs/Plan-Lazo-Del-Canal.md, y el protocolo de sesión en
 @docs/Perimetro-Manual-Claude-Code.md. No inventes alcance que no esté en esos
 documentos.
 

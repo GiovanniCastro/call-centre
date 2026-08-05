@@ -15,6 +15,8 @@
 
 | Revisión | Fecha | Entradas | Resumen |
 |---|---|---|---|
+| **10** | 2026‑08‑04 | R‑056 … R‑063 | Adaptar el sistema a otro negocio. Los productos de un cliente **son su corpus**, no una tabla que el agente no podría citar. Plantillas por herencia y cuatro en vez de ocho. Un perfil declara palabras y capacidades, jamás garantías. Y la regla que ordena tres funciones a la vez: **el panel lee, el perímetro escribe**. Nacen [[Plan-Perfil-De-Negocio]] y [[Plan-Soporte]]. Cierra con un identificador duplicado en el lote y con el orden de trabajo: la clave de nube antes que cualquier fase, porque desbloquea la comparación que justifica el proyecto |
+| **9** | 2026‑08‑04 | R‑051 … R‑055 | La maqueta entra en el panel y lo que no tiene fuente no se dibuja. Y el hallazgo del día, que no es un fallo sino una costura: el ciclo de caso funciona y **solo lo invoca el corredor del lote**; la interfaz de la cola no declara desencolar, así que el consumidor no falta, no se puede escribir. Nace [[Plan-Lazo-Del-Canal]], fase 11, numerada la última y ordenada la primera |
 | **8** | 2026‑08‑04 | R‑047 … R‑050 | Fase 9 construida. Falla es que el sistema no pudiera, no que decidiera correctamente que no: contar un escalado por falta de fuente habría hecho que cumplir el invariante 1 bajara la disponibilidad. La clasificación mira a dónde iba la llamada, no solo qué devolvió. Y «el informe propone, nunca aplica» pasa de promesa a regla del grafo de dependencias |
 | **7** | 2026‑08‑04 | R‑040 … R‑046 | Fase 8 partida en 8A y 8B; 8A construida. El respaldo y su restauración son la misma orden. Los secretos se declaran, y la prueba encontró uno sin declarar. La demo pública es una tercera clase de fuente. Las reglas de Firestore, por fin ejercitadas: dos criterios de la fase 6 que llevaban abiertos desde el día 2. Y la exención de gitleaks, por valor y no por ruta, que es lo que desbloquea el cierre |
 | **6** | 2026‑08‑02 | R‑034 … R‑039 | Fase 6 construida. La reconciliación se hace imposible en vez de comprobarse. Los eventos se persisten. La banda de demostración sale del tipo, no de un acuerdo. Y una corrección: un `allow read: if false` final no cierra nada |
@@ -28,6 +30,21 @@
 
 ## Contenido
 
+- [Revisión 2026‑08‑04 · perfil de negocio y soporte](#revisión-2026-08-04--perfil-de-negocio-y-soporte)
+  - [R‑056 · Los productos de un negocio son su corpus](#r-056--los-productos-de-un-negocio-son-su-corpus-no-una-tabla)
+  - [R‑057 · Corrección: los esquemas de salida ya son agnósticos](#r-057--corrección-los-esquemas-de-salida-ya-son-agnósticos-y-el-perfil-no-los-declara)
+  - [R‑058 · Plantillas por herencia, y cuatro en vez de ocho](#r-058--plantillas-por-herencia-y-cuatro-en-vez-de-ocho)
+  - [R‑059 · Un perfil declara capacidades y palabras, nunca garantías](#r-059--un-perfil-declara-capacidades-y-palabras-nunca-garantías)
+  - [R‑060 · El panel lee, el perímetro escribe](#r-060--el-panel-lee-el-perímetro-escribe)
+  - [R‑061 · La bandeja del operador va primero](#r-061--la-bandeja-del-operador-va-primero-el-plano-de-control-es-otro-producto)
+  - [R‑062 · Un identificador duplicado en el lote de la fase 7](#r-062--un-identificador-duplicado-en-el-lote-de-la-fase-7)
+  - [R‑063 · El orden de trabajo: la clave de nube antes que cualquier fase](#r-063--el-orden-de-trabajo-la-clave-de-nube-antes-que-cualquier-fase)
+- [Revisión 2026‑08‑04 · panel y lazo del canal](#revisión-2026-08-04--panel-y-lazo-del-canal)
+  - [R‑051 · La maqueta entra en el panel, y lo que no tiene fuente no se dibuja](#r-051--la-maqueta-de-operación-entra-en-el-panel-y-lo-que-no-tiene-fuente-no-se-dibuja)
+  - [R‑052 · Corrección: el ciclo de caso no está enchufado al canal](#r-052--corrección-el-ciclo-de-caso-funciona-y-solo-lo-invoca-el-corredor-del-lote)
+  - [R‑053 · El montaje del ciclo se comparte con el corredor](#r-053--el-montaje-del-ciclo-se-comparte-con-el-corredor-no-se-duplica)
+  - [R‑054 · La cola no tiene lado de consumo](#r-054--la-cola-no-tiene-lado-de-consumo-y-por-eso-el-consumidor-no-falta-no-se-puede-escribir)
+  - [R‑055 · La fase 11 se numera la última y se ordena la primera](#r-055--la-fase-11-se-numera-la-última-y-se-ordena-la-primera)
 - [Revisión 2026‑08‑04 · fase 9](#revisión-2026-08-04--fase-9)
   - [R‑047 · Qué cuenta como falla, y por qué un escalado correcto no lo es](#r-047--qué-cuenta-como-falla-y-por-qué-un-escalado-correcto-no-lo-es)
   - [R‑048 · La clasificación mira a dónde iba la llamada](#r-048--la-clasificación-mira-a-dónde-iba-la-llamada-no-solo-qué-devolvió)
@@ -85,6 +102,431 @@
   - [R‑009 · Demo pública por reproducción](#r-009--la-demo-pública-reproduce-ejecuciones-registradas-no-hace-inferencia-en-vivo)
   - [R‑010 · n8n queda como referencia](#r-010--n8n-queda-como-referencia-no-entra-en-el-stack)
   - [R‑011 · Fase 8 de despliegue y operación](#r-011--se-añade-una-fase-8-de-despliegue-y-operación-que-el-plan-no-tenía)
+
+---
+
+## Revisión 2026‑08‑04 · perfil de negocio y soporte
+
+### R‑056 · Los productos de un negocio son su corpus, no una tabla
+
+**Contexto.** Para vender el sistema a un dentista o a una cristalería hace falta
+que el dueño pueda «poner sus productos». La lectura inmediata es un editor de
+catálogo: una tabla de productos con su precio y su descripción.
+
+**La vía descartada.** Justamente esa. En esta arquitectura el agente **solo puede
+hablar de lo documentado** —invariante 1, sin fuente no hay respuesta— y cada dato
+factual de la salida viaja con el `fragmento_id` del trozo de corpus que lo
+sostiene. Una tabla de productos que no pase por la ingestión no produce
+fragmentos, así que el verificador de procedencia rechazaría cualquier respuesta
+apoyada en ella. El editor sería una de dos cosas: **inútil**, porque el agente la
+ignoraría, o **una vía para saltarse el invariante 1**, si se le diera permiso para
+responder desde ahí.
+
+**Qué cambió.** Configurar los productos de un negocio **es subir sus documentos**.
+La superficie ya estaba especificada y a medio construir: la fase 2 pide
+«ingestión desde carpeta vigilada y desde Cloud Storage, registrando quién subió
+cada documento y cuándo». La carpeta funciona —17 documentos, 106 fragmentos—; la
+subida con procedencia es lo que falta.
+
+**Por qué es mejor de lo que parece.** Un dentista no mantiene un catálogo en una
+tabla: tiene una lista de tratamientos, una política de cancelación y unos
+precios, en documentos que ya existen. Pedirle que los reescriba en un formulario
+es trabajo nuevo; pedirle que los suba, no. Y lo que suba es exactamente lo que el
+agente podrá citar, que es la propiedad que hace defendible el sistema.
+
+**Impacto.** [[Plan-Perfil-De-Negocio]] §1 y §9. Sin efecto en código todavía.
+
+---
+
+### R‑057 · Corrección: los esquemas de salida ya son agnósticos, y el perfil no los declara
+
+**Contexto.** La primera versión de la propuesta del perfil de negocio incluía un
+campo `esquemas` donde cada sector declararía sus campos factuales: «tratamiento,
+precio, duración» para el dentista, «ramo, cobertura, deducible» para la
+aseguradora. Se escribió sin mirar el código.
+
+**Qué dice el código.** [esquemas.ts](../src/core/respuesta/esquemas.ts) define la
+salida de todas las clases sobre una forma común: `datos` es un
+`array<{valor, fragmento_id}>` —una lista de afirmaciones que cargan su
+procedencia— y **no hay un solo campo de dominio en ningún esquema**. Ni «póliza»,
+ni «cobertura», ni nada del ramo.
+
+**Qué cambió.** La fila se retira. El perfil de negocio **no toca los esquemas**.
+
+**Por qué la forma genérica es lo correcto, y no una carencia.** Es lo que permite
+que un único verificador de procedencia —existe el fragmento, se recuperó en esta
+ejecución, el valor aparece literalmente en él— sirva a los tres sectores sin
+cambiar. Campos por sector darían un verificador por sector, y la garantía dejaría
+de ser una para pasar a ser tres que hay que mantener idénticas. Es el mismo
+razonamiento de R‑034 aplicado a la validación en vez de a las métricas.
+
+**Impacto.** Reduce la fase 12: lo que iba a ser «esquemas por sector» no existe.
+Queda como posible aporte futuro una lista de campos *esperados* que oriente la
+petición al modelo — orientación para el prompt, nunca contrato de validación.
+
+---
+
+### R‑058 · Plantillas por herencia, y cuatro en vez de ocho
+
+**Contexto.** Para que un negocio arranque rápido conviene enviar perfiles ya
+hechos por sector, que el cliente luego ajuste.
+
+**Qué cambió.** Se envía una plantilla `base` con todo lo genérico —las seis clases
+de tarea, el léxico común, el vocabulario por omisión— y cada sector **declara solo
+lo que difiere**, con mezcla aditiva para el léxico. Cuatro plantillas: `base`,
+`seguros`, `dental`, `instalacion`.
+
+**Por qué herencia y no copia.** Cuatro archivos completos divergen: el día que se
+corrija un marcador mal puesto se corrige en uno y sigue mal en tres, y nadie se
+entera hasta que un cliente lo nota. Con herencia, arreglar el `base` arregla los
+cuatro — y eso es un criterio de aceptación, no una esperanza.
+
+**Por qué cuatro y no ocho.** Cada plantilla necesita léxico, vocabulario,
+esqueleto de corpus y una prueba de que arranca. Ocho a medias son peor que tres de
+verdad: quien coge la suya y no funciona no vuelve. El criterio para merecer
+plantilla es el mismo que hace que el producto sirva —catálogo documentable, algo
+que agendar o presupuestar, y datos del cliente que convenga no sacar del
+perímetro—, y por eso un restaurante no está.
+
+**Impacto.** [[Plan-Perfil-De-Negocio]] §4 y §7.
+
+---
+
+### R‑059 · Un perfil declara capacidades y palabras, nunca garantías
+
+**Contexto.** Un perfil de negocio es un archivo que alguien edita a mano fuera de
+una revisión de código. Todo lo que pueda declarar, alguien acabará declarándolo.
+
+**Qué cambió.** La lista de lo que un perfil **no puede** tocar es cerrada y
+explícita: vigías, sus umbrales y su autoridad; los umbrales de sustento y matiz;
+la regla dura de enrutamiento; la retirada de un patrón de saneo —solo se pueden
+añadir—; la exención de procedencia de un campo; y la lista blanca de destinos de
+salida. Todo eso sigue en `config/vigias.json`, `config/respuesta.json`,
+`config/politica.json` y `config/destinos.json`, que no son editables por perfil.
+
+**Por qué, y cómo se comprueba.** Un perfil que pudiera poner el vigía de perímetro
+en `avisar` convertiría la afirmación central del producto en una casilla. El
+criterio de aceptación no es una promesa: una prueba **carga un perfil hostil** que
+intenta las tres cosas —degradar el vigía, bajar el sustento a cero, retirar un
+patrón— y falla si alguna surte efecto. Mismo método con el que se comprobaron los
+checks de la fase 0: añadir la violación y verla rebotar.
+
+**Y una asimetría deliberada.** Un secreto que falta **no impide arrancar**: se
+pierde una capacidad declarada y se avisa. Un perfil malformado **sí detiene el
+arranque**: sin él el sistema no sabe de qué negocio es, y toda respuesta sería de
+otro. Degradar tiene sentido en el primer caso y ninguno en el segundo.
+
+**Impacto.** [[Plan-Perfil-De-Negocio]] §6 y §9.
+
+---
+
+### R‑060 · El panel lee, el perímetro escribe
+
+**Contexto.** Tres funciones distintas llegaron a la misma frontera en la misma
+sesión: una tuerca para configurar credenciales de API, la edición del perfil de
+negocio, y la bandeja donde un operador responde a lo que el agente escaló. Las
+tres quieren escribir, y las tres se pedían «en el panel».
+
+**Qué cambió.** La regla se enuncia una vez en lugar de decidirse tres:
+
+> **El panel de Firebase lee. Todo lo que escribe vive dentro del perímetro.**
+
+No es una preferencia de diseño: es el invariante 8 —«Firebase nunca escribe en el
+perímetro»—, que además es lo que se enseña al decir que el panel público no tiene
+acceso a los datos.
+
+**La consecuencia práctica es cómoda**, y por eso la regla no estorba: la mitad de
+lectura de cada función sí puede ir al panel, detrás del rol que le toque.
+
+| Función | En el panel | En el perímetro |
+|---|---|---|
+| Credenciales | qué está puesto y qué falta, nunca el valor | el `.env` de la máquina |
+| Perfil de negocio | el perfil vigente y el corpus indexado | el archivo versionado y la ingestión |
+| Bandeja de escalados | la cola con su hilo y sus fuentes | la respuesta del operador |
+
+**Y un argumento que no es de invariantes.** Hoy el panel no tiene nada que robar:
+es una proyección saneada de solo lectura. El día que pueda escribir credenciales
+o responder a clientes pasa a ser el sitio más valioso del sistema para atacar, y
+con la superficie más expuesta.
+
+**Impacto.** [[Plan-Soporte]] §3, [[Plan-Perfil-De-Negocio]] §9 fase 12C, y la
+tuerca de credenciales, que queda como vista de solo lectura detrás del rol de
+operador y **nunca en la demo pública**: decir qué credencial falta es decir qué
+está sin proteger.
+
+---
+
+### R‑061 · La bandeja del operador va primero; el plano de control es otro producto
+
+**Contexto.** «Este proyecto es el modelo del cliente; luego hay que crear una para
+el soporte del cliente, estilo Uber.» La frase admite dos lecturas —la bandeja del
+operador humano del negocio, o tu consola sobre varios clientes— y llevan a
+productos distintos.
+
+**Qué se midió antes de decidir.** La tabla `escalados` existe desde la fase 4 y se
+escribe con motivo, transcripción y contexto. **Ninguna pantalla la lee**: el panel
+publica el agregado «por qué se escaló», no la cola. En la corrida vigente del
+lote son **41 casos de 65** en una bandeja que nadie abre.
+
+**Qué cambió.** Se hacen las dos, y la bandeja va primero. La bandeja ya tiene
+tráfico y el plano de control no tiene nada que enseñar hasta que exista un
+segundo cliente. Un agente que escala el 63 % sin un sitio donde se atienda ese
+63 % no es un producto.
+
+**Y una decisión dentro de la decisión.** La primera versión de la bandeja **no es
+una consola**: el escalado llega a un canal humano —un grupo de Telegram del
+negocio— con el hilo y sus fuentes, y el operador responde ahí. Usa la interfaz
+`Canal` que la fase 3B ya demostró extensible, no añade superficie expuesta, no
+añade autenticación y es como trabaja de verdad una pyme de cinco personas. La
+consola propia llega cuando el volumen no quepa en un hilo.
+
+**El plano de control, cuando llegue, solo lee proyecciones.** Nada de reiniciar
+servicios ni rotar claves en remoto: eso sería una llave maestra a todos los
+perímetros de todos tus clientes, y su existencia se le puede preguntar a un
+cliente en una auditoría. Y vive **en otro repositorio**, porque este es un
+perímetro: uno. Que solo lea es además lo que permite mantener un perímetro por
+cliente en vez de multi‑tenant.
+
+**Impacto.** [[Plan-Soporte]] entero. Fases 13A y 13B en la tabla de [[00-CANON]];
+el plano de control **no** entra en ella, por no ser de este repositorio.
+
+---
+
+### R‑062 · Un identificador duplicado en el lote de la fase 7
+
+**Contexto.** Al montar la tabla «caso por caso» del panel, React avisó de dos
+hijos con la misma clave. La clave era `modo:caso_id`, así que el aviso decía algo
+sobre los datos y no sobre el componente.
+
+**Qué se midió.** `lote/casos.json` tiene **65 casos y 64 identificadores únicos**:
+`lote:v1:001` aparece dos veces. Como `derivarDemo` resuelve el texto de cada caso
+con un `Map` por identificador, **el segundo caso enseña la pregunta del primero**.
+
+**Qué cambió, y qué no.** En el panel, la clave de fila pasa a llevar la posición
+—una fila es «el n‑ésimo resultado registrado», que sí es único—. **No se
+deduplica.** Quitar la fila repetida dejaría una pantalla limpia y un defecto
+invisible; el arreglo va en el lote, que es donde está el error.
+
+**Qué no afecta.** Los recuentos del informe. Los 65 casos se ejecutaron y el
+acierto se cuenta sobre resultados, no sobre identificadores: las cifras vigentes
+de [[00-CANON]] siguen siendo válidas. Lo que está mal es **el texto que se enseña
+en una fila de la demo**.
+
+**Impacto.** `panel/src/Reproduccion.tsx`. Queda como issue con etiqueta de fase 7,
+por la regla de no parchear dentro de la fase que encuentra el defecto — la misma
+que se aplicó al issue #32.
+
+---
+
+### R‑063 · El orden de trabajo: la clave de nube antes que cualquier fase
+
+**Contexto.** Al cerrar el día había tres planes escritos —11, 12 y 13— y ninguna
+línea construida. La pregunta práctica es por dónde se empieza.
+
+**Qué cambió.** El orden recomendado, y lo primero no es una fase:
+
+| # | Qué | Coste | Qué desbloquea |
+|---|---|---|---|
+| 1 | **`ANTHROPIC_API_KEY`** | minutos | Modos nube e híbrido, y la comparación local‑vs‑nube |
+| 2 | Fase 11 — el lazo del canal | 6–7 sesiones | Que el sistema conteste |
+| 3 | Fase 13A — el escalado a un humano | 1–2 sesiones | Dónde cae el 63 % del tráfico |
+| 4 | Fase 8B — despliegue | 1–2 sesiones | La demo pública, ya con datos |
+| 5 | Fase 12 — plantillas de negocio | 5 sesiones | El segundo cliente |
+
+**Por qué la clave va antes que todo.** No es una preferencia de coste: es que
+**la comparación entre local y nube es el argumento del proyecto** y nunca se ha
+ejecutado. El informe vigente marca dos de sus tres columnas como `NO CORRIDO`, el
+vigía de perímetro sigue siendo vacuo en local (R‑032) y el mayor grupo de fallas
+—gemma4 no sostiene la salida estructurada con citas literales— es un problema del
+plano que no se ha probado a sustituir. Cuesta minutos y unos dólares, y es lo
+único de esta lista que puede mover el 48 % de acierto.
+
+**Por qué la fase 12 va la última pese a estar pedida.** Construir plantillas para
+un dentista que todavía no existe es adivinar. El criterio para empezarla es
+concreto: **un cliente pidiéndola.** Antes de eso, un perímetro que contesta bien a
+una empresa vale más que uno configurable que no contesta a ninguna.
+
+**Impacto.** No toca código. Ordena [[Plan-Lazo-Del-Canal]],
+[[Plan-Perfil-De-Negocio]] y [[Plan-Soporte]] entre sí y con la fase 8B, y explica
+por qué la tabla de fases de [[00-CANON]] no se lee de arriba abajo.
+
+---
+
+## Revisión 2026‑08‑04 · panel y lazo del canal
+
+### R‑051 · La maqueta de operación entra en el panel, y lo que no tiene fuente no se dibuja
+
+**Contexto.** La maqueta HTML de la pantalla de Operación llevaba desde el
+principio en el vault como referencia de composición, con la advertencia de que
+**sus cifras son inventadas y se contradicen entre sí** (R‑002). El panel de la
+fase 6, en cambio, tenía las cifras buenas y ninguna composición: tablas sobre
+fondo blanco. Dos mitades correctas que nunca se habían juntado.
+
+**Qué cambió.** El sistema de diseño de la maqueta pasa a `panel/src/estilo.css`
+tokenizado —barra lateral, tarjetas, KPI, barras apiladas, barras de reparto,
+lista de estado, etiquetas y pie—, y las dos pantallas del panel se reescriben
+sobre él. Tres piezas de la maqueta **no se portaron**, porque no tienen fuente:
+
+| Pieza de la maqueta | Qué la sustituye, y por qué |
+|---|---|
+| Barras por día y chispa de tendencia | La proyección trae agregados sobre una ventana, no serie temporal. Van columnas por **clase de sensibilidad** (operación) y por **categoría del lote** (demo) |
+| Selector Hoy / 14 días / Mes | No hay nada que conmutar. Se enseña la ventana de la proyección |
+| Lista de vigías con umbral y autoridad | En la demo, **cuántas veces actuó cada vigía** en la corrida, dicho en la tarjeta que no es estado en vivo |
+
+Dos cambios más de fondo. El primero: en la maqueta, el reparto del enrutador
+mezcla Local, Nube y **Escalado** en el mismo grupo de barras; aquí van separados,
+porque escalar es un desenlace y no un destino de ejecución, y juntarlos daría dos
+denominadores en un gráfico — el defecto que la fase 6 existe para no tener
+(R‑034). El segundo: la hoja de estilos **no contiene ni una altura de barra**.
+Todo lo que dibuja un número toma su tamaño de la fuente de datos, porque una hoja
+de estilos con valores dentro sería el sitio más fácil del repositorio para dejar
+una cifra inventada sin que ningún check la viera.
+
+Añadido un interruptor de claro/oscuro (`role="switch"`, recuerda la elección) que
+no hace más que poner `data-tema` en la raíz: ni un color se decide en JavaScript,
+y los tonos que significan algo —verde retenido, rojo egreso, ámbar escalado—
+conservan su papel en los dos juegos.
+
+**Por qué.** Porque la pantalla es la mitad del argumento comercial y llevaba
+cuatro fases sin recibirlo, y porque hacerlo obligó a decidir caso por caso qué
+cifra existe de verdad. Las tres piezas que se cayeron son exactamente las que un
+portado mecánico habría rellenado con datos plausibles.
+
+**Impacto.** `panel/src/estilo.css`, `App.tsx`, `Reproduccion.tsx`,
+`Calculadora.tsx`, más `ui.tsx` y `formato.ts` nuevos. Las pruebas que atan la
+banda de demostración al discriminante (R‑037) y la exención de la calculadora
+(R‑038) siguen pasando sin tocarse: la firma de `App` y el texto que comprueban no
+cambiaron. **Corregido de paso** un defecto de configuración: `root: '.'` en
+`panel/vite.config.ts` se resolvía contra el directorio de trabajo, y como las
+órdenes se lanzan desde la raíz del repositorio, Vite servía el perímetro entero
+—el panel solo aparecía bajo `/panel/` y `panel/public/` no se servía—. Ahora se
+resuelve desde el propio archivo, que es lo que su comentario de cabecera decía
+que hacía. `panel/dist` quedó obsoleto y hay que reconstruirlo antes de desplegar:
+es lo que `firebase.json` publica.
+
+---
+
+### R‑052 · Corrección: el ciclo de caso funciona, y solo lo invoca el corredor del lote
+
+**Contexto.** Al comprobar el estado real del sistema —y no el de los documentos—
+apareció una costura que ninguna fase reclama como suya. Este documento la
+registra como corrección porque el canon describía el enrutador y el ciclo sin
+decir desde dónde se invocan, y esa omisión hace leer el estado como más completo
+de lo que es.
+
+**Qué se midió.** Cuatro comprobaciones, el 4‑ago‑2026:
+
+| Qué | Resultado |
+|---|---|
+| Quién importa `src/core/caso` | **un solo archivo**: `src/lote/corredor.ts` |
+| La interfaz `Cola` de `src/borde/cola.ts` | declara `encolar` y `pendientes`; **no declara desencolar** |
+| Quién instancia `EmisorPostgres` | **nadie** fuera de las pruebas |
+| `select count(*) from eventos` | **0 filas** |
+
+Un mensaje de Telegram hoy se verifica, se deduplica, se limita por tasa y tamaño,
+se normaliza, se agrupa, se persiste como conversación y se encola. Y ahí termina:
+no se genera respuesta y no se emite evento. `main.ts` monta el registro de
+canales, el almacén, la cola, el despachador y el servidor; **no monta el agente**.
+
+**Por qué pasó, y por qué no es un fallo de nadie.** Cada fase construyó su mitad y
+sus criterios de aceptación son ciertos: la 1 sobre el borde, la 3 y la 4 sobre el
+ciclo, la 5 sobre las acciones, la 7 sobre el corredor. Ninguno dice «y el proceso
+que corre contesta». El lote tapó el hueco sin querer: como monta a mano las
+dependencias y llama a `atender`, el sistema funcionaba de principio a fin desde
+cualquier sitio donde uno mirara. **Lo que no tiene criterio de aceptación no está
+terminado, aunque todas sus piezas lo estén.**
+
+Conviene ser preciso con el invariante 5: **no está roto.** No hay ninguna ruta que
+termine sin emitir su evento. Hay una ruta que no termina.
+
+**Impacto.** Nace [[Plan-Lazo-Del-Canal]] con las fases 11A a 11D. Se corrige
+[[00-CANON]] §Parte 4, que describía el ciclo sin decir quién lo llama, y
+[[INDEX]], cuyo «estado en una línea» seguía en las fases 0 y 1. El panel de
+operación **no puede cumplir hoy** su criterio «toda cifra se rastrea hasta eventos
+reales en PostgreSQL» por la vía de tráfico; lo cumple contra la base en pruebas, y
+esa distinción no estaba escrita.
+
+---
+
+### R‑053 · El montaje del ciclo se comparte con el corredor, no se duplica
+
+**Contexto.** El trabajador de producción necesita las mismas dependencias que el
+corredor del lote arma hoy en `src/lote/ordenes.ts`: recuperador, planos de
+inferencia, los cuatro vigías del ciclo, respuesta graduada y emisor.
+
+**La vía descartada.** Escribir el montaje de producción aparte. Es lo natural
+—cada punto de arranque compone lo suyo— y rompe lo que más importa del lote: de
+él salen **todas** las cifras publicables del proyecto. Con dos composiciones, el
+lote pasaría a medir un camino que producción no recorre, y la divergencia no daría
+la cara como un fallo sino como una cifra ligeramente distinta que nadie sabría
+explicar.
+
+**Qué cambió.** Un módulo único de composición que importan los dos, y un criterio
+de aceptación que lo sostiene con una prueba **estructural**: falla si aparece un
+segundo sitio que instancie un vigía o un plano de inferencia fuera de él.
+
+**Por qué es el mismo razonamiento de la fase 7.** Allí se decidió que los tres
+modos fueran la misma política con las reglas reescritas y no tres rutas de código,
+con estas palabras: «un modo con ruta propia mediría un camino que producción no
+recorre». Aquí es la frase entera, aplicada a producción misma.
+
+**Impacto.** [[Plan-Lazo-Del-Canal]] §Fase 11A. Toca `src/lote/ordenes.ts`, que
+cede su `montar`, y el arranque, que pasa a pedirlo.
+
+---
+
+### R‑054 · La cola no tiene lado de consumo, y por eso el consumidor no falta: no se puede escribir
+
+**Contexto.** La interfaz `Cola` declara `encolar` y `pendientes`. `ColaEnMemoria`
+tiene además un `vaciar()` marcado «solo para pruebas y para el registro de
+desarrollo». No hay `desencolar`.
+
+**Qué cambió.** La interfaz gana lado de consumo con la semántica declarada —qué
+pasa con un grupo tomado y no confirmado— y la implementación pasa a Redis. No es
+alcance nuevo: el stack fijado en [[00-CANON]] ya dice Redis para colas, y el
+arranque ya avisa de que el almacén en memoria se pierde al reiniciar.
+
+**La vía descartada.** Llamar a `atender` directamente desde el webhook y ahorrarse
+la cola. Sería más corto y tira por tierra el criterio de la fase 1: la ventana de
+agrupación existe para que cinco mensajes en tres segundos produzcan una sola
+ejecución, y atender en el webhook la convierte en decoración. Además Telegram
+reentrega si el webhook tarda, así que responder rápido y trabajar aparte no es una
+preferencia de diseño — es lo que el proveedor exige.
+
+**Por qué importa la confirmación explícita.** Sin ella, un reinicio a mitad de un
+caso pierde el trabajo o lo repite, y las dos cosas se ven desde fuera: la primera
+como un cliente sin respuesta, la segunda como dos respuestas al mismo mensaje. De
+ahí que la idempotencia de envío (fase 11B) y la cola persistente (11C) sean fases
+distintas con criterios distintos.
+
+**Impacto.** `src/borde/cola.ts` y [[Plan-Lazo-Del-Canal]] §Fases 11A y 11C.
+
+---
+
+### R‑055 · La fase 11 se numera la última y se ordena la primera
+
+**Contexto.** El trabajo del lazo no cabe en ninguna fase existente y hay que
+colocarlo. Numerarlo 11 lo pone después del canal de voz, que es opcional.
+
+**Qué cambió.** Se numera **11** y se declara que va **antes que 8B y que 10**. El
+número dice cuándo se escribió la fase; el orden, cuándo se hace. No es una
+excepción: la propuesta ya ejecuta la 7 antes que la 6B y partió la 8 en 8A y 8B
+por el mismo motivo.
+
+**Por qué no renumerar.** Insertarla como «5B» o «4D» obligaría a mover
+referencias en ocho documentos, en las ramas de git y en las etiquetas `v0.N`, y
+haría ilegible el historial: el manual afirma cosas sobre «la fase 5» que dejarían
+de encajar. Un número no es un orden de ejecución, y tratarlo como si lo fuera es
+lo que empuja a renumerar.
+
+**Por qué va antes que 8B.** Desplegar el panel sobre una proyección vacía es
+publicar la maqueta. Y el criterio de la fase 6 —«toda cifra del panel se rastrea
+hasta eventos reales en PostgreSQL»— hoy se cumple contra la base en pruebas, no
+contra tráfico, que es la vía que el criterio pretendía.
+
+**Impacto.** [[Plan-Lazo-Del-Canal]] §4, la tabla de fases de [[00-CANON]] y el
+orden de trabajo de [[Propuesta-Desarrollo-Por-Fases]] §7, que queda enlazado
+desde aquí en vez de reescrito.
 
 ---
 
