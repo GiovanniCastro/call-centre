@@ -204,6 +204,13 @@ del webhook con cuatro fases de código y de pruebas encima.
 | **9** | Vigía de fallas e informe de salud | 2–3 | 8 |
 | **10** | Canal de voz — opcional | 3+ | 8 |
 
+> **Añadido el 4‑ago‑2026 (R‑052, R‑055): la fase 11 va antes que 8B y que 10.**
+> Esta tabla dio por hecho algo que ninguna de sus fases construyó — que el proceso
+> en marcha contesta. El ciclo de caso funciona y **solo lo invoca el corredor del
+> lote**; la interfaz de la cola no declara desencolar. Las cuatro subfases que
+> cierran el lazo están en [[Plan-Lazo-Del-Canal]], numeradas la última y ordenadas
+> la primera. Son 6 o 7 sesiones más.
+
 Total hasta demo pública publicable: **fases 0 a 8**, del orden de 30 a 38
 sesiones. Las fases 9 y 10 son mejora, no requisito.
 

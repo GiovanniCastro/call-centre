@@ -8,9 +8,16 @@
 // La alternativa —copiar la fórmula aquí— daría dos sitios donde se decide cuánto
 // cuesta un caso. El día que cambiara la política de costeo, el panel seguiría
 // enseñando la cifra vieja y nadie lo notaría hasta que alguien comparase.
+//
+// Sus cifras se ven distintas de las del resto del panel a propósito: no salen de
+// una ejecución registrada, salen de los parámetros de esta misma tarjeta. Son
+// una proyección, y una proyección con el cuerpo de un KPI acaba citada como si
+// fuera una medida.
 
 import { useState } from 'react';
 
+import { entero } from './formato.ts';
+import { Tarjeta } from './ui.tsx';
 import {
   costosPorModo,
   recomendar,
@@ -73,6 +80,24 @@ const CAMPOS: readonly {
   },
 ];
 
+function Dato({
+  titulo,
+  valor,
+  ayuda,
+}: {
+  titulo: string;
+  valor: string;
+  ayuda: string;
+}): React.JSX.Element {
+  return (
+    <div className="dato">
+      <div className="label">{titulo}</div>
+      <div className="val d">{valor}</div>
+      <div className="ayuda">{ayuda}</div>
+    </div>
+  );
+}
+
 export function Calculadora(): React.JSX.Element {
   const [escenario, setEscenario] = useState<Escenario>(INICIAL);
 
@@ -83,17 +108,19 @@ export function Calculadora(): React.JSX.Element {
   const hibrido = costos.find((c) => c.modo === 'hibrido');
 
   return (
-    <section>
-      <h2>Punto de equilibrio</h2>
-      <p className="explica">
-        Las cifras salen de <code>costear</code>, la misma función que usó el corredor de la fase 7.
-        Mover un parámetro cambia la tabla de precios que se le pasa, no la fórmula.
-      </p>
-
-      <div className="rejilla">
+    <Tarjeta
+      titulo="Punto de equilibrio"
+      pista={
+        <>
+          Las cifras salen de <code>costear</code>, la misma función que usó el corredor de la fase
+          7. Mover un parámetro cambia la tabla de precios que se le pasa, no la fórmula.
+        </>
+      }
+    >
+      <div className="campos">
         {CAMPOS.map((campo) => (
           <label key={campo.clave} className="campo">
-            <span className="cifra-titulo">{campo.etiqueta}</span>
+            <span className="label">{campo.etiqueta}</span>
             <input
               type="number"
               step={campo.paso}
@@ -104,49 +131,47 @@ export function Calculadora(): React.JSX.Element {
                 setEscenario((prev) => ({ ...prev, [campo.clave]: Number.isFinite(v) ? v : 0 }));
               }}
             />
-            {campo.ayuda !== undefined && <span className="cifra-nota">{campo.ayuda}</span>}
+            {campo.ayuda !== undefined && <span className="ayuda">{campo.ayuda}</span>}
           </label>
         ))}
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Modo</th>
-            <th>Por caso</th>
-            <th>Al mes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {costos.map((c) => (
-            <tr key={c.modo} className={c.modo === consejo.modo ? 'alta' : ''}>
-              <td>{c.modo}</td>
-              <td>${c.por_caso.toFixed(4)}</td>
-              <td>${c.mensual.toFixed(2)}</td>
+      <div className="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Modo</th>
+              <th>Por caso</th>
+              <th>Al mes</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {costos.map((c) => (
+              <tr key={c.modo} className={c.modo === consejo.modo ? 'elegida' : ''}>
+                <td>{c.modo}</td>
+                <td className="mono">${c.por_caso.toFixed(4)}</td>
+                <td className="mono">${c.mensual.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      <div className="rejilla">
-        <Cifra
-          titulo="Recomendación"
-          valor={consejo.modo}
-          nota={consejo.por_que}
-        />
-        <Cifra
+      <div className="datos">
+        <Dato titulo="Recomendación" valor={consejo.modo} ayuda={consejo.por_que} />
+        <Dato
           titulo="Equilibrio"
-          valor={equilibrio === null ? 'nunca' : `${equilibrio.toLocaleString('es')} casos/mes`}
-          nota={
+          valor={equilibrio === null ? 'nunca' : `${entero(equilibrio)} casos/mes`}
+          ayuda={
             equilibrio === null
               ? 'Con estos parámetros el local no alcanza a la nube en ningún volumen razonable. Se dice «nunca» y no un número enorme, que se leería como una medida.'
               : 'Volumen a partir del cual la máquina sale más barata que la nube.'
           }
         />
-        <Cifra
+        <Dato
           titulo="Utilización de la máquina"
           valor={`${(uso.utilizacion * 100).toFixed(2)} %`}
-          nota={
+          ayuda={
             uso.saturada
               ? 'SATURADA: este volumen no cabe en una sola máquina.'
               : 'Se deriva del volumen, no se asume. Es lo que hace que el equilibrio exista: con la máquina parada, cada caso carga con una porción enorme de la amortización.'
@@ -155,32 +180,14 @@ export function Calculadora(): React.JSX.Element {
       </div>
 
       {hibrido?.correccion !== undefined && (
-        <p className="explica">
-          <strong>El híbrido, sin maquillar.</strong> De {escenario.volumen_mensual} casos,{' '}
-          {hibrido.correccion.casos_a_nube} acaban en la nube porque el local no llegó, y esa
+        <p className="note">
+          <b>El híbrido, sin maquillar.</b> De {entero(escenario.volumen_mensual)} casos,{' '}
+          {entero(hibrido.correccion.casos_a_nube)} acaban en la nube porque el local no llegó, y esa
           corrección cuesta ${hibrido.correccion.costo_extra_mensual.toFixed(2)} al mes{' '}
           <em>además</em> del tiempo de cómputo local que ya se gastó. Descontarlo haría que el
           híbrido pareciera más barato de lo que es.
         </p>
       )}
-    </section>
-  );
-}
-
-function Cifra({
-  titulo,
-  valor,
-  nota,
-}: {
-  titulo: string;
-  valor: string;
-  nota: string;
-}): React.JSX.Element {
-  return (
-    <div className="cifra">
-      <div className="cifra-titulo">{titulo}</div>
-      <div className="cifra-valor">{valor}</div>
-      <div className="cifra-nota">{nota}</div>
-    </div>
+    </Tarjeta>
   );
 }

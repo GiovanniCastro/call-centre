@@ -123,6 +123,29 @@ consumido doce veces sobre un objetivo del 95 %. Cuatro grupos de falla, y el
 grande —29 de 39— es el mismo que la fase 7 ya había medido: el modelo local no
 sostiene la salida estructurada con citas literales.
 
+**El proceso en marcha, ejercitado por primera vez el 4‑ago‑2026.** El perímetro
+arranca con Redis, PostgreSQL y Qdrant conectados y escucha en `:8787`. `GET
+/salud` y `GET /canales` responden `200`; **un `POST /webhook/telegram` sin el
+secreto devuelve `401`**. La recuperación funciona contra el corpus indexado: la
+consulta «¿Cuánto cuesta el seguro de inquilino?» devolvió dos fragmentos con
+puntuación **0.775** y **0.612** sobre un umbral de 0.55, cada uno con su
+identificador. Y tres casos pasados por el ciclo completo con gemma4 —lote
+`comprobacion-en-vivo`— dieron **1 acierto de 3**, 20 256 ms de media, costo
+PROVISIONAL y 1 de 1 de sensibilidad alta retenido.
+
+**Y una costura que ninguna fase reclama como suya, medida el 4‑ago‑2026.** El
+ciclo de caso funciona y **solo lo invoca el corredor del lote**: `src/core/caso`
+lo importa un único archivo, `src/lote/corredor.ts`. La interfaz `Cola` declara
+`encolar` y `pendientes` y **no declara desencolar**, así que el consumidor no es
+que falte — no se puede escribir. `EmisorPostgres` no se instancia en ningún punto
+de arranque, y `select count(*) from eventos` devuelve **0 filas**.
+
+Un mensaje de Telegram se verifica, se deduplica, se limita, se normaliza, se
+agrupa, se persiste y se encola. Ahí termina: nadie responde y no se emite evento.
+El invariante 5 **no está roto** —ninguna ruta acaba sin su evento—; hay una ruta
+que no acaba. De ahí nace [[Plan-Lazo-Del-Canal]], fase 11, y la corrección está en
+[[CALL_CENTRE_DOCS]] R‑052.
+
 **Las fases 0, 1, 2, 3 y 3B están construidas.** Hay tres canales: Telegram,
 WhatsApp declarado sin credenciales, y `lote`, que alimenta casos desde archivos
 por el mismo camino. Entra un mensaje por Telegram, se
@@ -178,7 +201,28 @@ dicen Perímetro, y son ellos los que mandan.
 | 8A | Operación autoalojada, respaldos, secretos, demo por reproducción | **CONSTRUIDO** |
 | 8B | Hosting, Auth, App Check y webhook en producción | PROPUESTO · falta proyecto de Firebase |
 | 9 | Vigía de fallas e informe de salud | **CONSTRUIDO** |
+| 11A | Montaje compartido y trabajador del ciclo | PROPUESTO · **camino crítico** |
+| 11B | Respuesta por el canal, sin duplicar | PROPUESTO · camino crítico |
+| 11C | Cola persistente y ciclo de vida del proceso | PROPUESTO · camino crítico |
+| 11D | El panel de operación sobre tráfico real | PROPUESTO · camino crítico |
+| 12A | El perfil de negocio, y el léxico fuera del código | PROPUESTO |
+| 12B | Plantillas por herencia y arranque de un negocio nuevo | PROPUESTO |
+| 12C | Marca y vocabulario en el panel | PROPUESTO |
+| 13A | El escalado llega a un humano por un canal que ya existe | PROPUESTO |
+| 13B | La bandeja propia, cuando el volumen la pida | PROPUESTO |
 | 10 | Canal de voz | PROPUESTO · opcional |
+
+La fase **11 se numera la última y se ordena la primera**: va antes que 8B y que
+10. El número dice cuándo se escribió; el orden, cuándo se hace — ver R‑055 y
+[[Plan-Lazo-Del-Canal]]. Desplegar el panel sobre una proyección vacía sería
+publicar la maqueta.
+
+Las fases **12** ([[Plan-Perfil-De-Negocio]]) y **13** ([[Plan-Soporte]]) van
+después de la 11 y antes que la 10, por el mismo criterio: configurar un negocio
+cuyo agente no contesta es decorar, y atender escalados exige que existan
+escalados de tráfico real. **El plano de control multi‑cliente no está en esta
+tabla**: solo lee proyecciones y vive en otro repositorio, porque este es un
+perímetro — uno. Ver R‑061.
 
 ## Lo que existe hoy
 
@@ -463,3 +507,16 @@ Cada una con su entrada en [[CALL_CENTRE_DOCS]].
 | R‑048 | La clasificación de fallas mira a dónde iba la llamada, y `desconocida` se ve | Traducir códigos de estado a etiquetas; repartir lo no reconocido en el cajón que más se le parezca |
 | R‑049 | El informe de salud se compone sobre lo grabado, sin tabla nueva | Una tabla de fallas en PostgreSQL, que ata el informe a que la base esté en pie |
 | R‑050 | «El informe propone, nunca aplica» como regla del grafo más prueba estructural | Dejarlo escrito en el criterio de aceptación y confiar |
+| R‑051 | La maqueta entra en el panel; lo que no tiene fuente no se dibuja, y la hoja de estilos no contiene ni una altura de barra | Portarla entera y rellenar la serie temporal, el selector de periodo y los vigías con datos plausibles |
+| R‑052 | Corrección: el ciclo de caso funciona y solo lo invoca el corredor del lote | Leer «fases 0 a 9 construidas» como que el sistema contesta |
+| R‑053 | El montaje del ciclo se comparte con el corredor, con prueba estructural | Un montaje propio para producción, con el lote midiendo un camino que producción no recorre |
+| R‑054 | La cola gana lado de consumo y pasa a Redis, con confirmación explícita | Llamar a `atender` desde el webhook, convirtiendo la ventana de agrupación en decoración |
+| R‑055 | La fase 11 se numera la última y se ordena la primera | Renumerar el plan para insertarla como 5B, moviendo referencias en ocho documentos y en las etiquetas |
+| R‑056 | Los productos de un negocio son su corpus: configurarlos es subir documentos | Un editor de catálogo, que el verificador de procedencia rechazaría o que abriría una vía para saltarse el invariante 1 |
+| R‑057 | Corrección: los esquemas de salida ya son agnósticos; el perfil no los declara | Campos factuales por sector, que darían un verificador de procedencia por sector |
+| R‑058 | Plantillas por herencia sobre una `base`, y cuatro en vez de ocho | Un archivo completo copiado por sector, con cuatro léxicos divergiendo en silencio |
+| R‑059 | Un perfil declara capacidades y palabras; jamás vigías, umbrales ni saneo | Dejar el perfil abierto y confiar en que nadie degrade un vigía desde un JSON |
+| R‑060 | El panel lee, el perímetro escribe — para credenciales, perfil y escalados | Formularios de escritura en el panel de Firebase, rompiendo el invariante 8 |
+| R‑061 | La bandeja del operador va primero, sobre un canal que ya existe; el plano de control es otro repositorio y solo lee | Empezar por la consola multi‑cliente; o darle escritura sobre los perímetros |
+| R‑062 | El lote tiene un identificador duplicado: la fila se distingue por posición, no se deduplica | Quitar la fila repetida, dejando la pantalla limpia y el defecto invisible |
+| R‑063 | Antes que cualquier fase, la clave de nube: desbloquea la comparación que justifica el proyecto | Empezar por la fase 11 y dejar dos de las tres columnas del informe en `NO CORRIDO` |

@@ -1,197 +1,960 @@
-/* El panel. Sobrio a propósito: lo que tiene que destacar son las cifras y las
-   advertencias, no la decoración. */
+/* El panel.
+   ─────────────────────────────────────────────────────────────────────────────
+   Sistema de diseño de la maqueta de operación, con una condición que no se
+   negocia: **ninguna forma de esta hoja puede pintar una cifra que no exista**.
+
+   Por eso todo lo que dibuja un número —barras, pistas, chispas— toma su tamaño
+   de un `style` calculado a partir de la fuente, y no hay ni una altura de barra
+   escrita aquí. Una hoja de estilos con valores dentro sería el sitio más fácil
+   del repositorio para dejar una cifra inventada sin que ningún check lo viera.
+
+   Las variables van en dos juegos, claro y oscuro, y todos los colores del panel
+   salen de ellas. Un color escrito a mano dentro de un componente es un color
+   que no se entera del tema. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --tinta: #16181d;
-  --tinta-suave: #5b616e;
-  --linea: #dfe3ea;
-  --fondo: #fbfcfe;
-  --acento: #1f5fd0;
-  --alerta: #8a4b00;
-  --alerta-fondo: #fff4e0;
-  --alta: #f6f0ff;
-  color-scheme: light dark;
+  --papel: #f3f5f9;
+  --tarjeta: #ffffff;
+  --tarjeta-alta: linear-gradient(180deg, #fbfcfe, #ffffff);
+  --tinta: #12151a;
+  --tenue: #6e7683;
+  --mate: #9aa1ad;
+  --linea: #e5e9f0;
+  --linea-suave: #f1f3f8;
+  --realce: #f7f9fd;
+  --pista: #eef1f6;
+
+  --senal: #3a64f5;
+  --senal-fondo: #eaf0fe;
+  --local: #12a594;
+  --nube: #3a64f5;
+  --esc: #e8963c;
+  --alarma: #e5484d;
+  --gris: #8b93a1;
+
+  --t-local-fondo: #e4f6f3;
+  --t-local-tinta: #0c7a6d;
+  --t-nube-fondo: #e9effe;
+  --t-nube-tinta: #2c4fcc;
+  --t-esc-fondo: #fdf1e2;
+  --t-esc-tinta: #9a5f14;
+  --t-veto-fondo: #fdecec;
+  --t-veto-tinta: #b22b30;
+  --t-gris-fondo: #eef0f4;
+  --t-gris-tinta: #5c636f;
+
+  --aviso-fondo: #fff7ea;
+  --aviso-linea: #f3dfc0;
+  --aviso-tinta: #8a6220;
+
+  --r: 10px;
+  color-scheme: light;
 }
 
-* {
+/* El panel arranca claro, siga el sistema lo que siga. La maqueta está calibrada
+   en claro y aquí el color significa —verde retenido, rojo egreso, ámbar
+   escalado—; dejar que el sistema operativo eligiera el contraste sería dejarle
+   elegir cuánto se ve una alarma.
+
+   El oscuro se pide con el interruptor de la barra superior, que no hace más que
+   poner `data-tema` en el elemento raíz. Todo lo que cambia está aquí: ni un
+   color decidido en JavaScript, y los tonos que significan algo conservan su
+   papel —el verde sigue siendo el retenido— en los dos juegos. */
+:root[data-tema='oscuro'] {
+  --papel: #0e1116;
+  --tarjeta: #161a21;
+  --tarjeta-alta: linear-gradient(180deg, #191e26, #161a21);
+  --tinta: #e9ecf2;
+  --tenue: #9aa2b1;
+  --mate: #79808d;
+  --linea: #262c36;
+  --linea-suave: #1e232b;
+  --realce: #1b212a;
+  --pista: #232932;
+
+  --senal: #7d9bff;
+  --senal-fondo: #1c2740;
+  --local: #2ac2ae;
+  --nube: #7d9bff;
+  --esc: #f0a95a;
+  --alarma: #ff6b70;
+  --gris: #79808d;
+
+  --t-local-fondo: #10302d;
+  --t-local-tinta: #58d9c7;
+  --t-nube-fondo: #1c2740;
+  --t-nube-tinta: #9db4ff;
+  --t-esc-fondo: #3a2a12;
+  --t-esc-tinta: #f0b673;
+  --t-veto-fondo: #3a1c1e;
+  --t-veto-tinta: #ff9a9d;
+  --t-gris-fondo: #242a33;
+  --t-gris-tinta: #a4abb8;
+
+  --aviso-fondo: #33280f;
+  --aviso-linea: #5c4a1f;
+  --aviso-tinta: #f0c479;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
-  background: var(--fondo);
+  padding: 0;
+}
+
+body {
+  background: var(--papel);
   color: var(--tinta);
-  font: 15px/1.55 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
 }
 
-main {
-  max-width: 60rem;
-  margin: 0 auto;
-  padding: 2rem 1.25rem 4rem;
+h1,
+h2,
+h3,
+p,
+table,
+figure,
+ul {
+  margin: 0;
 }
 
-h1 {
-  font-size: 1.5rem;
-  margin: 0 0 0.25rem;
+/* `d` es la tipografía de titular; `m` la de etiqueta. Las dos existen en la
+   maqueta y se usan igual aquí. */
+.d {
+  font-family: 'Inter Tight', 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.025em;
 }
 
-h2 {
-  font-size: 1rem;
+.m {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--tinta-suave);
-  margin: 2.5rem 0 0.75rem;
 }
 
-/* La banda de demostración. Imposible de confundir con una nota al pie: si el
-   panel enseña cifras inventadas, tiene que verse antes que las cifras. */
+:focus-visible {
+  outline: 2px solid var(--senal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Estructura ───────────────────────────────────────────────────────────── */
+
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.rail {
+  width: 68px;
+  flex: 0 0 68px;
+  background: var(--tarjeta);
+  border-right: 1px solid var(--linea);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--tinta);
+  color: var(--papel);
+  display: grid;
+  place-items: center;
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.rail a {
+  width: 42px;
+  height: 42px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: var(--mate);
+  text-decoration: none;
+  transition:
+    background 0.18s,
+    color 0.18s;
+  position: relative;
+}
+
+.rail a:hover {
+  background: var(--realce);
+  color: var(--tinta);
+}
+
+.rail a[aria-current] {
+  background: var(--senal-fondo);
+  color: var(--senal);
+}
+
+.rail a[aria-current]::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 11px;
+  width: 3px;
+  height: 20px;
+  border-radius: 0 3px 3px 0;
+  background: var(--senal);
+}
+
+.rail svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 20px clamp(14px, 2.2vw, 28px) 34px;
+}
+
+/* ── Barra superior ───────────────────────────────────────────────────────── */
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.top h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.top .sub {
+  color: var(--tenue);
+  font-size: 0.82rem;
+  margin-top: 2px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--tarjeta);
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  padding: 6px 12px;
+  color: var(--tenue);
+  font-size: 0.78rem;
+}
+
+.pill code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  color: var(--tinta);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--local);
+  flex: 0 0 7px;
+}
+
+/* El interruptor de tema.
+   Un conmutador de verdad —`role="switch"`, con su estado en `aria-checked`—, no
+   dos botones que fingen serlo. Todo lo que cambia cuelga de `aria-checked`, así
+   que lo que se ve y lo que anuncia el lector de pantalla no pueden discrepar. */
+.tema {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 34px;
+  min-width: 142px;
+  padding: 0 14px 0 40px;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  background: var(--pista);
+  box-shadow: inset 0 1px 2px rgb(18 21 26 / 8%);
+  color: var(--tenue);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    background 0.2s;
+}
+
+.tema:hover {
+  color: var(--tinta);
+}
+
+.tema[aria-checked='true'] {
+  justify-content: flex-end;
+  padding: 0 40px 0 14px;
+}
+
+.tema .perilla {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--tarjeta);
+  border: 1px solid var(--linea);
+  box-shadow: 0 1px 2px rgb(18 21 26 / 16%);
+  color: var(--esc);
+  transition:
+    left 0.22s ease,
+    color 0.22s;
+}
+
+.tema[aria-checked='true'] .perilla {
+  left: calc(100% - 29px);
+  color: var(--senal);
+}
+
+.tema .perilla svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* La banda de aviso.
+   Sale del discriminante de `Fuente`, no de que alguien se acuerde de ponerla:
+   ver panel/src/fuente.ts. Aquí solo se decide cómo se ve. */
 .banda-demo {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  background: var(--alerta-fondo);
-  border: 2px solid var(--alerta);
+  gap: 4px;
+  margin: 14px 0 16px;
+  padding: 10px 13px;
+  background: var(--aviso-fondo);
+  border: 1px solid var(--aviso-linea);
   border-radius: 8px;
-  color: var(--alerta);
-  padding: 0.9rem 1.1rem;
-  margin-bottom: 1.5rem;
+  color: var(--aviso-tinta);
 }
 
 .banda-demo strong {
-  font-size: 1.05rem;
-  letter-spacing: 0.03em;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
-.origen {
-  color: var(--tinta-suave);
-  font-size: 0.85rem;
-  margin: 0 0 1rem;
+.banda-demo span {
+  font-size: 0.82rem;
+  line-height: 1.5;
 }
 
-.origen code {
-  font-size: 0.8rem;
-}
+/* ── Rejilla ──────────────────────────────────────────────────────────────── */
 
-.rejilla {
+.grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  gap: 0.85rem;
+  gap: 14px;
 }
 
-.cifra {
+.kpis {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 820px) {
+  .kpis {
+    grid-template-columns: 1.9fr 1fr 1fr 1fr;
+  }
+}
+
+.row2 {
+  grid-template-columns: 1fr;
+  margin-top: 14px;
+}
+
+@media (min-width: 1000px) {
+  .row2 {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.row1 {
+  grid-template-columns: 1fr;
+  margin-top: 14px;
+}
+
+.card {
+  background: var(--tarjeta);
   border: 1px solid var(--linea);
-  border-radius: 8px;
-  background: white;
-  padding: 0.9rem 1rem;
+  border-radius: var(--r);
+  padding: 16px 17px;
+  min-width: 0;
 }
 
-.cifra-titulo {
-  color: var(--tinta-suave);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.cifra-valor {
-  font-size: 1.75rem;
+.card h2 {
+  font-size: 0.9rem;
   font-weight: 600;
-  margin: 0.3rem 0;
-  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
-/* Los supuestos, junto al número. «$0.004 por caso» a secas invita a una
-   pregunta sin respuesta; con la ficha del equipo al lado, es defendible. */
-.cifra-nota {
-  color: var(--tinta-suave);
+.card .hint {
+  color: var(--mate);
+  font-size: 0.75rem;
+  margin-top: 2px;
+  line-height: 1.5;
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+/* ── Cifras ───────────────────────────────────────────────────────────────── */
+
+.kpi .label {
+  color: var(--tenue);
   font-size: 0.78rem;
+}
+
+.kpi .val {
+  font-family: 'Inter Tight', 'Inter', sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-top: 9px;
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.kpi.lead .val {
+  font-size: 3.1rem;
+}
+
+/* Un valor que no es un número —«PROVISIONAL», «—»— no se pinta con el cuerpo
+   de un número: se lee antes de leerse, y eso es lo que tiene que pasar. */
+.kpi .val.sin-cifra {
+  font-size: 1.5rem;
+  letter-spacing: 0.04em;
+  color: var(--esc);
+}
+
+.kpi.lead .val.sin-cifra {
+  font-size: 2rem;
+}
+
+.kpi .delta {
+  display: block;
+  margin-top: 9px;
+  font-size: 0.76rem;
+  color: var(--tenue);
+  line-height: 1.5;
+}
+
+.kpi.lead {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--tarjeta-alta);
+}
+
+/* ── Barras apiladas ──────────────────────────────────────────────────────── */
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(4px, 1vw, 9px);
+  height: 186px;
+  padding-top: 6px;
+}
+
+.col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 2px;
+  position: relative;
+  min-width: 0;
+}
+
+.col span {
+  display: block;
+  border-radius: 2px;
+  transition: filter 0.18s;
+}
+
+.col:hover span {
+  filter: brightness(1.14);
+}
+
+.s-local {
+  background: var(--local);
+}
+
+.s-nube {
+  background: var(--nube);
+}
+
+.s-esc {
+  background: var(--esc);
+}
+
+.s-veto {
+  background: var(--alarma);
+}
+
+.s-gris {
+  background: var(--gris);
+}
+
+.xaxis {
+  display: flex;
+  gap: clamp(4px, 1vw, 9px);
+  margin-top: 9px;
+}
+
+.xaxis span {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  color: var(--mate);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.58rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.legend span {
+  color: var(--tenue);
+  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── Reparto ──────────────────────────────────────────────────────────────── */
+
+.split {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  margin-top: 4px;
+}
+
+.split .lbl {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.split .lbl b {
+  font-family: 'Inter Tight', 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 1.02rem;
+  letter-spacing: -0.02em;
+}
+
+.split .lbl span {
+  color: var(--tenue);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.track {
+  height: 7px;
+  border-radius: 4px;
+  background: var(--pista);
+  overflow: hidden;
+}
+
+.track i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+}
+
+.note {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--linea);
+  color: var(--tenue);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.note b,
+.note strong {
+  color: var(--tinta);
+}
+
+.note code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+}
+
+/* ── Tablas ───────────────────────────────────────────────────────────────── */
+
+.tablewrap {
+  overflow-x: auto;
+  margin: 0 -17px -16px;
+}
+
+.tablewrap.alto {
+  max-height: 30rem;
+  overflow-y: auto;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-variant-numeric: tabular-nums;
-}
-
-th,
-td {
-  text-align: left;
-  padding: 0.5rem 0.6rem;
-  border-bottom: 1px solid var(--linea);
-}
-
-th {
-  color: var(--tinta-suave);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-tr.alta {
-  background: var(--alta);
-  font-weight: 600;
-}
-
-.explica {
-  color: var(--tinta-suave);
-  font-size: 0.88rem;
-  margin: 0.6rem 0 0;
-}
-
-.vacio {
-  border: 1px dashed var(--linea);
-  border-radius: 8px;
-  padding: 1.25rem;
-  color: var(--tinta-suave);
-}
-
-footer {
-  margin-top: 3rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--linea);
-  color: var(--tinta-suave);
   font-size: 0.82rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --tinta: #e9ecf2;
-    --tinta-suave: #9aa2b1;
-    --linea: #2b303a;
-    --fondo: #101319;
-    --alta: #1d1a2b;
-    --alerta: #ffc46b;
-    --alerta-fondo: #3a2a10;
-  }
-
-  .cifra {
-    background: #171b23;
-  }
+th {
+  text-align: left;
+  color: var(--mate);
+  font-weight: 500;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--linea);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--tarjeta);
+  position: sticky;
+  top: 0;
 }
 
-/* Campos de la calculadora. */
+th:first-child,
+td:first-child {
+  padding-left: 17px;
+}
+
+th:last-child,
+td:last-child {
+  padding-right: 17px;
+  text-align: right;
+}
+
+td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--linea-suave);
+  color: var(--tinta);
+  vertical-align: top;
+}
+
+tbody tr {
+  transition: background 0.15s;
+}
+
+tbody tr:hover {
+  background: var(--realce);
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* La fila de sensibilidad alta, marcada. Es la clase de la que depende la
+   afirmación central del proyecto; se ve sin buscarla. */
+tr.alta td {
+  background: var(--t-veto-fondo);
+}
+
+.mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  color: var(--tenue);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 5px;
+  padding: 2.5px 7px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.t-local {
+  background: var(--t-local-fondo);
+  color: var(--t-local-tinta);
+}
+
+.t-nube {
+  background: var(--t-nube-fondo);
+  color: var(--t-nube-tinta);
+}
+
+.t-esc {
+  background: var(--t-esc-fondo);
+  color: var(--t-esc-tinta);
+}
+
+.t-veto {
+  background: var(--t-veto-fondo);
+  color: var(--t-veto-tinta);
+}
+
+.t-gris {
+  background: var(--t-gris-fondo);
+  color: var(--t-gris-tinta);
+}
+
+/* ── Lista de estado ──────────────────────────────────────────────────────── */
+
+.watch {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+}
+
+.watch li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--linea-suave);
+  list-style: none;
+}
+
+.watch li:last-child {
+  border-bottom: 0;
+}
+
+.watch .nm {
+  flex: 1;
+  min-width: 0;
+}
+
+.watch .nm b {
+  display: block;
+  font-weight: 500;
+  font-size: 0.83rem;
+}
+
+.watch .nm span {
+  color: var(--mate);
+  font-size: 0.72rem;
+}
+
+.state {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 8px;
+}
+
+.ok {
+  background: var(--local);
+}
+
+.warn {
+  background: var(--esc);
+}
+
+.auth {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mate);
+  border: 1px solid var(--linea);
+  border-radius: 4px;
+  padding: 2px 5px;
+  white-space: nowrap;
+}
+
+/* ── Pie ──────────────────────────────────────────────────────────────────── */
+
+.budget {
+  margin-top: 14px;
+  background: var(--tarjeta);
+  border: 1px solid var(--linea);
+  border-radius: var(--r);
+  padding: 13px 17px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  color: var(--tenue);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.budget .txt {
+  flex: 1;
+  min-width: 240px;
+}
+
+.budget .txt b {
+  color: var(--tinta);
+  font-weight: 600;
+}
+
+.budget code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+}
+
+/* ── Vacío y campos ───────────────────────────────────────────────────────── */
+
+.vacio {
+  background: var(--tarjeta);
+  border: 1px dashed var(--linea);
+  border-radius: var(--r);
+  padding: 18px;
+  color: var(--tenue);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin-top: 14px;
+}
+
+.campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
 .campo {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 5px;
   border: 1px solid var(--linea);
   border-radius: 8px;
-  background: white;
-  padding: 0.7rem 0.85rem;
+  padding: 10px 12px;
+  background: var(--papel);
+}
+
+.campo .label {
+  color: var(--tenue);
+  font-size: 0.78rem;
 }
 
 .campo input {
   font: inherit;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
-  padding: 0.35rem 0.5rem;
+  padding: 6px 8px;
   border: 1px solid var(--linea);
-  border-radius: 5px;
-  background: transparent;
-  color: inherit;
+  border-radius: 6px;
+  background: var(--tarjeta);
+  color: var(--tinta);
+  width: 100%;
 }
 
-@media (prefers-color-scheme: dark) {
-  .campo {
-    background: #171b23;
+.campo .ayuda {
+  color: var(--mate);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+/* Un resultado de la calculadora. No es un KPI —no sale de una ejecución, sale
+   de los parámetros de arriba— y por eso no lleva la caja de una tarjeta. */
+.datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.dato {
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  padding: 12px 13px;
+  background: var(--papel);
+}
+
+.dato .label {
+  color: var(--tenue);
+  font-size: 0.78rem;
+}
+
+.dato .val {
+  font-family: 'Inter Tight', 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.dato .ayuda {
+  color: var(--mate);
+  font-size: 0.72rem;
+  margin-top: 6px;
+  line-height: 1.45;
+}
+
+/* La fila recomendada por la calculadora. Verde y no roja: `tr.alta` ya quiere
+   decir «sensibilidad alta» en las otras tablas, y un color no puede querer
+   decir dos cosas en la misma pantalla. */
+tr.elegida td {
+  background: var(--t-local-fondo);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
   }
 }

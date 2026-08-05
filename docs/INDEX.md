@@ -18,12 +18,26 @@ costeable y auditable.
   disco**, glosario y decisiones tomadas. Si algo choca con el código, gana el
   código.
 - [[CALL_CENTRE_DOCS]] — 📘 **el manual**: cada cambio de fondo con su contexto,
-  qué cambió, por qué y a qué afecta. Veintiuna entradas en dos revisiones, a
-  31‑jul‑2026. Lo mantiene la habilidad `call_centre_docs`.
+  qué cambió, por qué y a qué afecta. Sesenta y una entradas en diez revisiones, a
+  4‑ago‑2026. Lo mantiene la habilidad `call_centre_docs`.
 - [[Propuesta-Desarrollo-Por-Fases]] — 🧭 **el cómo y el cuándo**: dieciséis fases
   con criterios de aceptación, los invariantes convertidos en checks de CI que
   bloquean el merge, protocolo de git y GitHub, y el reparto de Firebase. Sustituye
   al orden del plan original.
+- [[Plan-Lazo-Del-Canal]] — 🔌 **fase 11, camino crítico**: el ciclo de caso
+  funciona y solo lo invoca el corredor del lote; la interfaz de la cola no declara
+  desencolar. Cuatro subfases para que un mensaje que entra por un canal salga
+  contestado y deje su evento. Numerada la última, ordenada la primera.
+  **PROPUESTO** — nada construido.
+- [[Plan-Perfil-De-Negocio]] — 🏷️ **fase 12**: adaptar el sistema a otro sector.
+  Los productos de un negocio **son su corpus**; el léxico del clasificador sale
+  del código a `config/negocio.json`; cuatro plantillas por herencia —base,
+  seguros, dental, instalación—. Y la regla dura: un perfil declara palabras y
+  capacidades, nunca vigías ni umbrales. **PROPUESTO**.
+- [[Plan-Soporte]] — 🎧 **fase 13 y el plano de control**: 41 de 65 casos escalan a
+  una tabla que ninguna pantalla lee. Primero el escalado a un canal humano que ya
+  existe, después la bandeja propia. El plano de control multi‑cliente es otro
+  repositorio y solo lee proyecciones. **PROPUESTO**.
 - [[Perimetro-Manual-Claude-Code]] — 🛠️ protocolo de sesión con el agente: plan
   antes que código, pruebas primero, implementación acotada, puerta de
   verificación. Y qué vigilar del propio agente.
@@ -52,6 +66,10 @@ costeable y auditable.
 Partes de jornada en `bitacoras/AAAA/MM/`. Uno por día de trabajo, con lo que se
 hizo, lo que quedó abierto y las entradas de manual que salieron.
 
+- `bitacoras/2026/08/2026-08-04_lazo-del-canal.md` — la maqueta entra en el panel,
+  con las tres piezas que no tienen fuente declaradas en vez de rellenadas; y el
+  hallazgo del día: el ciclo de caso funciona y solo lo invoca el corredor del
+  lote. Nace la fase 11
 - `bitacoras/2026/08/2026-08-04_fase-9.md` — fase 9: vigía de fallas e informe de
   salud. Qué cuenta como falla y por qué un escalado correcto no lo es; la
   clasificación mira a dónde iba la llamada; «propone, nunca aplica» pasa de
@@ -107,8 +125,12 @@ panel.
 
 ## Estado en una línea
 
-**Fases 0 y 1 construidas.** Entra un mensaje por Telegram, se verifica, se agrupa
-y se guarda. Nadie responde todavía: no hay recuperación ni enrutador. 99 pruebas
-en el CI, contra Redis y PostgreSQL reales. Bloqueantes conocidos: el corpus de la
-empresa ficticia, la máquina de referencia para Ollama y el proveedor de nube — el
-trámite de WhatsApp dejó de bloquear con R‑020. Ver [[00-CANON]] §Parte 4.
+**Fases 0 a 9 construidas, salvo 8B.** 473 pruebas más 6 de reglas contra el
+emulador de Firestore. El corpus está indexado y se consulta con cita; el
+enrutador clasifica, sanea y redacta; los diez vigías actúan; el panel y la demo
+por reproducción están en pie. **Y nadie responde todavía en producción**: el
+ciclo de caso solo lo invoca el corredor del lote, la cola no tiene lado de
+consumo y la tabla `eventos` está vacía — es la fase 11, [[Plan-Lazo-Del-Canal]].
+Bloqueantes conocidos: la máquina de referencia para Ollama, que mantiene todo
+costo en PROVISIONAL, y la credencial de nube, sin la cual los modos nube e
+híbrido nunca se han corrido. Ver [[00-CANON]] §Parte 4.
