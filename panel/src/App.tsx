@@ -1,4 +1,4 @@
-// El panel. Lee la proyección publicada y la enseña.
+// El panel de operación. Lee la proyección publicada y la enseña.
 //
 // La jerarquía es la del plan y el orden importa: **costo por caso resuelto**
 // primero, porque es la cifra que decide si el proyecto tiene sentido; luego
@@ -9,186 +9,207 @@
 // Ninguna cifra se calcula aquí. Todas vienen derivadas del publicador, que las
 // saca de PostgreSQL. Un panel que calculara sería un segundo sitio donde se
 // decide qué significa «escalado», y acabaría discrepando del primero.
+//
+// Y lo que esta pantalla NO tiene, que también es una decisión: no hay selector
+// de periodo ni línea de tendencia. La proyección trae una ventana y unos
+// agregados sobre ella; no trae serie temporal. Un control que no puede cambiar
+// nada, o una chispa dibujada a ojo, serían adorno con aspecto de medida.
 
 import { Calculadora } from './Calculadora.tsx';
+import { dinero, entero, esAusencia, fecha, fechaHora, pct, pctDe, segundos } from './formato.ts';
+import {
+  BarrasApiladas,
+  Cabecera,
+  Cifra,
+  Leyenda,
+  Partes,
+  Pie,
+  Rail,
+  Tarjeta,
+  type Columna,
+  type Parte,
+  type Seccion,
+  type Tono,
+} from './ui.tsx';
 import type { Fuente } from './fuente.ts';
 import type { Proyeccion } from '../../proyeccion/derivar.ts';
 
-function pct(v: number | null): string {
-  // `null` no es 0 %: es «no hay denominador». Enseñarlo como 0 % sería una
-  // afirmación sacada de ninguna observación.
-  return v === null ? '—' : `${(v * 100).toFixed(0)} %`;
-}
+const SECCIONES: readonly Seccion[] = [
+  { id: 'resumen', titulo: 'Operación', icono: 'cuadros' },
+  { id: 'perimetro', titulo: 'Perímetro', icono: 'escudo' },
+  { id: 'reparto', titulo: 'Reparto del enrutador', icono: 'nodos' },
+  { id: 'escalados', titulo: 'Escalados', icono: 'pulso' },
+  { id: 'economia', titulo: 'Punto de equilibrio', icono: 'moneda' },
+];
 
-function ms(v: string | null): string {
-  return v === null ? '—' : `${(Number(v) / 1000).toFixed(1)} s`;
-}
-
-/**
- * Una cifra de dinero, o por qué no hay cifra.
- *
- * Igual que en el informe de la fase 7 (R-031): con la máquina de referencia sin
- * caracterizar, el costo por caso saldría `$0.0000`, que se lee como «gratis» y
- * es falso. `config/maquina-referencia.json` lo prohíbe por escrito.
- */
-function dinero(v: number | null, provisional: boolean): string {
-  if (provisional) return 'PROVISIONAL';
-  return v === null ? '—' : `$${v.toFixed(4)}`;
-}
-
-function Cifra({
-  titulo,
-  valor,
-  nota,
-}: {
-  titulo: string;
-  valor: string;
-  nota?: string;
-}): React.JSX.Element {
-  return (
-    <div className="cifra">
-      <div className="cifra-titulo">{titulo}</div>
-      <div className="cifra-valor">{valor}</div>
-      {nota !== undefined && <div className="cifra-nota">{nota}</div>}
-    </div>
-  );
+/** El destino de ejecución decide el color, y el color quiere decir siempre lo mismo. */
+function tonoDeDestino(destino: string): Tono {
+  if (destino === 'local') return 'local';
+  if (destino === 'nube') return 'nube';
+  return 'gris';
 }
 
 function Kpis({ p }: { p: Proyeccion }): React.JSX.Element {
+  const costo = dinero(p.kpi.costo_por_resuelto, p.costeo.provisional);
+
   return (
-    <section>
-      <h2>Lo que decide si esto sirve</h2>
-      <div className="rejilla">
-        <Cifra
-          titulo="Costo por caso resuelto"
-          valor={dinero(p.kpi.costo_por_resuelto, p.costeo.provisional)}
-          nota={
-            p.costeo.provisional
-              ? 'La máquina de referencia no está caracterizada. Con tarifa horaria cero el costo saldría $0.0000, que se lee como «gratis» y no lo es.'
-              : Object.entries(p.costeo.supuestos)
-                  .map(([k, v]) => `${k}: ${String(v)}`)
-                  .join(' · ')
-          }
-        />
-        <Cifra
-          titulo="Resueltos sin intervención"
-          valor={pct(p.kpi.resueltos_sin_intervencion)}
-          nota={`${p.kpi.resueltos} de ${p.kpi.casos} casos`}
-        />
-        <Cifra
-          titulo="Primera respuesta (mediana)"
-          valor={ms(p.latencia.mediana_ms)}
-          nota={`p95: ${ms(p.latencia.p95_ms)}`}
-        />
-        <Cifra
-          titulo="Escalados a una persona"
-          valor={String(p.kpi.escalados_a_humano)}
-          nota={pct(p.kpi.casos === 0 ? null : p.kpi.escalados_a_humano / p.kpi.casos)}
-        />
-      </div>
+    <section className="grid kpis" id="resumen" aria-label="Indicadores principales">
+      <Cifra
+        destacada
+        titulo="Costo por caso resuelto"
+        valor={costo}
+        ausencia={esAusencia(costo)}
+        // Los supuestos, junto al número. «$0.004 por caso» a secas invita a una
+        // pregunta sin respuesta; con la ficha del equipo al lado, es defendible.
+        nota={
+          p.costeo.provisional
+            ? 'La máquina de referencia no está caracterizada. Con tarifa horaria cero el costo saldría $0.0000, que se lee como «gratis» y no lo es.'
+            : Object.entries(p.costeo.supuestos)
+                .map(([k, v]) => `${k}: ${String(v)}`)
+                .join(' · ')
+        }
+      />
+      <Cifra
+        titulo="Resueltos sin intervención"
+        valor={pct(p.kpi.resueltos_sin_intervencion)}
+        ausencia={esAusencia(pct(p.kpi.resueltos_sin_intervencion))}
+        nota={`${entero(p.kpi.resueltos)} de ${entero(p.kpi.casos)} casos`}
+      />
+      <Cifra
+        titulo="Primera respuesta"
+        valor={segundos(p.latencia.mediana_ms)}
+        ausencia={esAusencia(segundos(p.latencia.mediana_ms))}
+        nota={`mediana · p95 en ${segundos(p.latencia.p95_ms)}`}
+      />
+      <Cifra
+        titulo="Escalados a una persona"
+        valor={entero(p.kpi.escalados_a_humano)}
+        nota={`${pctDe(p.kpi.escalados_a_humano, p.kpi.casos)} de ${entero(p.kpi.casos)} casos atendidos`}
+      />
     </section>
   );
 }
 
-function Perimetro({ p }: { p: Proyeccion }): React.JSX.Element {
+/**
+ * Egreso por clase de sensibilidad, con numerador **y** denominador.
+ *
+ * «0 casos de egreso» puede querer decir «los retuvimos todos» o «no llegó
+ * ninguno», y son cosas muy distintas. Por eso la columna es la clase entera y
+ * el color reparte dentro: la altura es el denominador, siempre a la vista.
+ */
+function PerimetroYReparto({ p }: { p: Proyeccion }): React.JSX.Element {
+  const columnas: readonly Columna[] = p.perimetro.map((f) => ({
+    etiqueta: f.clase_sensibilidad,
+    segmentos: [
+      { clave: 'con egreso', valor: f.con_egreso, tono: 'veto' },
+      { clave: 'retenidos', valor: f.retenidos, tono: 'local' },
+    ],
+  }));
+
+  const destinos: readonly Parte[] = p.reparto.por_destino.map((d) => ({
+    etiqueta: d.destino_ejecucion,
+    casos: d.casos,
+    tono: tonoDeDestino(d.destino_ejecucion),
+    detalle: segundos(d.latencia_media_ms),
+  }));
+  const casosConDestino = p.reparto.por_destino.reduce((s, d) => s + d.casos, 0);
+
   return (
-    <section>
-      <h2>Egreso por clase de sensibilidad</h2>
-      <p className="explica">
-        Numerador <strong>y</strong> denominador, siempre. «0 casos de egreso» puede querer decir
-        «los retuvimos todos» o «no llegó ninguno», y son cosas muy distintas.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Sensibilidad</th>
-            <th>Casos</th>
-            <th>Con egreso</th>
-            <th>Retenidos</th>
-            <th>Cómo se lee</th>
-          </tr>
-        </thead>
-        <tbody>
+    <section className="grid row2">
+      <Tarjeta
+        id="perimetro"
+        titulo="Egreso por clase de sensibilidad"
+        pista="Cada columna es una clase. La altura es cuántos casos hubo; el color, cuántos se retuvieron."
+        extra={
+          <Leyenda
+            series={[
+              { clave: 'Retenidos', tono: 'local' },
+              { clave: 'Con egreso', tono: 'veto' },
+            ]}
+          />
+        }
+      >
+        <BarrasApiladas columnas={columnas} />
+        <p className="note">
           {p.perimetro.map((f) => (
-            <tr key={f.clase_sensibilidad} className={f.clase_sensibilidad === 'alta' ? 'alta' : ''}>
-              <td>{f.clase_sensibilidad}</td>
-              <td>{f.casos}</td>
-              <td>{f.con_egreso}</td>
-              <td>{f.retenidos}</td>
-              <td>{f.como_texto}</td>
-            </tr>
+            <span key={f.clase_sensibilidad}>
+              <b>{f.clase_sensibilidad}</b>: {f.como_texto}.{' '}
+            </span>
           ))}
-        </tbody>
-      </table>
+          El denominador va con el número porque sin él «0 escapados» no afirma nada.
+        </p>
+      </Tarjeta>
+
+      <Tarjeta
+        id="reparto"
+        titulo="Reparto del enrutador"
+        pista={`Sobre ${entero(casosConDestino)} casos con destino registrado`}
+      >
+        <Partes partes={destinos} total={casosConDestino} />
+        <p className="note">
+          Escalados a una persona: <b>{entero(p.reparto.escalados_a_humano)}</b>. Es el mismo número
+          que arriba porque es <em>la misma variable</em>, no dos cuentas que coinciden. Va aparte
+          del reparto y no como una barra más: escalar es un desenlace, no un destino de ejecución,
+          y mezclarlos daría dos denominadores en un solo gráfico.
+        </p>
+      </Tarjeta>
     </section>
   );
 }
 
-function Reparto({ p }: { p: Proyeccion }): React.JSX.Element {
-  return (
-    <section>
-      <h2>Reparto local / nube</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Destino</th>
-            <th>Casos</th>
-            <th>Latencia media</th>
-            <th>Tokens entrada</th>
-            <th>Tokens salida</th>
-            <th>Costo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {p.reparto.por_destino.map((d) => (
-            <tr key={d.destino_ejecucion}>
-              <td>{d.destino_ejecucion}</td>
-              <td>{d.casos}</td>
-              <td>{ms(d.latencia_media_ms)}</td>
-              <td>{d.tokens_entrada.toLocaleString('es')}</td>
-              <td>{d.tokens_salida.toLocaleString('es')}</td>
-              <td>{d.costo_provisional ? 'PROVISIONAL' : `$${Number(d.costo).toFixed(4)}`}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="explica">
-        Escalados a una persona: <strong>{p.reparto.escalados_a_humano}</strong>. Es el mismo
-        número que arriba porque es <em>la misma variable</em>, no dos cuentas que coinciden.
-      </p>
-    </section>
-  );
-}
+function EscaladosYDesenlaces({ p }: { p: Proyeccion }): React.JSX.Element {
+  // Los cuatro desenlaces salen de `kpi`, que a su vez sale de un único recuento
+  // en el publicador. No se vuelven a contar aquí.
+  const desenlaces: readonly Parte[] = [
+    { etiqueta: 'Resueltos', casos: p.kpi.resueltos, tono: 'local' },
+    { etiqueta: 'Escalados a una persona', casos: p.kpi.escalados_a_humano, tono: 'esc' },
+    { etiqueta: 'Bloqueados', casos: p.kpi.bloqueados, tono: 'veto' },
+    { etiqueta: 'Descartados', casos: p.kpi.descartados, tono: 'gris' },
+  ];
 
-function Escalados({ p }: { p: Proyeccion }): React.JSX.Element {
   return (
-    <section>
-      <h2>Por qué se escaló</h2>
-      {p.escalados_por_motivo.length === 0 ? (
-        <p className="vacio">Ningún escalado en esta ventana.</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Motivo</th>
-              <th>Casos</th>
-            </tr>
-          </thead>
-          <tbody>
-            {p.escalados_por_motivo.map((e) => (
-              <tr key={e.motivo_escalado}>
-                <td>{e.motivo_escalado}</td>
-                <td>{e.casos}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      <p className="explica">
-        Sustento agregado: <strong>{pct(p.sustento.proporcion)}</strong> —{' '}
-        {p.sustento.con_procedencia} campos con procedencia válida sobre {p.sustento.totales}. Es
-        una proporción contable, no una estimación.
-      </p>
+    <section className="grid row2">
+      <Tarjeta
+        id="escalados"
+        titulo="Por qué se escaló"
+        pista="El motivo se registra en el mismo evento que el desenlace"
+      >
+        {p.escalados_por_motivo.length === 0 ? (
+          <p className="hint">Ningún escalado en esta ventana.</p>
+        ) : (
+          <div className="tablewrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Motivo</th>
+                  <th>Casos</th>
+                  <th>De los escalados</th>
+                </tr>
+              </thead>
+              <tbody>
+                {p.escalados_por_motivo.map((e) => (
+                  <tr key={e.motivo_escalado}>
+                    <td>{e.motivo_escalado}</td>
+                    <td className="mono">{entero(e.casos)}</td>
+                    <td className="mono">{pctDe(e.casos, p.kpi.escalados_a_humano)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Tarjeta>
+
+      <Tarjeta titulo="Desenlaces" pista={`Sobre ${entero(p.kpi.casos)} casos de la ventana`}>
+        <Partes partes={desenlaces} total={p.kpi.casos} />
+        <p className="note">
+          Sustento agregado: <b>{pct(p.sustento.proporcion)}</b> — {entero(p.sustento.con_procedencia)}{' '}
+          campos con procedencia válida sobre {entero(p.sustento.totales)}. Es una proporción
+          contable, no una estimación: cada campo trae su <code>fragmento_id</code> y el verificador
+          comprueba que exista, que se recuperara en esa ejecución y que el valor esté literalmente
+          en el fragmento.
+        </p>
+      </Tarjeta>
     </section>
   );
 }
@@ -206,42 +227,50 @@ export function App({ fuente }: { fuente: Fuente }): React.JSX.Element {
   const p = fuente.proyeccion;
 
   return (
-    <main>
-      {fuente.es_demostracion && (
-        <div className="banda-demo" role="alert">
-          <strong>Datos de demostración</strong>
-          <span>{fuente.aviso}</span>
-        </div>
-      )}
+    <div className="app">
+      <Rail secciones={SECCIONES} />
 
-      <header>
-        <h1>Perímetro · Operación</h1>
-        <p className="origen">
-          Ventana {p.ventana.desde.slice(0, 10)} → {p.ventana.hasta.slice(0, 10)} · generado{' '}
-          {p.generado_en.slice(0, 16).replace('T', ' ')} · origen <code>{fuente.origen}</code>
-        </p>
-      </header>
+      <main className="main">
+        <Cabecera
+          titulo="Operación"
+          sub={`Ventana ${fecha(p.ventana.desde)} → ${fecha(p.ventana.hasta)} · derivado el ${fechaHora(p.generado_en)}`}
+          marca={
+            <>
+              <i className="dot" aria-hidden="true" />
+              {entero(p.kpi.casos)} casos en la ventana
+            </>
+          }
+        />
 
-      {p.kpi.casos === 0 ? (
-        <p className="vacio">
-          Sin casos en esta ventana. El panel enseña vacío y no ceros: una cifra de cero sobre
-          ninguna observación es una afirmación que nadie ha medido.
-        </p>
-      ) : (
-        <>
-          <Kpis p={p} />
-          <Perimetro p={p} />
-          <Reparto p={p} />
-          <Escalados p={p} />
-        </>
-      )}
+        {fuente.es_demostracion && (
+          <div className="banda-demo" role="alert">
+            <strong>Datos de demostración</strong>
+            <span>{fuente.aviso}</span>
+          </div>
+        )}
 
-      <Calculadora />
+        {p.kpi.casos === 0 ? (
+          <p className="vacio">
+            Sin casos en esta ventana. El panel enseña vacío y no ceros: una cifra de cero sobre
+            ninguna observación es una afirmación que nadie ha medido.
+          </p>
+        ) : (
+          <>
+            <Kpis p={p} />
+            <PerimetroYReparto p={p} />
+            <EscaladosYDesenlaces p={p} />
+          </>
+        )}
 
-      <footer>
-        Toda cifra de esta pantalla sale de un evento registrado en PostgreSQL, derivado por el
-        publicador. El panel no calcula nada.
-      </footer>
-    </main>
+        <section className="grid row1" id="economia">
+          <Calculadora />
+        </section>
+
+        <Pie>
+          Toda cifra de esta pantalla sale de un evento registrado en PostgreSQL, derivado por el
+          publicador. El panel no calcula nada. Origen: <code>{fuente.origen}</code>.
+        </Pie>
+      </main>
+    </div>
   );
 }
